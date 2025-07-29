@@ -5,39 +5,41 @@ import './SkinDetailPage.css';
 
 const SkinDetailPage = () => {
   const { marketHashName } = useParams();
-  
-  const [skinData, setSkinData] = useState(null);
+  const [inspectedData, setInspectedData] = useState({});
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  // Guardar o URL da imagem base para usar na tabela
-  const [baseSkinImageUrl, setBaseSkinImageUrl] = useState('');
 
   useEffect(() => {
     const fetchSkinData = async () => {
       setLoading(true);
       setError(null);
-      
+
       const data = await getSkinDetails(marketHashName);
-      
+
       if (data && data.success) {
-        setSkinData(data);
-        const formattedListings = Object.values(data.listinginfo || {});
-        setListings(formattedListings);
+        setListings(data.listings || []);
+        console.log("LISTINGS RECEBIDOS:", data.listings);
 
-        // Extrai e guarda o URL do ícone da skin para usar na tabela
-        // Assume que o primeiro asset é representativo
-        const assetKey = Object.keys(data.assets || {})[0];
-        if (assetKey) {
-            const iconUrl = data.assets[assetKey].icon_url;
-            setBaseSkinImageUrl(`https://community.cloudflare.steamstatic.com/economy/image/${iconUrl}`);
+        for (const listing of data.listings) {
+          const inspectUrl = listing.inspectLink;
+          if (inspectUrl) {
+            try {
+              const res = await fetch(`http://localhost/?url=${encodeURIComponent(inspectUrl)}`);
+              const json = await res.json();
+              setInspectedData(prev => ({
+                ...prev,
+                [listing.listingid]: json.iteminfo
+              }));
+            } catch (e) {
+              console.error(`Erro ao inspecionar item ${listing.listingid}`, e);
+            }
+          }
         }
-
       } else {
         setError("Não foi possível carregar os dados desta skin.");
       }
-      
+
       setLoading(false);
     };
 
@@ -56,13 +58,14 @@ const SkinDetailPage = () => {
     <div className="skin-detail-page">
       <div className="skin-info-column">
         <h1>{decodeURIComponent(marketHashName)}</h1>
-        <div className="skin-image-large-container">
-          <img 
-            src={`https://community.cloudflare.steamstatic.com/economy/image/${skinData?.assets?.[Object.keys(skinData.assets)[0]]?.icon_url_large}`}
-            alt={decodeURIComponent(marketHashName)}
-          />
-        </div>
-        {/* Futuramente pode adicionar aqui mais detalhes como float, pattern, etc. */}
+        {listings[0] && (
+          <div className="skin-image-large-container">
+            <img 
+              src={listings[0].image}
+              alt={decodeURIComponent(marketHashName)}
+            />
+          </div>
+        )}
       </div>
 
       <div className="skin-listings-column">
@@ -71,7 +74,6 @@ const SkinDetailPage = () => {
           <table className="listings-table">
             <thead>
               <tr>
-                {/* NOVA COLUNA PARA A IMAGEM */}
                 <th>Skin</th>
                 <th>Preço</th>
                 <th className="placeholder-data">Float</th>
@@ -81,31 +83,30 @@ const SkinDetailPage = () => {
             </thead>
             <tbody>
               {listings.length > 0 ? (
-                listings.map(listing => (
-                  <tr key={listing.listingid}>
-                    {/* CELULA COM A IMAGEM DA SKIN */}
-                    <td>
-                      <img 
-                        src={baseSkinImageUrl} 
-                        alt="skin" 
-                        className="listing-skin-image" 
-                      />
-                    </td>
-                    <td>{(listing.converted_price_per_unit / 100).toFixed(2)} {listing.converted_currency_symbol}</td>
-                    <td className="placeholder-data">N/A</td>
-                    <td className="placeholder-data">N/A</td>
-                    <td>
-                      <a 
-                        href={`https://steamcommunity.com/market/listings/730/${encodeURIComponent(marketHashName)}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="buy-button"
-                      >
-                        Ver
-                      </a>
-                    </td>
-                  </tr>
-                ))
+                listings.map(listing => {
+                  const item = inspectedData[listing.listingid];
+                  return (
+                    <tr key={listing.listingid}>
+                      <td>
+                        <img src={listing.image} alt="Skin" width="64" /><br />
+                        {listing.name}
+                      </td>
+                      <td>{listing.price}</td>
+                      <td>{item ? item.floatvalue.toFixed(4) : 'A carregar...'}</td>
+                      <td>{item ? item.paintseed : 'A carregar...'}</td>
+                      <td>
+                        <a 
+                          href={listing.inspectLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="buy-button"
+                        >
+                          Inspecionar
+                        </a>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan="5">Nenhum listing encontrado.</td>

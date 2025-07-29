@@ -37,13 +37,50 @@ app.get('/api/search', async (req, res) => {
   res.json({ results });
 });
 
-// Endpoint para detalhes da skin
+
 app.get('/api/skin/:marketHashName', async (req, res) => {
-    const { marketHashName } = req.params;
-    const data = await fetchPage(decodeURIComponent(marketHashName), 0, 100);
-    // Aqui, você processaria 'data' para extrair e formatar os listings e outras informações
-    res.json(data); // Por agora, enviamos os dados brutos
+  const { marketHashName } = req.params;
+  const data = await fetchPage(decodeURIComponent(marketHashName), 0); // ou mais se quiseres
+
+  if (!data || !data.results_html) {
+    return res.status(500).json({ success: false, message: 'Erro ao obter HTML da Steam' });
+  }
+
+  const $ = cheerio.load(data.results_html);
+  const listings = [];
+
+  $('.market_listing_row').each((_, el) => {
+    const $el = $(el);
+
+    const listingid = $el.attr('id')?.replace('listing_', '');
+    const name = $el.find('.market_listing_item_name').text().trim();
+    const price = $el.find('.market_listing_price_with_fee').text().trim();
+    const image = $el.find('img.market_listing_item_img').attr('src');
+    const inspectLink = $el.find('.market_listing_row_action a').attr('href');
+
+    const stickerImgs = [];
+    $el.find('#sticker_info img').each((_, img) => {
+      const src = $(img).attr('src');
+      if (src) stickerImgs.push(src);
+    });
+
+    listings.push({
+      listingid,
+      name,
+      price,
+      image,
+      inspectLink,
+      stickers: stickerImgs.length > 0 ? stickerImgs : null,
+    });
+  });
+
+  res.json({
+    success: true,
+    marketHashName: decodeURIComponent(marketHashName),
+    listings,
+  });
 });
+
 
 
 app.listen(PORT, () => console.log(`Backend a correr em http://localhost:${PORT}`));

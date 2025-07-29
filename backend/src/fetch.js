@@ -34,7 +34,7 @@ async function fetchPage(itemName, start = 0, count = 100) {
       console.error(`❌ Erro HTTP ${response.status} em: ${steamUrl}`);
       return null;
     }
-
+    
     return await response.json();
   } catch (err) {
     console.error(`⚠️ Erro ao tentar obter ${itemName} (${start}): ${err.message}`);
