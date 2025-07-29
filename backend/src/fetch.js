@@ -1,6 +1,7 @@
 const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args));
 
 const SCRAPER_API_KEY = '4884690a8ffa8209e924678ba8c17e6c'; // <--- Coloca aqui a tua chave da ScraperAPI
+const SCRAPEDO_TOKEN = 'ce5b103fcb1f4c35b806930ffe77bf8a545567f2118';
 
 const BASE_LISTING_URL = 'https://steamcommunity.com/market/listings/730';
 const BASE_SEARCH_URL = 'https://steamcommunity.com/market/search/render/';
@@ -12,13 +13,17 @@ function wrapWithScraperApi(steamUrl) {
   return `http://api.scraperapi.com/?api_key=${SCRAPER_API_KEY}&url=${encodeURIComponent(steamUrl)}`;
 }
 
+function wrapWithScrapeDo(steamUrl) {
+  return `http://api.scrape.do/?url=${encodeURIComponent(steamUrl)}&token=${SCRAPEDO_TOKEN}`;
+}
+
 /**
  * Faz fetch a uma página de listagens da Steam Market.
  */
 async function fetchPage(itemName, start = 0, count = 100) {
   const encodedItem = encodeURIComponent(itemName);
   const steamUrl = `${BASE_LISTING_URL}/${encodedItem}/render/?start=${start}&count=${count}&country=PT&language=portuguese&currency=3`;
-  const url = wrapWithScraperApi(steamUrl);
+  const url = wrapWithScrapeDo(steamUrl);
 
   console.log(`📦 A obter [${itemName}] de ${start} a ${start + count}...`);
 
@@ -47,7 +52,7 @@ async function fetchPage(itemName, start = 0, count = 100) {
  */
 async function fetchSearchPage(query, start = 0, count = 10) {
   const steamUrl = `${BASE_SEARCH_URL}?query=${encodeURIComponent(query)}&appid=730&start=${start}&count=${count}&country=PT&language=portuguese&currency=3`;
-  const url = wrapWithScraperApi(steamUrl);
+  const url = wrapWithScrapeDo(steamUrl);
 
   console.log(`🔍 Search: ${query} (start=${start}, count=${count})`);
 
