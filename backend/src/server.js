@@ -40,7 +40,7 @@ app.get('/api/search', async (req, res) => {
 
 app.get('/api/skin/:marketHashName', async (req, res) => {
   const { marketHashName } = req.params;
-  const data = await fetchPage(decodeURIComponent(marketHashName), 0); // ou mais se quiseres
+  const data = await fetchPage(decodeURIComponent(marketHashName), 0);
 
   if (!data || !data.results_html) {
     return res.status(500).json({ success: false, message: 'Erro ao obter HTML da Steam' });
