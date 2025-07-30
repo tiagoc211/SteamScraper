@@ -1,43 +1,55 @@
 .homepage {
   display: flex;
   flex-direction: column;
-  gap: 2.5rem; /* Aumenta o espaço vertical entre as seções */
+  gap: 2.5rem;
 }
 
-.hero-section {
-  text-align: center;
-  padding: 4rem 1rem; /* Mais padding vertical para impacto */
+.interactive-selection-area {
+  width: 100%;
+  min-height: 550px;
   background-color: var(--color-bg-light);
-  border-radius: 8px;
   border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.hero-section h2 {
+.preview-area {
+  flex-grow: 1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.skin-selection-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
   color: var(--color-text-bright);
-  font-size: 2.8rem; /* Fonte maior */
-  margin-bottom: 1rem;
 }
 
-.hero-section p {
+.skin-selection-header h2 {
+  font-size: 2.5rem;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.skin-selection-header p {
   font-size: 1.1rem;
   color: var(--color-text);
-  max-width: 600px;
-  margin: 0 auto;
+  text-align: center;
 }
 
-.search-section {
-  background-color: var(--color-bg-light);
-  padding: 2rem; /* Mais padding interno */
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
-}
-
-.filter-controls {
+.skin-selection-controls {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem; /* Mais espaço entre os controlos */
-  align-items: center;
-  justify-content: center; /* CENTRA OS CONTROLOS HORIZONTALMENTE */
+  gap: 1rem;
+  width: 100%;
+  max-width: 400px;
 }
 
 .custom-select {
@@ -48,53 +60,58 @@
   border-radius: 4px;
   font-family: inherit;
   font-size: 1rem;
-  flex-grow: 1; /* Permite que cresçam */
-  flex-basis: 220px; /* Define uma largura base consistente */
-  min-width: 200px;
-  height: 50px; /* Altura fixa para alinhar com o botão */
-  transition: border-color 0.2s;
+  flex-grow: 1;
+  height: 50px;
 }
 
-.custom-select:focus {
-  outline: none;
+.controls-area {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+  margin-top: 2rem;
+}
+
+.control-button {
+  height: 50px;
+  padding: 0 1.5rem;
+  background-color: var(--color-bg-dark);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.search-button {
+  background-color: var(--color-accent);
+  color: var(--color-bg-dark);
   border-color: var(--color-accent);
 }
 
-.custom-select:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* O search-bar foi removido, agora estilizamos o botão diretamente */
-.search-button {
-  display: flex; /* Para alinhar ícone e texto */
-  align-items: center;
-  gap: 0.75rem; /* Espaço entre ícone e texto */
-  
-  height: 50px; /* Mesma altura dos selects */
-  padding: 0 1.5rem; /* Padding horizontal */
-  
-  background-color: var(--color-accent);
-  color: var(--color-bg-dark);
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s, transform 0.2s;
-  
-  font-size: 1rem;
-  font-weight: 600; /* Texto a negrito */
-  flex-shrink: 0; /* Impede que o botão encolha */
+.control-button:hover {
+  border-color: var(--color-accent);
+  color: var(--color-text-bright);
 }
 
 .search-button:hover {
   background-color: #8dd1f9;
-  transform: translateY(-2px); /* Efeito de elevação subtil */
+  border-color: #8dd1f9;
+  color: var(--color-bg-dark);
 }
 
 .search-button:disabled {
   background-color: var(--color-bg-lighter);
+  border-color: var(--color-border);
+  color: var(--color-text);
   cursor: not-allowed;
-  transform: none;
 }
 
 .results-section {
@@ -103,7 +120,7 @@
 
 .loader, .no-results {
   text-align: center;
-  padding: 4rem; /* Mais padding para destaque */
+  padding: 4rem; /* Mais padding para destaquQe */
   font-size: 1.2rem;
   color: var(--color-text);
 }

@@ -1,138 +1,220 @@
-import React, { useState, useEffect } from 'react';
-import { FaSearch } from 'react-icons/fa';
+import React, { useState } from 'react';
+import { FaSearch, FaArrowLeft } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import './HomePage.css';
 
-// Funções e dados importados
-import { rifles, smgs, heavy, pistols } from '../data/Weapons';
+// Componentes e Dados
+import { rifles, smgs, heavy, pistols, knives } from '../data/Weapons';
 import * as rifleSkins from '../data/Rifles';
 import * as smgSkins from '../data/Smgs';
 import * as heavySkins from '../data/Heavy';
 import * as pistolSkins from '../data/Pistols';
+import * as knifeSkins from '../data/Knives';
 import { searchSkins } from '../api/Skins';
 import SkinCard from '../components/SkinCard';
+import RadialMenu from '../components/RadialMenu';
 
-// Objeto que agrega todas as skins para fácil acesso
-const allSkinsData = {
-  ...rifleSkins,
-  ...smgSkins,
-  ...heavySkins,
-  ...pistolSkins,
-};
+const allSkinsData = { ...rifleSkins, ...smgSkins, ...heavySkins, ...pistolSkins, ...knifeSkins };
 
-// Mapeamento fiável do nome da arma para a chave de dados
 const weaponToDataKeyMap = {
-    "AK-47": "ak47Skins", "AUG": "augSkins", "AWP": "awpSkins", "FAMAS": "famasSkins",
-    "G3SG1": "g3sg1Skins", "Galil AR": "galilARSkins", "M4A1-S": "m4a1sSkins",
-    "M4A4": "m4a4Skins", "SCAR-20": "scar20Skins", "SG 553": "sg553Skins", "SSG 08": "ssg08Skins",
-    "MAC-10": "mac10Skins", "MP5-SD": "mp5sdSkins", "MP7": "mp7Skins", "MP9": "mp9Skins",
-    "PP-Bizon": "ppBizonSkins", "P90": "p90Skins", "UMP-45": "ump45Skins",
-    "MAG-7": "mag7Skins", "Nova": "novaSkins", "Sawed-Off": "sawedOffSkins",
-    "XM1014": "xm1014Skins", "M249": "m249Skins", "Negev": "negevSkins",
-    "USP-S": "uspSkins", "Glock-18": "glock18Skins", "Desert Eagle": "desertEagleSkins",
-    "P250": "p250Skins", "Five-SeveN": "fiveSevenSkins", "CZ75-Auto": "cz75Skins",
-    "P2000": "p2000Skins", "Tec-9": "tec9Skins", "R8 Revolver": "r8Skins",
-    "Dual Berettas": "dualBerettasSkins",
-};
+    // Rifles
+    "AK-47": "ak47Skins",
+    "AUG": "augSkins",
+    "AWP": "awpSkins",
+    "FAMAS": "famasSkins",
+    "G3SG1": "g3sg1Skins",
+    "Galil AR": "galilARSkins",
+    "M4A1-S": "m4a1sSkins",
+    "M4A4": "m4a4Skins",
+    "SCAR-20": "scar20Skins",
+    "SG 553": "sg553Skins",
+    "SSG 08": "ssg08Skins",
 
+    // SMGs
+    "MAC-10": "mac10Skins",
+    "MP5-SD": "mp5sdSkins",
+    "MP7": "mp7Skins",
+    "MP9": "mp9Skins",
+    "PP-Bizon": "ppBizonSkins",
+    "P90": "p90Skins",
+    "UMP-45": "ump45Skins",
+
+    // Heavy
+    "MAG-7": "mag7Skins",
+    "Nova": "novaSkins",
+    "Sawed-Off": "sawedOffSkins",
+    "XM1014": "xm1014Skins",
+    "M249": "m249Skins",
+    "Negev": "negevSkins",
+
+    // Pistols
+    "USP-S": "uspSkins",
+    "Glock-18": "glock18Skins",
+    "Desert Eagle": "desertEagleSkins",
+    "P250": "p250Skins",
+    "Five-SeveN": "fiveSevenSkins",
+    "CZ75-Auto": "cz75Skins",
+    "P2000": "p2000Skins",
+    "Tec-9": "tec9Skins",
+    "R8 Revolver": "r8Skins",
+    "Dual Berettas": "dualBerettasSkins",
+
+    // Knives
+    "Bayonet": "bayonetSkins",
+    "Bowie Knife": "bowieKnifeSkins",
+    "Butterfly Knife": "butterflyKnifeSkins",
+    "Classic Knife": "classicKnifeSkins",
+    "Falchion Knife": "falchionKnifeSkins",
+    "Flip Knife": "flipKnifeSkins",
+    "Gut Knife": "gutKnifeSkins",
+    "Huntsman Knife": "huntsmanKnifeSkins",
+    "Karambit": "karambitSkins",
+    "Kukri Knife": "kukriKnifeSkins",
+    "M9 Bayonet": "m9BayonetSkins",
+    "Navaja Knife": "navajaKnifeSkins",
+    "Nomad Knife": "nomadKnifeSkins",
+    "Paracord Knife": "paracordKnifeSkins",
+    "Shadow Daggers": "shadowDaggersSkins",
+    "Skeleton Knife": "skeletonKnifeSkins",
+    "Stiletto Knife": "stilettoKnifeSkins",
+    "Survival Knife": "survivalKnifeSkins",
+    "Talon Knife": "talonKnifeSkins",
+    "Ursus Knife": "ursusKnifeSkins",
+};
 const getSkinsForWeapon = (weaponName) => {
   const dataKey = weaponToDataKeyMap[weaponName];
   if (!dataKey || !allSkinsData[dataKey]) return [];
   const weaponData = allSkinsData[dataKey];
-  return Object.values(weaponData).flat().map(skin => skin.name.split(' | ')[1]).sort();
+  const skinNames = Object.values(weaponData).flat().map(skin => skin.name.split(' | ')[1]);
+  return [...new Set(skinNames)].sort();
 };
 
+const categoryItems = [
+  { key: 'pistols', label: 'Pistol' },
+  { key: 'heavy', label: 'Heavy' },
+  { key: 'smgs', label: 'SMG' },
+  { key: 'rifles', label: 'Rifle' },
+  { key: 'knives', label: 'Knives' },
+];
+
+const weaponTypes = { rifles, smgs, heavy, pistols, knives };
+
 const HomePage = () => {
-  const [selectedType, setSelectedType] = useState('rifles');
+  const [selectionStep, setSelectionStep] = useState('category');
+  const [selectedType, setSelectedType] = useState(null);
   const [selectedWeapon, setSelectedWeapon] = useState('');
-  const [selectedSkin, setSelectedSkin] = useState(''); // Estado para a skin selecionada
-  const [skinList, setSkinList] = useState([]);
+  const [skinQuery, setSkinQuery] = useState('');
+  
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const weaponTypes = { rifles, smgs, heavy, pistols };
-
-  useEffect(() => {
-    if (selectedWeapon) {
-      setSkinList(getSkinsForWeapon(selectedWeapon));
-    } else {
-      setSkinList([]);
+  const handleBack = () => {
+    if (selectionStep === 'skin') {
+      setSelectedWeapon('');
+      setSkinQuery('');
+      setSelectionStep('weapon');
+    } else if (selectionStep === 'weapon') {
+      setSelectedType(null);
+      setSelectionStep('category');
     }
-    setSelectedSkin(''); // Limpa a skin ao trocar de arma
-  }, [selectedWeapon]);
+  };
+
+  const handleCategorySelect = (categoryKey) => {
+    if (!weaponTypes[categoryKey]) return;
+    setSelectedType(categoryKey);
+    setSelectionStep('weapon');
+  };
+
+  const handleWeaponSelect = (weaponName) => {
+    setSelectedWeapon(weaponName);
+    setSelectionStep('skin');
+  };
 
   const handleSearch = async () => {
-    if (!selectedWeapon || !selectedSkin) {
-      alert("Por favor, selecione uma arma e uma skin para pesquisar.");
+    if (!selectedWeapon || !skinQuery) {
+      alert("Por favor, selecione uma arma e uma skin.");
       return;
     }
     setLoading(true);
     setHasSearched(true);
     setResults([]);
-    const searchResults = await searchSkins(selectedWeapon, selectedSkin);
+    // A pesquisa usa sempre o `selectedWeapon` que tem o nome completo (ex: "Bowie Knife")
+    const searchResults = await searchSkins(selectedWeapon, skinQuery);
     setResults(searchResults);
     setLoading(false);
   };
+  
+  // Constrói os itens para o menu, mas ajusta o `label` para as facas
+  const weaponItems = selectedType 
+    ? weaponTypes[selectedType].map(w => ({
+        key: w, // O `key` mantém o nome completo (ex: "Bowie Knife")
+        label: w.replace(' Knife', ''), // O `label` remove " Knife" para exibição
+      }))
+    : [];
 
   return (
     <div className="homepage">
-      <section className="hero-section">
-        <h2>Encontre a sua Skin Perfeita</h2>
-        <p>Selecione uma arma e uma skin para ver os detalhes e preços em tempo real.</p>
-      </section>
-      
-      <section className="search-section">
-        <div className="filter-controls">
-          <select 
-            className="custom-select"
-            value={selectedType} 
-            onChange={e => {
-              setSelectedType(e.target.value);
-              setSelectedWeapon('');
-            }}
-          >
-            <option value="rifles">Rifles</option>
-            <option value="smgs">SMGs</option>
-            <option value="heavy">Heavy</option>
-            <option value="pistols">Pistolas</option>
-          </select>
+      <section className="interactive-selection-area">
+        <div className="preview-area">
+          {selectionStep === 'category' && (
+            <RadialMenu
+              title="Categoria"
+              items={categoryItems}
+              onSelect={handleCategorySelect}
+              onHover={() => {}}
+            />
+          )}
 
-          <select 
-            className="custom-select"
-            value={selectedWeapon} 
-            onChange={e => setSelectedWeapon(e.target.value)}
-            disabled={!selectedType}
-          >
-            <option value="">Selecione a arma</option>
-            {selectedType && weaponTypes[selectedType].map(weapon => (
-              <option key={weapon} value={weapon}>{weapon}</option>
-            ))}
-          </select>
-          
-          {/* O INPUT FOI SUBSTITUÍDO POR ESTE SELECT */}
-          <select
-            className="custom-select"
-            value={selectedSkin}
-            onChange={e => setSelectedSkin(e.target.value)}
-            disabled={!selectedWeapon || skinList.length === 0}
-          >
-            <option value="">Selecione a skin</option>
-            {skinList.map(skinName => (
-              <option key={skinName} value={skinName}>{skinName}</option>
-            ))}
-          </select>
+          {selectionStep === 'weapon' && (
+            <RadialMenu
+              title={selectedType}
+              items={weaponItems}
+              onSelect={handleWeaponSelect}
+              onHover={() => {}}
+            />
+          )}
 
-          <button className="search-button" onClick={handleSearch} disabled={loading || !selectedSkin}>
-            {loading ? '...' : <FaSearch />}
-            <span className="search-button-text">Pesquisar</span>
-          </button>
+          {selectionStep === 'skin' && (
+            <div className="skin-selection-container">
+              <div className="skin-selection-header">
+                  <h2>{selectedWeapon}</h2>
+                  <p>Selecione a skin desejada</p>
+              </div>
+              <div className="skin-selection-controls">
+                <select 
+                    className="custom-select" 
+                    value={skinQuery}
+                    onChange={e => setSkinQuery(e.target.value)}
+                >
+                    <option value="">Selecione uma skin...</option>
+                    {getSkinsForWeapon(selectedWeapon).map(skinName => (
+                        <option key={skinName} value={skinName}>{skinName}</option>
+                    ))}
+                </select>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        <div className="controls-area">
+          {selectionStep !== 'category' && (
+            <button onClick={handleBack} className="control-button back-button">
+              <FaArrowLeft /> Voltar
+            </button>
+          )}
+          {selectionStep === 'skin' && (
+            <button className="control-button search-button" onClick={handleSearch} disabled={loading || !skinQuery}>
+              {loading ? '...' : <FaSearch />}
+              <span>Pesquisar</span>
+            </button>
+          )}
         </div>
       </section>
 
+      {/* Secção de Resultados (sem alterações) */}
       <section className="results-section">
         {loading && <div className="loader">A Carregar...</div>}
-        
         {!loading && results.length > 0 && (
           <div className="results-grid">
             {results.map((skin) => (
@@ -146,10 +228,9 @@ const HomePage = () => {
             ))}
           </div>
         )}
-        
         {!loading && results.length === 0 && hasSearched && (
           <div className="no-results">
-            <p>Nenhuma skin encontrada para os critérios selecionados.</p>
+            <p>Nenhuma skin encontrada.</p>
           </div>
         )}
       </section>
