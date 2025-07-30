@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { getSkinDetails } from '../api/Skins';
+import SkinCardListening from '../components/SkinCardListening';
 import './SkinDetailPage.css';
 
 const SkinDetailPage = () => {
@@ -19,7 +20,7 @@ const SkinDetailPage = () => {
 
       if (data && data.success) {
         setListings(data.listings || []);
-        console.log("LISTINGS RECEBIDOS:", data.listings);
+        //console.log("LISTINGS RECEBIDOS:", data.listings);
 
         for (const listing of data.listings) {
           const inspectUrl = listing.inspectLink;
@@ -70,50 +71,18 @@ const SkinDetailPage = () => {
 
       <div className="skin-listings-column">
         <h2>Listings no Mercado</h2>
-        <div className="listings-table-container">
-          <table className="listings-table">
-            <thead>
-              <tr>
-                <th>Skin</th>
-                <th>Preço</th>
-                <th className="placeholder-data">Float</th>
-                <th className="placeholder-data">Pattern</th>
-                <th>Ação</th>
-              </tr>
-            </thead>
-            <tbody>
-              {listings.length > 0 ? (
-                listings.map(listing => {
-                  const item = inspectedData[listing.listingid];
-                  return (
-                    <tr key={listing.listingid}>
-                      <td>
-                        <img src={listing.image} alt="Skin" width="64" /><br />
-                        {listing.name}
-                      </td>
-                      <td>{listing.price}</td>
-                      <td>{item ? item.floatvalue.toFixed(4) : 'A carregar...'}</td>
-                      <td>{item ? item.paintseed : 'A carregar...'}</td>
-                      <td>
-                        <a 
-                          href={listing.inspectLink} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="buy-button"
-                        >
-                          Inspecionar
-                        </a>
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan="5">Nenhum listing encontrado.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        <div className="skin-cards-grid">
+          {listings.length > 0 ? (
+            listings.map(listing => (
+              <SkinCardListening
+                key={listing.listingid}
+                listing={listing}
+                inspectedData={inspectedData}
+              />
+            ))
+          ) : (
+            <div>Nenhum listing encontrado.</div>
+          )}
         </div>
       </div>
     </div>

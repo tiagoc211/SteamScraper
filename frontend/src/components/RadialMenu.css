@@ -31,10 +31,11 @@
 }
 
 .slice-path {
-  fill: rgba(42, 71, 94, 0.8); /* Cor da fatia */
-  stroke: var(--color-bg-dark);
-  stroke-width: 0.015; /* Linha de separação */
-  transition: fill 0.2s ease-in-out;
+  fill: rgba(255, 255, 255, 0.04);
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 0.015;
+  backdrop-filter: blur(4px);
+  transition: fill 0.3s ease;
 }
 
 .radial-menu-slice-group {
@@ -75,4 +76,14 @@
 
 .radial-menu-slice-group.disabled .slice-text {
   fill: #5a6978;
+}
+
+.radial-menu-svg {
+  transform: rotate(-90deg);
+  transform-style: preserve-3d;
+}
+
+.radial-menu-slice-group {
+  transform-style: preserve-3d;
+  transform-origin: center;
 }

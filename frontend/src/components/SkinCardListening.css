@@ -1,0 +1,118 @@
+.skin-card {
+  background: #1e1f26;
+  color: white;
+  border-radius: 10px;
+  padding: 12px;
+  width: 300px;
+  margin: 10px;
+  box-shadow: 0 0 6px rgba(0,0,0,0.6);
+  display: flex;
+  flex-direction: column;
+  font-family: sans-serif;
+}
+
+.skin-header {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.skin-wear {
+  font-size: 13px;
+  color: #aaa;
+  margin-bottom: 8px;
+}
+
+.skin-image-container {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.skin-image {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.skin-price {
+  font-size: 20px;
+  font-weight: bold;
+  color: #76ff03;
+  text-align: center;
+  margin: 6px 0;
+}
+
+.skin-bar {
+  height: 6px;
+  background: #444;
+  border-radius: 3px;
+  margin: 6px 0;
+  position: relative;
+}
+
+.float-bar {
+  height: 100%;
+  background: linear-gradient(to right, #00e676, #ff1744);
+  border-radius: 3px 0 0 3px;
+}
+
+.float-gradient {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(to right, #00e676, #ff1744);
+  border-radius: 3px;
+}
+
+.float-indicator {
+  position: absolute;
+  top: -4px;
+  width: 8px;
+  height: 14px;
+  background: white;
+  border-radius: 2px;
+  transform: translateX(-50%);
+}
+
+
+.skin-float-pattern {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin: 6px 0;
+}
+
+.stickers-container {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+  justify-content: center;
+}
+
+.sticker-img {
+  width: 40px;
+  height: 40px;
+}
+
+.no-stickers {
+  font-size: 12px;
+  color: #777;
+}
+
+.skin-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  font-size: 13px;
+}
+
+
+.inspect-btn {
+  padding: 6px 10px;
+  background: #03a9f4;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: bold;
+  font-size: 12px;
+}

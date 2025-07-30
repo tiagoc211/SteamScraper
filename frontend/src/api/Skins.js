@@ -34,6 +34,7 @@ export const getSkinDetails = async (marketHashName) => {
   try {
     // Usamos encodeURIComponent para garantir que caracteres especiais na URL são tratados
     const response = await apiClient.get(`/skin/${encodeURIComponent(marketHashName)}`);
+    console.log("debug: " + response.data);
     return response.data;
   } catch (error) {
     console.error("Erro ao obter detalhes da skin:", error);
