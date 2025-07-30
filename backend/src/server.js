@@ -11,8 +11,18 @@ const PORT = 3001; // Garanta que esta é a porta do seu backend
 // Endpoint para pesquisa
 app.get('/api/search', async (req, res) => {
   const { weapon, query } = req.query;
-  const searchQuery = `${weapon || ''} ${query || ''}`;
-  
+
+  // 1. Juntar os parâmetros de pesquisa numa única string
+  let initialSearch = `${weapon || ''} ${query || ''}`;
+
+  // 2. Agora, limpar a palavra "knife" da string completa e remover espaços extras
+  const searchQuery = initialSearch.replace(/knife/gi, '').trim();
+
+  // Se a pesquisa ficar vazia após a limpeza, pode optar por não pesquisar
+  if (!searchQuery) {
+    return res.json({ results: [] });
+  }
+
   const data = await fetchSearchPage(searchQuery, 0, 100);
   if (!data || !data.results_html) {
     return res.json({ results: [] });
@@ -25,7 +35,7 @@ app.get('/api/search', async (req, res) => {
     const name = $(el).find('span.market_listing_item_name').text().trim();
     const price = $(el).find('span.normal_price span.market_listing_price').text().trim();
     const iconUrl = $(el).find('img.market_listing_item_img').attr('src');
-    
+
     results.push({
       market_hash_name: name, // O nome completo é o melhor identificador
       name: name.split(' | ')[1]?.split(' (')[0] || name,
