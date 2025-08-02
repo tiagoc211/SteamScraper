@@ -16,6 +16,22 @@ import RadialMenu from '../components/RadialMenu';
 
 const allSkinsData = { ...rifleSkins, ...smgSkins, ...heavySkins, ...pistolSkins, ...knifeSkins };
 
+// CORREÇÃO: Função para gerar o URL da imagem dinamicamente
+const getWeaponImageUrl = (weaponName) => {
+  if (!weaponName) return null;
+  // Substitui espaços por underscores (ex: "Desert Eagle" -> "Desert_Eagle")
+  const formattedName = weaponName.replace(/ /g, '_');
+  return `https://www.csgodatabase.com/images/weapons/webp/${formattedName}.webp`;
+};
+
+const glowColorMap = {
+    rifles: '#ff4d4d',    // Vermelho
+    pistols: '#4da6ff',  // Azul
+    smgs: '#ffff4d',     // Amarelo
+    heavy: '#ff944d',    // Laranja
+    knives: '#bf4dff',   // Roxo
+};
+
 const weaponToDataKeyMap = {
     // Rifles
     "AK-47": "ak47Skins",
@@ -110,65 +126,41 @@ const SkinSelectorPage = () => {
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const [hoveredItem, setHoveredItem] = useState(null);
-  const [backgroundStyle, setBackgroundStyle] = useState({});
+  const [glowImageUrl, setGlowImageUrl] = useState(null);
+  const [glowColor, setGlowColor] = useState('transparent');
 
-  const getRepresentativeImage = (itemKey, type = 'category') => {
-    let dataKeyForSkins;
-    if (type === 'category') {
-        const firstWeaponName = weaponTypes[itemKey]?.[0];
-        if (!firstWeaponName) return null;
-        dataKeyForSkins = weaponToDataKeyMap[firstWeaponName];
-    } else {
-        dataKeyForSkins = weaponToDataKeyMap[itemKey];
-    }
-
-    if (!dataKeyForSkins || !allSkinsData[dataKeyForSkins]) return null;
-    
-    const allAvailableSkins = Object.values(allSkinsData[dataKeyForSkins]).flat();
-    const representativeSkin = allAvailableSkins.find(skin => skin && skin.icon_url);
-    
-    if (representativeSkin) {
-        // CORREÇÃO: Usar o URL diretamente, apenas garantindo HTTPS.
-        // O sufixo /300fx300f estava a quebrar o URL.
-        const correctUrl = representativeSkin.icon_url.replace(/^http:/, 'https');
-        return correctUrl;
-    }
-    
-    return null;
+  const updateGlow = (imageUrl, color) => {
+    setGlowImageUrl(imageUrl);
+    setGlowColor(color || 'transparent');
   };
 
   const handleCategoryHover = (key) => {
-    setHoveredItem(key);
-    const imageUrl = key ? getRepresentativeImage(key, 'category') : null;
-    
-    if (imageUrl) {
-      console.log(`[Categoria: ${key}] URL da Imagem:`, imageUrl);
-      setBackgroundStyle({
-        backgroundImage: `linear-gradient(rgba(27, 40, 56, 0.85), rgba(27, 40, 56, 0.85)), url(${imageUrl})`,
-        backgroundSize: 'contain',
-        backgroundPosition: 'left center',
-        backgroundRepeat: 'no-repeat',
-      });
+    if (key) {
+      let representativeWeapon;
+      switch (key) {
+        case 'rifles': representativeWeapon = 'AK-47'; break;
+        case 'smgs': representativeWeapon = 'MP9'; break;
+        case 'heavy': representativeWeapon = 'XM1014'; break;
+        case 'pistols': representativeWeapon = 'Glock-18'; break;
+        case 'knives': representativeWeapon = 'Karambit'; break;
+        default: representativeWeapon = null;
+      }
+      updateGlow(getWeaponImageUrl(representativeWeapon), glowColorMap[key]);
     } else {
-      setBackgroundStyle({});
+      updateGlow(null);
     }
   };
 
   const handleWeaponHover = (weaponName) => {
-    setHoveredItem(weaponName);
-    const imageUrl = weaponName ? getRepresentativeImage(weaponName, 'weapon') : null;
-
-    if (imageUrl) {
-        console.log(`[Arma: ${weaponName}] URL da Imagem:`, imageUrl);
-        setBackgroundStyle({
-            backgroundImage: `linear-gradient(rgba(27, 40, 56, 0.85), rgba(27, 40, 56, 0.85)), url('${imageUrl}')`,
-            backgroundSize: 'contain',
-            backgroundPosition: 'left center',
-            backgroundRepeat: 'no-repeat',
-        });
+    if (weaponName) {
+      const imageUrl = getWeaponImageUrl(weaponName);
+      if (imageUrl) {
+        updateGlow(imageUrl, glowColorMap[selectedType]);
+      } else {
+        updateGlow(null);
+      }
     } else {
-        setBackgroundStyle({});
+      updateGlow(null);
     }
   };
 
@@ -177,11 +169,11 @@ const SkinSelectorPage = () => {
       setSelectedWeapon('');
       setSkinQuery('');
       setSelectionStep('weapon');
-      setBackgroundStyle({});
+      updateGlow(null);
     } else if (selectionStep === 'weapon') {
       setSelectedType(null);
       setSelectionStep('category');
-      setBackgroundStyle({});
+      updateGlow(null);
     }
   };
 
@@ -189,13 +181,13 @@ const SkinSelectorPage = () => {
     if (!weaponTypes[categoryKey]) return;
     setSelectedType(categoryKey);
     setSelectionStep('weapon');
-    handleCategoryHover(null);
+    updateGlow(null);
   };
 
   const handleWeaponSelect = (weaponName) => {
     setSelectedWeapon(weaponName);
     setSelectionStep('skin');
-    setBackgroundStyle({});
+    updateGlow(null);
   };
 
   const handleSearch = async () => {
@@ -220,9 +212,20 @@ const SkinSelectorPage = () => {
 
   return (
     <div className="skinselectorpage">
-      <section className="interactive-selection-area" style={backgroundStyle}>
+      <section className="interactive-selection-area">
         
-        {selectionStep === 'category' && !hoveredItem && (
+        {glowImageUrl && (
+          <div className="weapon-glow-container">
+            <img
+              src={glowImageUrl}
+              alt="Weapon Preview"
+              className="weapon-glow-image"
+              style={{ '--glow-color': glowColor }}
+            />
+          </div>
+        )}
+
+        {selectionStep === 'category' && !glowImageUrl && (
             <div className="guidance-container">
                 <p>Selecione uma categoria</p>
                 <div className="arrow" />
@@ -286,7 +289,6 @@ const SkinSelectorPage = () => {
         </div>
       </section>
 
-      {/* Secção de Resultados (sem alterações) */}
       <section className="results-section">
         {loading && <div className="loader">A Carregar...</div>}
         {!loading && results.length > 0 && (
