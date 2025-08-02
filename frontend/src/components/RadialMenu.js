@@ -38,7 +38,18 @@ const RadialMenu = ({ title, items, onSelect, onHover }) => {
             `L 0 0`,
           ].join(' ');
 
-          const textAngle = (startPercent + slicePercent / 2) * 360;
+          // Ângulo para posicionar e rodar o texto
+          const textAngleDegrees = (startPercent + endPercent) / 2 * 360;
+          const textAngleRadians = textAngleDegrees * (Math.PI / 180);
+
+          // Posição do texto (num raio de 0.65)
+          const textX = Math.cos(textAngleRadians) * 0.65;
+          const textY = Math.sin(textAngleRadians) * 0.65;
+          
+          // Lógica para garantir que o texto não fica de cabeça para baixo
+          const isFlipped = textAngleDegrees > 180 && textAngleDegrees < 360;
+          const rotation = isFlipped ? textAngleDegrees + 180 : textAngleDegrees;
+          const anchor = isFlipped ? 'end' : 'start';
 
           return (
             <motion.g
@@ -66,16 +77,20 @@ const RadialMenu = ({ title, items, onSelect, onHover }) => {
               <path className="slice-path" d={pathData} />
               <text
                 className="slice-text"
-                transform={`rotate(${textAngle})`}
+                x={textX}
+                y={textY}
+                dy="0.03em" // Ajuste fino da linha de base
+                textAnchor={anchor}
+                transform={`rotate(${rotation}, ${textX}, ${textY})`}
+                // CORREÇÃO: Evita que o texto desapareça durante a animação de hover
+                style={{ willChange: 'transform' }}
               >
-                <tspan x="0.65" dy="0.03em" transform="rotate(90)">
-                  {item.label}
-                </tspan>
+                {item.label}
               </text>
             </motion.g>
           );
         })}
-      </motion.svg>
+      </motion.svg> 
     </div>
   );
 };

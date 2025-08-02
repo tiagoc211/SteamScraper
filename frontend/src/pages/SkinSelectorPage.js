@@ -113,7 +113,6 @@ const SkinSelectorPage = () => {
   const [hoveredItem, setHoveredItem] = useState(null);
   const [backgroundStyle, setBackgroundStyle] = useState({});
 
-  // CORREÇÃO: Função atualizada para ser mais robusta e usar a mesma lógica do SkinCard.
   const getRepresentativeImage = (itemKey, type = 'category') => {
     let dataKeyForSkins;
     if (type === 'category') {
@@ -130,11 +129,10 @@ const SkinSelectorPage = () => {
     const representativeSkin = allAvailableSkins.find(skin => skin && skin.icon_url);
     
     if (representativeSkin) {
-        // Usa a mesma lógica do SkinCard para obter um URL de alta qualidade e seguro
-        const highQualityUrl = representativeSkin.icon_url
-            .replace(/^http:/, 'https') // Força HTTPS
-            .replace('96fx96f', '300fx300f'); // Pede imagem maior
-        return highQualityUrl;
+        // CORREÇÃO: Usar o URL diretamente, apenas garantindo HTTPS.
+        // O sufixo /300fx300f estava a quebrar o URL.
+        const correctUrl = representativeSkin.icon_url.replace(/^http:/, 'https');
+        return correctUrl;
     }
     
     return null;
@@ -145,7 +143,7 @@ const SkinSelectorPage = () => {
     const imageUrl = key ? getRepresentativeImage(key, 'category') : null;
     
     if (imageUrl) {
-      console.log(`[Categoria: ${key}] URL da Imagem:`, imageUrl); // Log para depuração
+      console.log(`[Categoria: ${key}] URL da Imagem:`, imageUrl);
       setBackgroundStyle({
         backgroundImage: `linear-gradient(rgba(27, 40, 56, 0.85), rgba(27, 40, 56, 0.85)), url(${imageUrl})`,
         backgroundSize: 'contain',
@@ -162,7 +160,7 @@ const SkinSelectorPage = () => {
     const imageUrl = weaponName ? getRepresentativeImage(weaponName, 'weapon') : null;
 
     if (imageUrl) {
-        console.log(`[Arma: ${weaponName}] URL da Imagem:`, imageUrl); // Log para depuração
+        console.log(`[Arma: ${weaponName}] URL da Imagem:`, imageUrl);
         setBackgroundStyle({
             backgroundImage: `linear-gradient(rgba(27, 40, 56, 0.85), rgba(27, 40, 56, 0.85)), url('${imageUrl}')`,
             backgroundSize: 'contain',

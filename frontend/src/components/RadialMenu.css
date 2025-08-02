@@ -1,6 +1,6 @@
 .radial-menu-container {
   position: relative;
-  width: 650px; /* Aumentado para acomodar texto longo */
+  width: 650px;
   height: 650px;
   display: flex;
   justify-content: center;
@@ -26,8 +26,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  /* Rotação inicial para alinhar a primeira fatia ao topo */
-  transform: rotate(-90deg); 
+  transform: rotate(-90deg);
 }
 
 .slice-path {
@@ -47,24 +46,23 @@
 }
 
 .slice-text {
-  /* Tamanho da fonte ajustado para a escala do SVG */
-  font-size: 0.075px; 
+  font-size: 0.07px;
   font-family: 'Poppins', sans-serif;
   fill: var(--color-text-bright);
   font-weight: 500;
-  text-anchor: middle; /* Centraliza o texto no seu caminho */
   text-transform: uppercase;
   pointer-events: none;
-  letter-spacing: 0.008px;
+  letter-spacing: 0.005px;
   transition: fill 0.2s ease-in-out;
+  /* A propriedade 'will-change' foi removida, pois a solução agora está no style do componente. */
 }
 
 .radial-menu-slice-group:hover .slice-text {
-  fill: var(--color-bg-dark);
-  font-weight: 600;
+  fill: var(--color-text-bright);
+  font-weight: 700;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
 }
 
-/* Estado Desativado */
 .radial-menu-slice-group.disabled {
   pointer-events: none;
   cursor: not-allowed;
