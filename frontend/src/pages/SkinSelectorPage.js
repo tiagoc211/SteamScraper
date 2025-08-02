@@ -113,15 +113,17 @@ const SkinSelectorPage = () => {
         const randomWeapon = weaponsInCategory[randomIndex];
         updateGlow(getWeaponImageUrl(randomWeapon), glowColorMap[key]);
       }
-    } 
-    // CORREÇÃO: A chamada para updateGlow(null) foi removida do 'else' para "fixar" a imagem.
+    } else {
+      updateGlow(null);
+    }
   };
   
   const handleWeaponHover = (weaponName) => {
     if (weaponName) {
       updateGlow(getWeaponImageUrl(weaponName), glowColorMap[selectedType]);
+    } else {
+      updateGlow(null);
     }
-     // CORREÇÃO: A chamada para updateGlow(null) foi removida do 'else' para "fixar" a imagem.
   };
   
   const handleSkinHover = (skinName) => {
@@ -144,7 +146,7 @@ const SkinSelectorPage = () => {
     if (!weaponTypes[categoryKey]) return;
     setSelectedType(categoryKey);
     setSelectionStep('weapon');
-    updateGlow(null); // Limpa ao selecionar para começar a nova fase
+    updateGlow(null);
   };
   
   const handleBack = () => {
@@ -182,96 +184,98 @@ const SkinSelectorPage = () => {
 
   return (
     <div className="skinselectorpage">
-      <section className="interactive-selection-area">
-        
-        {selectionStep !== 'skin' && (
-          <>
-            {glowImageUrl && (
-              <div className="weapon-glow-container">
-                <img src={glowImageUrl} alt="Weapon Preview" className="weapon-glow-image" style={{'--glow-color': glowColor}}/>
-              </div>
-            )}
-            {selectionStep === 'category' && !glowImageUrl && (
-                <div className="guidance-container">
-                    <p>Selecione uma categoria</p>
-                    <div className="arrow" />
-                    <div className="arrow" />
-                </div>
-            )}
-            <div className="preview-area">
-              {selectionStep === 'category' && (
-                <RadialMenu title="Categoria" items={categoryItems} onSelect={handleCategorySelect} onHover={handleCategoryHover} />
-              )}
-              {selectionStep === 'weapon' && (
-                <RadialMenu title={selectedType} items={weaponItems} onSelect={handleWeaponSelect} onHover={handleWeaponHover} />
-              )}
-            </div>
-          </>
-        )}
-
-        {selectionStep === 'skin' && (
-          <div className="skin-selection-area-split">
-            <div className="weapon-glow-container skin-preview">
+      <div className="page-content-wrapper">
+        <section className="interactive-selection-area">
+          
+          {selectionStep !== 'skin' && (
+            <>
               {glowImageUrl && (
-                <img src={glowImageUrl} alt="Skin Preview" className="weapon-glow-image" style={{'--glow-color': glowColor}}/>
+                <div className="weapon-glow-container">
+                  <img src={glowImageUrl} alt="Weapon Preview" className="weapon-glow-image" style={{'--glow-color': glowColor}}/>
+                </div>
               )}
-            </div>
-            <div className="skin-selection-container">
-              <div className="skin-selection-header">
-                  <h2>{selectedWeapon}</h2>
-                  <p>Selecione a skin desejada</p>
-              </div>
-              <div className="custom-skin-dropdown">
-                <button className="dropdown-skin-toggle" onClick={() => setIsSkinDropdownOpen(!isSkinDropdownOpen)}>
-                  {skinQuery || 'Selecione uma skin...'}
-                  <span className="arrow">{isSkinDropdownOpen ? '▲' : '▼'}</span>
-                </button>
-                {isSkinDropdownOpen && (
-                  <ul className="dropdown-skin-list">
-                    {getSkinsForWeapon(selectedWeapon).map(skinName => (
-                      <li key={skinName} onClick={() => handleSkinSelect(skinName)} onMouseEnter={() => handleSkinHover(skinName)}>
-                        {skinName}
-                      </li>
-                    ))}
-                  </ul>
+              {selectionStep === 'category' && !glowImageUrl && (
+                  <div className="guidance-container">
+                      <p>Selecione uma categoria</p>
+                      <div className="arrow" />
+                      <div className="arrow" />
+                  </div>
+              )}
+              <div className="preview-area">
+                {selectionStep === 'category' && (
+                  <RadialMenu title="Categoria" items={categoryItems} onSelect={handleCategorySelect} onHover={handleCategoryHover} />
+                )}
+                {selectionStep === 'weapon' && (
+                  <RadialMenu title={selectedType} items={weaponItems} onSelect={handleWeaponSelect} onHover={handleWeaponHover} />
                 )}
               </div>
-            </div>
-          </div>
-        )}
-        
-        <div className="controls-area">
-          {selectionStep !== 'category' && (
-            <button onClick={handleBack} className="control-button back-button">
-              <FaArrowLeft /> Voltar
-            </button>
+            </>
           )}
-          {selectionStep === 'skin' && (
-            <button className="control-button search-button" onClick={handleSearch} disabled={loading || !skinQuery}>
-              {loading ? '...' : <FaSearch />}
-              <span>Pesquisar</span>
-            </button>
-          )}
-        </div>
-      </section>
 
-      <section className="results-section">
-        {loading && <div className="loader">A Carregar...</div>}
-        {!loading && results.length > 0 && (
-          <div className="results-grid">
-            {results.map((skin) => (
-              <Link key={skin.market_hash_name} to={`/skin/${encodeURIComponent(skin.market_hash_name)}`} className="skin-card-link">
-                <SkinCard skin={skin} />
-              </Link>
-            ))}
+          {selectionStep === 'skin' && (
+            <div className="skin-selection-area-split">
+              <div className="weapon-glow-container skin-preview">
+                {glowImageUrl && (
+                  <img src={glowImageUrl} alt="Skin Preview" className="weapon-glow-image" style={{'--glow-color': glowColor}}/>
+                )}
+              </div>
+              <div className="skin-selection-container">
+                <div className="skin-selection-header">
+                    <h2>{selectedWeapon}</h2>
+                    <p>Selecione a skin desejada</p>
+                </div>
+                <div className="custom-skin-dropdown">
+                  <button className="dropdown-skin-toggle" onClick={() => setIsSkinDropdownOpen(!isSkinDropdownOpen)}>
+                    {skinQuery || 'Selecione uma skin...'}
+                    <span className="arrow">{isSkinDropdownOpen ? '▲' : '▼'}</span>
+                  </button>
+                  {isSkinDropdownOpen && (
+                    <ul className="dropdown-skin-list">
+                      {getSkinsForWeapon(selectedWeapon).map(skinName => (
+                        <li key={skinName} onClick={() => handleSkinSelect(skinName)} onMouseEnter={() => handleSkinHover(skinName)}>
+                          {skinName}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div className="controls-area">
+            {selectionStep !== 'category' && (
+              <button onClick={handleBack} className="control-button back-button">
+                <FaArrowLeft /> Voltar
+              </button>
+            )}
+            {selectionStep === 'skin' && (
+              <button className="control-button search-button" onClick={handleSearch} disabled={loading || !skinQuery}>
+                {loading ? '...' : <FaSearch />}
+                <span>Pesquisar</span>
+              </button>
+            )}
           </div>
-        )}
-        {!loading && results.length === 0 && hasSearched && (
-          <div className="no-results">
-            <p>Nenhuma skin encontrada.</p>
-          </div>
-        )}
-      </section>
+        </section>
+
+        <section className="results-section">
+          {loading && <div className="loader">A Carregar...</div>}
+          {!loading && results.length > 0 && (
+            <div className="results-grid">
+              {results.map((skin) => (
+                <Link key={skin.market_hash_name} to={`/skin/${encodeURIComponent(skin.market_hash_name)}`} className="skin-card-link">
+                  <SkinCard skin={skin} />
+                </Link>
+              ))}
+            </div>
+          )}
+          {!loading && results.length === 0 && hasSearched && (
+            <div className="no-results">
+              <p>Nenhuma skin encontrada.</p>
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 };
