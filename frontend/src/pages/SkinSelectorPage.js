@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { FaSearch, FaArrowLeft } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import './SkinSelectorPage.css';
@@ -24,85 +24,48 @@ const getWeaponImageUrl = (weaponName) => {
   return `https://www.csgodatabase.com/images/weapons/webp/${formattedName}.webp`;
 };
 
-const getSkinImageUrl = (weapon, skin) => {
+const getSkinImageUrl = (weapon, skin, type) => {
     if (!weapon || !skin) return null;
     const formattedWeapon = formatForUrl(weapon);
     const formattedSkin = formatForUrl(skin);
+    
+    if (type === 'knives') {
+        return `https://www.csgodatabase.com/images/knives/webp/${formattedWeapon}_${formattedSkin}.webp`;
+    }
     return `https://www.csgodatabase.com/images/skins/webp/${formattedWeapon}_${formattedSkin}.webp`;
 };
 
 const glowColorMap = {
-    rifles: '#ff4d4d',    // Vermelho
-    pistols: '#4da6ff',  // Azul
-    smgs: '#ffff4d',     // Amarelo
-    heavy: '#ff944d',    // Laranja
-    knives: '#bf4dff',   // Roxo
+    rifles: '#ff4d4d',
+    pistols: '#4da6ff',
+    smgs: '#ffff4d',
+    heavy: '#ff944d',
+    knives: '#bf4dff',
 };
 
 const weaponToDataKeyMap = {
     // Rifles
-    "AK-47": "ak47Skins",
-    "AUG": "augSkins",
-    "AWP": "awpSkins",
-    "FAMAS": "famasSkins",
-    "G3SG1": "g3sg1Skins",
-    "Galil AR": "galilARSkins",
-    "M4A1-S": "m4a1sSkins",
-    "M4A4": "m4a4Skins",
-    "SCAR-20": "scar20Skins",
-    "SG 553": "sg553Skins",
-    "SSG 08": "ssg08Skins",
-
+    "AK-47": "ak47Skins", "AUG": "augSkins", "AWP": "awpSkins", "FAMAS": "famasSkins",
+    "G3SG1": "g3sg1Skins", "Galil AR": "galilARSkins", "M4A1-S": "m4a1sSkins",
+    "M4A4": "m4a4Skins", "SCAR-20": "scar20Skins", "SG 553": "sg553Skins", "SSG 08": "ssg08Skins",
     // SMGs
-    "MAC-10": "mac10Skins",
-    "MP5-SD": "mp5sdSkins",
-    "MP7": "mp7Skins",
-    "MP9": "mp9Skins",
-    "PP-Bizon": "ppBizonSkins",
-    "P90": "p90Skins",
-    "UMP-45": "ump45Skins",
-
+    "MAC-10": "mac10Skins", "MP5-SD": "mp5sdSkins", "MP7": "mp7Skins", "MP9": "mp9Skins",
+    "PP-Bizon": "ppBizonSkins", "P90": "p90Skins", "UMP-45": "ump45Skins",
     // Heavy
-    "MAG-7": "mag7Skins",
-    "Nova": "novaSkins",
-    "Sawed-Off": "sawedOffSkins",
-    "XM1014": "xm1014Skins",
-    "M249": "m249Skins",
-    "Negev": "negevSkins",
-
+    "MAG-7": "mag7Skins", "Nova": "novaSkins", "Sawed-Off": "sawedOffSkins",
+    "XM1014": "xm1014Skins", "M249": "m249Skins", "Negev": "negevSkins",
     // Pistols
-    "USP-S": "uspSkins",
-    "Glock-18": "glock18Skins",
-    "Desert Eagle": "desertEagleSkins",
-    "P250": "p250Skins",
-    "Five-SeveN": "fiveSevenSkins",
-    "CZ75-Auto": "cz75Skins",
-    "P2000": "p2000Skins",
-    "Tec-9": "tec9Skins",
-    "R8 Revolver": "r8Skins",
-    "Dual Berettas": "dualBerettasSkins",
-
+    "USP-S": "uspSkins", "Glock-18": "glock18Skins", "Desert Eagle": "desertEagleSkins",
+    "P250": "p250Skins", "Five-SeveN": "fiveSevenSkins", "CZ75-Auto": "cz75Skins",
+    "P2000": "p2000Skins", "Tec-9": "tec9Skins", "R8 Revolver": "r8Skins", "Dual Berettas": "dualBerettasSkins",
     // Knives
-    "Bayonet": "bayonetSkins",
-    "Bowie Knife": "bowieKnifeSkins",
-    "Butterfly Knife": "butterflyKnifeSkins",
-    "Classic Knife": "classicKnifeSkins",
-    "Falchion Knife": "falchionKnifeSkins",
-    "Flip Knife": "flipKnifeSkins",
-    "Gut Knife": "gutKnifeSkins",
-    "Huntsman Knife": "huntsmanKnifeSkins",
-    "Karambit": "karambitSkins",
-    "Kukri Knife": "kukriKnifeSkins",
-    "M9 Bayonet": "m9BayonetSkins",
-    "Navaja Knife": "navajaKnifeSkins",
-    "Nomad Knife": "nomadKnifeSkins",
-    "Paracord Knife": "paracordKnifeSkins",
-    "Shadow Daggers": "shadowDaggersSkins",
-    "Skeleton Knife": "skeletonKnifeSkins",
-    "Stiletto Knife": "stilettoKnifeSkins",
-    "Survival Knife": "survivalKnifeSkins",
-    "Talon Knife": "talonKnifeSkins",
-    "Ursus Knife": "ursusKnifeSkins",
+    "Bayonet": "bayonetSkins", "Bowie Knife": "bowieKnifeSkins", "Butterfly Knife": "butterflyKnifeSkins",
+    "Classic Knife": "classicKnifeSkins", "Falchion Knife": "falchionKnifeSkins", "Flip Knife": "flipKnifeSkins",
+    "Gut Knife": "gutKnifeSkins", "Huntsman Knife": "huntsmanKnifeSkins", "Karambit": "karambitSkins",
+    "Kukri Knife": "kukriKnifeSkins", "M9 Bayonet": "m9BayonetSkins", "Navaja Knife": "navajaKnifeSkins",
+    "Nomad Knife": "nomadKnifeSkins", "Paracord Knife": "paracordKnifeSkins", "Shadow Daggers": "shadowDaggersSkins",
+    "Skeleton Knife": "skeletonKnifeSkins", "Stiletto Knife": "stilettoKnifeSkins", "Survival Knife": "survivalKnifeSkins",
+    "Talon Knife": "talonKnifeSkins", "Ursus Knife": "ursusKnifeSkins",
 };
 
 const getSkinsForWeapon = (weaponName) => {
@@ -132,8 +95,8 @@ const SkinSelectorPage = () => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-
   const [isSkinDropdownOpen, setIsSkinDropdownOpen] = useState(false);
+  
   const [glowImageUrl, setGlowImageUrl] = useState(null);
   const [glowColor, setGlowColor] = useState('transparent');
 
@@ -142,6 +105,19 @@ const SkinSelectorPage = () => {
     setGlowColor(color || 'transparent');
   };
 
+  const handleCategoryHover = (key) => {
+    if (key) {
+      const weaponsInCategory = weaponTypes[key];
+      if (weaponsInCategory && weaponsInCategory.length > 0) {
+        const randomIndex = Math.floor(Math.random() * weaponsInCategory.length);
+        const randomWeapon = weaponsInCategory[randomIndex];
+        updateGlow(getWeaponImageUrl(randomWeapon), glowColorMap[key]);
+      }
+    } else {
+      updateGlow(null);
+    }
+  };
+  
   const handleWeaponHover = (weaponName) => {
     if (weaponName) {
       updateGlow(getWeaponImageUrl(weaponName), glowColorMap[selectedType]);
@@ -149,24 +125,23 @@ const SkinSelectorPage = () => {
       updateGlow(null);
     }
   };
-
+  
   const handleSkinHover = (skinName) => {
-    updateGlow(getSkinImageUrl(selectedWeapon, skinName), glowColorMap[selectedType]);
+    updateGlow(getSkinImageUrl(selectedWeapon, skinName, selectedType), glowColorMap[selectedType]);
   };
-
+  
   const handleSkinSelect = (skinName) => {
     setSkinQuery(skinName);
     setIsSkinDropdownOpen(false);
-    updateGlow(getSkinImageUrl(selectedWeapon, skinName), glowColorMap[selectedType]);
+    updateGlow(getSkinImageUrl(selectedWeapon, skinName, selectedType), glowColorMap[selectedType]);
   };
-  
+
   const handleWeaponSelect = (weaponName) => {
     setSelectedWeapon(weaponName);
     setSelectionStep('skin');
-    // Mostra a arma base assim que é selecionada
     updateGlow(getWeaponImageUrl(weaponName), glowColorMap[selectedType]);
   };
-
+  
   const handleCategorySelect = (categoryKey) => {
     if (!weaponTypes[categoryKey]) return;
     setSelectedType(categoryKey);
@@ -174,8 +149,6 @@ const SkinSelectorPage = () => {
     updateGlow(null);
   };
   
-  // E outros handlers como handleBack, handleSearch...
-
   const handleBack = () => {
     if (selectionStep === 'skin') {
       setSelectedWeapon('');
@@ -188,7 +161,7 @@ const SkinSelectorPage = () => {
       updateGlow(null);
     }
   };
-
+  
   const handleSearch = async () => {
     if (!selectedWeapon || !skinQuery) {
       alert("Por favor, selecione uma arma e uma skin.");
@@ -201,7 +174,7 @@ const SkinSelectorPage = () => {
     setResults(searchResults);
     setLoading(false);
   };
-  
+
   const weaponItems = selectedType 
     ? weaponTypes[selectedType].map(w => ({
         key: w, 
@@ -213,7 +186,6 @@ const SkinSelectorPage = () => {
     <div className="skinselectorpage">
       <section className="interactive-selection-area">
         
-        {/* Lógica de renderização principal */}
         {selectionStep !== 'skin' && (
           <>
             {glowImageUrl && (
@@ -230,7 +202,7 @@ const SkinSelectorPage = () => {
             )}
             <div className="preview-area">
               {selectionStep === 'category' && (
-                <RadialMenu title="Categoria" items={categoryItems} onSelect={handleCategorySelect} onHover={handleWeaponHover} />
+                <RadialMenu title="Categoria" items={categoryItems} onSelect={handleCategorySelect} onHover={handleCategoryHover} />
               )}
               {selectionStep === 'weapon' && (
                 <RadialMenu title={selectedType} items={weaponItems} onSelect={handleWeaponSelect} onHover={handleWeaponHover} />
@@ -239,7 +211,6 @@ const SkinSelectorPage = () => {
           </>
         )}
 
-        {/* Novo Layout para a seleção de skin */}
         {selectionStep === 'skin' && (
           <div className="skin-selection-area-split">
             <div className="weapon-glow-container skin-preview">
@@ -258,13 +229,9 @@ const SkinSelectorPage = () => {
                   <span className="arrow">{isSkinDropdownOpen ? '▲' : '▼'}</span>
                 </button>
                 {isSkinDropdownOpen && (
-                  <ul className="dropdown-skin-list" onMouseLeave={() => handleSkinHover(skinQuery)}>
+                  <ul className="dropdown-skin-list" onMouseLeave={() => handleSkinHover(skinQuery || null)}>
                     {getSkinsForWeapon(selectedWeapon).map(skinName => (
-                      <li 
-                        key={skinName} 
-                        onClick={() => handleSkinSelect(skinName)}
-                        onMouseEnter={() => handleSkinHover(skinName)}
-                      >
+                      <li key={skinName} onClick={() => handleSkinSelect(skinName)} onMouseEnter={() => handleSkinHover(skinName)}>
                         {skinName}
                       </li>
                     ))}
