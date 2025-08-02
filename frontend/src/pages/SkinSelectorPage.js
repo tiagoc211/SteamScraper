@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaSearch, FaArrowLeft } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import './SkinSelectorPage.css';
@@ -16,12 +16,19 @@ import RadialMenu from '../components/RadialMenu';
 
 const allSkinsData = { ...rifleSkins, ...smgSkins, ...heavySkins, ...pistolSkins, ...knifeSkins };
 
-// CORREÇÃO: Função para gerar o URL da imagem dinamicamente
+const formatForUrl = (name) => name.replace(/ /g, '_').replace(/[™()|]/g, '');
+
 const getWeaponImageUrl = (weaponName) => {
   if (!weaponName) return null;
-  // Substitui espaços por underscores (ex: "Desert Eagle" -> "Desert_Eagle")
-  const formattedName = weaponName.replace(/ /g, '_');
+  const formattedName = formatForUrl(weaponName);
   return `https://www.csgodatabase.com/images/weapons/webp/${formattedName}.webp`;
+};
+
+const getSkinImageUrl = (weapon, skin) => {
+    if (!weapon || !skin) return null;
+    const formattedWeapon = formatForUrl(weapon);
+    const formattedSkin = formatForUrl(skin);
+    return `https://www.csgodatabase.com/images/skins/webp/${formattedWeapon}_${formattedSkin}.webp`;
 };
 
 const glowColorMap = {
@@ -126,6 +133,7 @@ const SkinSelectorPage = () => {
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
+  const [isSkinDropdownOpen, setIsSkinDropdownOpen] = useState(false);
   const [glowImageUrl, setGlowImageUrl] = useState(null);
   const [glowColor, setGlowColor] = useState('transparent');
 
@@ -134,35 +142,39 @@ const SkinSelectorPage = () => {
     setGlowColor(color || 'transparent');
   };
 
-  const handleCategoryHover = (key) => {
-    if (key) {
-      let representativeWeapon;
-      switch (key) {
-        case 'rifles': representativeWeapon = 'AK-47'; break;
-        case 'smgs': representativeWeapon = 'MP9'; break;
-        case 'heavy': representativeWeapon = 'XM1014'; break;
-        case 'pistols': representativeWeapon = 'Glock-18'; break;
-        case 'knives': representativeWeapon = 'Karambit'; break;
-        default: representativeWeapon = null;
-      }
-      updateGlow(getWeaponImageUrl(representativeWeapon), glowColorMap[key]);
+  const handleWeaponHover = (weaponName) => {
+    if (weaponName) {
+      updateGlow(getWeaponImageUrl(weaponName), glowColorMap[selectedType]);
     } else {
       updateGlow(null);
     }
   };
 
-  const handleWeaponHover = (weaponName) => {
-    if (weaponName) {
-      const imageUrl = getWeaponImageUrl(weaponName);
-      if (imageUrl) {
-        updateGlow(imageUrl, glowColorMap[selectedType]);
-      } else {
-        updateGlow(null);
-      }
-    } else {
-      updateGlow(null);
-    }
+  const handleSkinHover = (skinName) => {
+    updateGlow(getSkinImageUrl(selectedWeapon, skinName), glowColorMap[selectedType]);
   };
+
+  const handleSkinSelect = (skinName) => {
+    setSkinQuery(skinName);
+    setIsSkinDropdownOpen(false);
+    updateGlow(getSkinImageUrl(selectedWeapon, skinName), glowColorMap[selectedType]);
+  };
+  
+  const handleWeaponSelect = (weaponName) => {
+    setSelectedWeapon(weaponName);
+    setSelectionStep('skin');
+    // Mostra a arma base assim que é selecionada
+    updateGlow(getWeaponImageUrl(weaponName), glowColorMap[selectedType]);
+  };
+
+  const handleCategorySelect = (categoryKey) => {
+    if (!weaponTypes[categoryKey]) return;
+    setSelectedType(categoryKey);
+    setSelectionStep('weapon');
+    updateGlow(null);
+  };
+  
+  // E outros handlers como handleBack, handleSearch...
 
   const handleBack = () => {
     if (selectionStep === 'skin') {
@@ -175,19 +187,6 @@ const SkinSelectorPage = () => {
       setSelectionStep('category');
       updateGlow(null);
     }
-  };
-
-  const handleCategorySelect = (categoryKey) => {
-    if (!weaponTypes[categoryKey]) return;
-    setSelectedType(categoryKey);
-    setSelectionStep('weapon');
-    updateGlow(null);
-  };
-
-  const handleWeaponSelect = (weaponName) => {
-    setSelectedWeapon(weaponName);
-    setSelectionStep('skin');
-    updateGlow(null);
   };
 
   const handleSearch = async () => {
@@ -214,65 +213,67 @@ const SkinSelectorPage = () => {
     <div className="skinselectorpage">
       <section className="interactive-selection-area">
         
-        {glowImageUrl && (
-          <div className="weapon-glow-container">
-            <img
-              src={glowImageUrl}
-              alt="Weapon Preview"
-              className="weapon-glow-image"
-              style={{ '--glow-color': glowColor }}
-            />
-          </div>
-        )}
-
-        {selectionStep === 'category' && !glowImageUrl && (
-            <div className="guidance-container">
-                <p>Selecione uma categoria</p>
-                <div className="arrow" />
-                <div className="arrow" />
+        {/* Lógica de renderização principal */}
+        {selectionStep !== 'skin' && (
+          <>
+            {glowImageUrl && (
+              <div className="weapon-glow-container">
+                <img src={glowImageUrl} alt="Weapon Preview" className="weapon-glow-image" style={{'--glow-color': glowColor}}/>
+              </div>
+            )}
+            {selectionStep === 'category' && !glowImageUrl && (
+                <div className="guidance-container">
+                    <p>Selecione uma categoria</p>
+                    <div className="arrow" />
+                    <div className="arrow" />
+                </div>
+            )}
+            <div className="preview-area">
+              {selectionStep === 'category' && (
+                <RadialMenu title="Categoria" items={categoryItems} onSelect={handleCategorySelect} onHover={handleWeaponHover} />
+              )}
+              {selectionStep === 'weapon' && (
+                <RadialMenu title={selectedType} items={weaponItems} onSelect={handleWeaponSelect} onHover={handleWeaponHover} />
+              )}
             </div>
+          </>
         )}
 
-        <div className="preview-area">
-          {selectionStep === 'category' && (
-            <RadialMenu
-              title="Categoria"
-              items={categoryItems}
-              onSelect={handleCategorySelect}
-              onHover={handleCategoryHover}
-            />
-          )}
-
-          {selectionStep === 'weapon' && (
-            <RadialMenu
-              title={selectedType}
-              items={weaponItems}
-              onSelect={handleWeaponSelect}
-              onHover={handleWeaponHover}
-            />
-          )}
-
-          {selectionStep === 'skin' && (
+        {/* Novo Layout para a seleção de skin */}
+        {selectionStep === 'skin' && (
+          <div className="skin-selection-area-split">
+            <div className="weapon-glow-container skin-preview">
+              {glowImageUrl && (
+                <img src={glowImageUrl} alt="Skin Preview" className="weapon-glow-image" style={{'--glow-color': glowColor}}/>
+              )}
+            </div>
             <div className="skin-selection-container">
               <div className="skin-selection-header">
                   <h2>{selectedWeapon}</h2>
                   <p>Selecione a skin desejada</p>
               </div>
-              <div className="skin-selection-controls">
-                <select 
-                    className="custom-select" 
-                    value={skinQuery}
-                    onChange={e => setSkinQuery(e.target.value)}
-                >
-                    <option value="">Selecione uma skin...</option>
+              <div className="custom-skin-dropdown">
+                <button className="dropdown-skin-toggle" onClick={() => setIsSkinDropdownOpen(!isSkinDropdownOpen)}>
+                  {skinQuery || 'Selecione uma skin...'}
+                  <span className="arrow">{isSkinDropdownOpen ? '▲' : '▼'}</span>
+                </button>
+                {isSkinDropdownOpen && (
+                  <ul className="dropdown-skin-list" onMouseLeave={() => handleSkinHover(skinQuery)}>
                     {getSkinsForWeapon(selectedWeapon).map(skinName => (
-                        <option key={skinName} value={skinName}>{skinName}</option>
+                      <li 
+                        key={skinName} 
+                        onClick={() => handleSkinSelect(skinName)}
+                        onMouseEnter={() => handleSkinHover(skinName)}
+                      >
+                        {skinName}
+                      </li>
                     ))}
-                </select>
+                  </ul>
+                )}
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
         
         <div className="controls-area">
           {selectionStep !== 'category' && (
@@ -294,11 +295,7 @@ const SkinSelectorPage = () => {
         {!loading && results.length > 0 && (
           <div className="results-grid">
             {results.map((skin) => (
-              <Link 
-                key={skin.market_hash_name} 
-                to={`/skin/${encodeURIComponent(skin.market_hash_name)}`}
-                className="skin-card-link"
-              >
+              <Link key={skin.market_hash_name} to={`/skin/${encodeURIComponent(skin.market_hash_name)}`} className="skin-card-link">
                 <SkinCard skin={skin} />
               </Link>
             ))}

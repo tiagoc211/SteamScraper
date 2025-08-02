@@ -27,12 +27,8 @@
 }
 
 @keyframes floatAnimation {
-  0% {
-    transform: translateY(-10px);
-  }
-  100% {
-    transform: translateY(10px);
-  }
+  0% { transform: translateY(-10px); }
+  100% { transform: translateY(10px); }
 }
 
 .weapon-glow-container {
@@ -49,14 +45,12 @@
 }
 
 .weapon-glow-image {
-  /* CORREÇÃO: Define um tamanho máximo para as armas para consistência */
-  max-width: 400px;
-  max-height: 400px;
+  max-width: 550px;
+  max-height: 550px;
   width: 100%;
   height: 100%;
   object-fit: contain;
-  /* CORREÇÃO: Acelera a animação de balanço */
-  animation: floatAnimation 3s ease-in-out infinite alternate;
+  animation: floatAnimation 4s ease-in-out infinite alternate;
   filter: drop-shadow(0 0 15px var(--glow-color)) drop-shadow(0 0 35px var(--glow-color));
 }
 
@@ -76,26 +70,27 @@
   transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
   gap: 1.5rem;
   color: var(--color-text);
   font-size: 1.2rem;
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
   opacity: 0.7;
   z-index: 1;
 }
 
-.arrow {
-  width: 20px;
-  height: 20px;
-  border: solid var(--color-accent);
-  border-width: 0 4px 4px 0;
-  transform: rotate(-45deg);
+/* NOVO: Layout para a seleção de skins */
+.skin-selection-area-split {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
 }
 
+.weapon-glow-container.skin-preview {
+  position: relative;
+  width: 60%;
+}
 
 .skin-selection-container {
   display: flex;
@@ -104,7 +99,8 @@
   justify-content: center;
   gap: 2rem;
   color: var(--color-text-bright);
-  width: 100%;
+  width: 40%; /* Ocupa o lado direito */
+  z-index: 2;
 }
 
 .skin-selection-header h2 {
@@ -119,14 +115,16 @@
   text-align: center;
 }
 
-.skin-selection-controls {
-  display: flex;
-  gap: 1rem;
+/* NOVO: Estilos para o dropdown de skins personalizado */
+.custom-skin-dropdown {
+  position: relative;
   width: 100%;
   max-width: 400px;
 }
 
-.custom-select {
+.dropdown-skin-toggle {
+  width: 100%;
+  height: 50px;
   background-color: var(--color-bg-dark);
   color: var(--color-text);
   padding: 0.75rem 1rem;
@@ -134,8 +132,42 @@
   border-radius: 4px;
   font-family: inherit;
   font-size: 1rem;
-  flex-grow: 1;
-  height: 50px;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: border-color 0.2s;
+}
+.dropdown-skin-toggle:hover {
+  border-color: var(--color-accent);
+}
+
+.dropdown-skin-list {
+  position: absolute;
+  top: 105%;
+  left: 0;
+  width: 100%;
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: var(--color-bg-dark);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  z-index: 100;
+}
+
+.dropdown-skin-list li {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.dropdown-skin-list li:hover {
+  background-color: var(--color-bg-lighter);
+  color: var(--color-text-bright);
 }
 
 .controls-area {
@@ -144,11 +176,7 @@
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  justify-content: center;
   gap: 1rem;
-  width: 100%;
-  padding-top: 1.5rem;
-  margin-top: 2rem;
   z-index: 3;
 }
 
