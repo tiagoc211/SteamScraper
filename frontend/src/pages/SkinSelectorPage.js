@@ -81,6 +81,7 @@ const weaponToDataKeyMap = {
     "Talon Knife": "talonKnifeSkins",
     "Ursus Knife": "ursusKnifeSkins",
 };
+
 const getSkinsForWeapon = (weaponName) => {
   const dataKey = weaponToDataKeyMap[weaponName];
   if (!dataKey || !allSkinsData[dataKey]) return [];
@@ -109,14 +110,80 @@ const SkinSelectorPage = () => {
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
+  const [hoveredItem, setHoveredItem] = useState(null);
+  const [backgroundStyle, setBackgroundStyle] = useState({});
+
+  // CORREÇÃO: Função atualizada para ser mais robusta e usar a mesma lógica do SkinCard.
+  const getRepresentativeImage = (itemKey, type = 'category') => {
+    let dataKeyForSkins;
+    if (type === 'category') {
+        const firstWeaponName = weaponTypes[itemKey]?.[0];
+        if (!firstWeaponName) return null;
+        dataKeyForSkins = weaponToDataKeyMap[firstWeaponName];
+    } else {
+        dataKeyForSkins = weaponToDataKeyMap[itemKey];
+    }
+
+    if (!dataKeyForSkins || !allSkinsData[dataKeyForSkins]) return null;
+    
+    const allAvailableSkins = Object.values(allSkinsData[dataKeyForSkins]).flat();
+    const representativeSkin = allAvailableSkins.find(skin => skin && skin.icon_url);
+    
+    if (representativeSkin) {
+        // Usa a mesma lógica do SkinCard para obter um URL de alta qualidade e seguro
+        const highQualityUrl = representativeSkin.icon_url
+            .replace(/^http:/, 'https') // Força HTTPS
+            .replace('96fx96f', '300fx300f'); // Pede imagem maior
+        return highQualityUrl;
+    }
+    
+    return null;
+  };
+
+  const handleCategoryHover = (key) => {
+    setHoveredItem(key);
+    const imageUrl = key ? getRepresentativeImage(key, 'category') : null;
+    
+    if (imageUrl) {
+      console.log(`[Categoria: ${key}] URL da Imagem:`, imageUrl); // Log para depuração
+      setBackgroundStyle({
+        backgroundImage: `linear-gradient(rgba(27, 40, 56, 0.85), rgba(27, 40, 56, 0.85)), url(${imageUrl})`,
+        backgroundSize: 'contain',
+        backgroundPosition: 'left center',
+        backgroundRepeat: 'no-repeat',
+      });
+    } else {
+      setBackgroundStyle({});
+    }
+  };
+
+  const handleWeaponHover = (weaponName) => {
+    setHoveredItem(weaponName);
+    const imageUrl = weaponName ? getRepresentativeImage(weaponName, 'weapon') : null;
+
+    if (imageUrl) {
+        console.log(`[Arma: ${weaponName}] URL da Imagem:`, imageUrl); // Log para depuração
+        setBackgroundStyle({
+            backgroundImage: `linear-gradient(rgba(27, 40, 56, 0.85), rgba(27, 40, 56, 0.85)), url('${imageUrl}')`,
+            backgroundSize: 'contain',
+            backgroundPosition: 'left center',
+            backgroundRepeat: 'no-repeat',
+        });
+    } else {
+        setBackgroundStyle({});
+    }
+  };
+
   const handleBack = () => {
     if (selectionStep === 'skin') {
       setSelectedWeapon('');
       setSkinQuery('');
       setSelectionStep('weapon');
+      setBackgroundStyle({});
     } else if (selectionStep === 'weapon') {
       setSelectedType(null);
       setSelectionStep('category');
+      setBackgroundStyle({});
     }
   };
 
@@ -124,11 +191,13 @@ const SkinSelectorPage = () => {
     if (!weaponTypes[categoryKey]) return;
     setSelectedType(categoryKey);
     setSelectionStep('weapon');
+    handleCategoryHover(null);
   };
 
   const handleWeaponSelect = (weaponName) => {
     setSelectedWeapon(weaponName);
     setSelectionStep('skin');
+    setBackgroundStyle({});
   };
 
   const handleSearch = async () => {
@@ -139,30 +208,37 @@ const SkinSelectorPage = () => {
     setLoading(true);
     setHasSearched(true);
     setResults([]);
-    // A pesquisa usa sempre o `selectedWeapon` que tem o nome completo (ex: "Bowie Knife")
     const searchResults = await searchSkins(selectedWeapon, skinQuery);
     setResults(searchResults);
     setLoading(false);
   };
   
-  // Constrói os itens para o menu, mas ajusta o `label` para as facas
   const weaponItems = selectedType 
     ? weaponTypes[selectedType].map(w => ({
-        key: w, // O `key` mantém o nome completo (ex: "Bowie Knife")
-        label: w.replace(' Knife', ''), // O `label` remove " Knife" para exibição
+        key: w, 
+        label: w.replace(' Knife', ''), 
       }))
     : [];
 
   return (
     <div className="skinselectorpage">
-      <section className="interactive-selection-area">
+      <section className="interactive-selection-area" style={backgroundStyle}>
+        
+        {selectionStep === 'category' && !hoveredItem && (
+            <div className="guidance-container">
+                <p>Selecione uma categoria</p>
+                <div className="arrow" />
+                <div className="arrow" />
+            </div>
+        )}
+
         <div className="preview-area">
           {selectionStep === 'category' && (
             <RadialMenu
               title="Categoria"
               items={categoryItems}
               onSelect={handleCategorySelect}
-              onHover={() => {}}
+              onHover={handleCategoryHover}
             />
           )}
 
@@ -171,7 +247,7 @@ const SkinSelectorPage = () => {
               title={selectedType}
               items={weaponItems}
               onSelect={handleWeaponSelect}
-              onHover={() => {}}
+              onHover={handleWeaponHover}
             />
           )}
 
