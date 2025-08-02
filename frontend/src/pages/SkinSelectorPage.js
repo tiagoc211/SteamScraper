@@ -113,17 +113,15 @@ const SkinSelectorPage = () => {
         const randomWeapon = weaponsInCategory[randomIndex];
         updateGlow(getWeaponImageUrl(randomWeapon), glowColorMap[key]);
       }
-    } else {
-      updateGlow(null);
-    }
+    } 
+    // CORREÇÃO: A chamada para updateGlow(null) foi removida do 'else' para "fixar" a imagem.
   };
   
   const handleWeaponHover = (weaponName) => {
     if (weaponName) {
       updateGlow(getWeaponImageUrl(weaponName), glowColorMap[selectedType]);
-    } else {
-      updateGlow(null);
     }
+     // CORREÇÃO: A chamada para updateGlow(null) foi removida do 'else' para "fixar" a imagem.
   };
   
   const handleSkinHover = (skinName) => {
@@ -146,7 +144,7 @@ const SkinSelectorPage = () => {
     if (!weaponTypes[categoryKey]) return;
     setSelectedType(categoryKey);
     setSelectionStep('weapon');
-    updateGlow(null);
+    updateGlow(null); // Limpa ao selecionar para começar a nova fase
   };
   
   const handleBack = () => {
@@ -229,7 +227,7 @@ const SkinSelectorPage = () => {
                   <span className="arrow">{isSkinDropdownOpen ? '▲' : '▼'}</span>
                 </button>
                 {isSkinDropdownOpen && (
-                  <ul className="dropdown-skin-list" onMouseLeave={() => handleSkinHover(skinQuery || null)}>
+                  <ul className="dropdown-skin-list">
                     {getSkinsForWeapon(selectedWeapon).map(skinName => (
                       <li key={skinName} onClick={() => handleSkinSelect(skinName)} onMouseEnter={() => handleSkinHover(skinName)}>
                         {skinName}
