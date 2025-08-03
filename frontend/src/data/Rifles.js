@@ -12,7 +12,6 @@ const ak47Skins = {
     { name: "AK-47 | The Empress", source: "Spectrum 2 Case" },
     { name: "AK-47 | Bloodsport", source: "Spectrum Case" },
     { name: "AK-47 | Asiimov", source: "Danger Zone Case" },
-    { name: "AK-47 | Neo-Noir", source: "CS20 Case" },
   ],
   Classified: [
     { name: "AK-47 | Panthera onca", source: "Ancient Collection" },
@@ -54,13 +53,9 @@ const ak47Skins = {
     { name: "AK-47 | Safety Net", source: "Vertigo Collection" },
   ],
   Industrial: [
-    { name: "AK-47 | Green Sage", source: "Control Collection" },
     { name: "AK-47 | Safari Mesh", source: "Mirage Collection" },
     { name: "AK-47 | Predator", source: "Dust Collection" },
     { name: "AK-47 | Jungle Spray", source: "Aztec Collection" },
-  ],
-  Consumer: [
-    { name: "AK-47 | Mud-Spec", source: "Train Collection" },
   ],
 };
 
@@ -347,7 +342,7 @@ const sg553Skins = {
     { name: "SG 553 | Gator Mesh", source: "Bank Collection" },
   ],
   Industrial: [
-    { name: "SG 553 | Waves", source: "Office Collection" },
+    { name: "SG 553 | Waves Perforated", source: "Office Collection" },
   ],
   Consumer: [
     { name: "SG 553 | Tornado", source: "Dust Collection" },

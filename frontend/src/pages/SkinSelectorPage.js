@@ -16,7 +16,7 @@ import RadialMenu from '../components/RadialMenu';
 
 const allSkinsData = { ...rifleSkins, ...smgSkins, ...heavySkins, ...pistolSkins, ...knifeSkins };
 
-const formatForUrl = (name) => name.replace(/ /g, '_').replace(/[™()|]/g, '');
+const formatForUrl = (name) => name.replace(/ /g, '_').replace(/[™|]/g, '');
 
 const getWeaponImageUrl = (weaponName) => {
   if (!weaponName) return null;
