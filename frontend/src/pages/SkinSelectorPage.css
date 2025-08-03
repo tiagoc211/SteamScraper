@@ -1,6 +1,5 @@
 .skinselectorpage {
   min-height: 100vh;
-  padding: 2rem;
   background-image: url('../data/background.png');
   background-size: cover;
   background-position: center;
@@ -11,54 +10,72 @@
   justify-content: center;
 }
 
+
 .page-content-wrapper {
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
+  align-self: flex-start;
   display: flex;
   flex-direction: column;
   gap: 2.5rem;
-  /* CORREÇÃO: Reduz o tamanho de todo o conteúdo para 80% */
-  transform: scale(0.8);
-  transform-origin: top center; /* Garante que a escala é feita a partir do topo */
+  padding: 2rem;
 }
 
 .interactive-selection-area {
   width: 100%;
-  min-height: 700px;
-  background-color: var(--color-bg-light);
+  min-height: 580px;
   border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 2rem;
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
   position: relative;
   overflow: hidden;
+  isolation: isolate;
 }
 
-@keyframes floatAnimation {
-  0% { transform: translateY(-10px); }
-  100% { transform: translateY(10px); }
-}
-
-.weapon-glow-container {
+.interactive-selection-area::before {
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
-  width: 55%;
+  width: 100%;
+  height: 100%;
+  background-image: url('../data/gun-wall.png');
+  background-size: cover;
+  background-position: center;
+  filter: blur(3px);
+  z-index: -1;
+}
+
+@keyframes floatAnimation {
+  0% { transform: translateY(-8px); }
+  100% { transform: translateY(8px); }
+}
+
+.content-half {
+  width: 50%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.weapon-glow-container {
+  width: 100%;
   height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   pointer-events: none;
-  z-index: 1;
+  /* CORREÇÃO: Posicionamento mais à esquerda e para baixo */
+  transform: translate(0%, 45%);
 }
 
 .weapon-glow-image {
-  max-width: 450px;
-  max-height: 450px;
+  max-width: 380px;
+  max-height: 380px;
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -66,19 +83,19 @@
   filter: drop-shadow(0 0 15px var(--glow-color)) drop-shadow(0 0 35px var(--glow-color));
 }
 
-.preview-area {
-  flex-grow: 1;
-  width: 45%;
+.preview-area, .skin-selection-container {
+  width: 100%;
+  height: 100%;
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
   align-items: center;
-  z-index: 2;
+  justify-content: center;
 }
 
 .guidance-container {
-  position: absolute;
+  position: relative;
+  margin-top: 45%;
   left: 27.5%;
-  top: 50%;
   transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
@@ -100,21 +117,25 @@
 
 .weapon-glow-container.skin-preview {
   position: relative;
-  width: 60%;
+  width: 50%;
 }
 
 .skin-selection-container {
+  width: 50%;
+  margin-top: 3rem;
+  margin-left: auto;
+  margin-right: 8rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  padding-top: 5vh;
-  padding-bottom: 100px;
+  justify-content: center; /* Centra verticalmente */
   gap: 2rem;
   color: var(--color-text-bright);
-  width: 40%;
-  z-index: 2;
-  height: 100%;
+}
+
+.skin-selection-container {
+  gap: 2rem;
+  color: var(--color-text-bright);
 }
 
 .skin-selection-header h2 {
@@ -132,7 +153,7 @@
 .custom-skin-dropdown {
   position: relative;
   width: 100%;
-  max-width: 400px;
+  max-width: 320px;
 }
 
 .dropdown-skin-toggle {
@@ -161,7 +182,7 @@
   top: 105%;
   left: 0;
   width: 100%;
-  max-height: 280px;
+  max-height: 220px;
   overflow-y: auto;
   background-color: var(--color-bg-dark);
   border: 1px solid var(--color-border);

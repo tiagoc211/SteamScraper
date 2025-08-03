@@ -71,8 +71,8 @@ const weaponToDataKeyMap = {
 const getSkinsForWeapon = (weaponName) => {
   const dataKey = weaponToDataKeyMap[weaponName];
   if (!dataKey || !allSkinsData[dataKey]) return [];
-  const weaponData = allSkinsData[dataKey];
-  const skinNames = Object.values(weaponData).flat().map(skin => skin.name.split(' | ')[1]);
+  const weaponData = Object.values(allSkinsData[dataKey]).flat();
+  const skinNames = weaponData.map(skin => skin.name.split(' | ')[1]);
   return [...new Set(skinNames)].sort();
 };
 
@@ -187,20 +187,23 @@ const SkinSelectorPage = () => {
       <div className="page-content-wrapper">
         <section className="interactive-selection-area">
           
-          {selectionStep !== 'skin' && (
-            <>
-              {glowImageUrl && (
-                <div className="weapon-glow-container">
-                  <img src={glowImageUrl} alt="Weapon Preview" className="weapon-glow-image" style={{'--glow-color': glowColor}}/>
-                </div>
-              )}
-              {selectionStep === 'category' && !glowImageUrl && (
-                  <div className="guidance-container">
-                      <p>Selecione uma categoria</p>
-                      <div className="arrow" />
-                      <div className="arrow" />
-                  </div>
-              )}
+          <div className="content-half left-half">
+            {glowImageUrl && (
+              <div className="weapon-glow-container">
+                <img src={glowImageUrl} alt="Weapon Preview" className="weapon-glow-image" style={{'--glow-color': glowColor}}/>
+              </div>
+            )}
+            {selectionStep === 'category' && !glowImageUrl && (
+              <div className="guidance-container">
+                  <p>Selecione uma categoria</p>
+                  <div className="arrow" />
+                  <div className="arrow" />
+              </div>
+            )}
+          </div>
+
+          <div className="content-half right-half">
+            {selectionStep !== 'skin' ? (
               <div className="preview-area">
                 {selectionStep === 'category' && (
                   <RadialMenu title="Categoria" items={categoryItems} onSelect={handleCategorySelect} onHover={handleCategoryHover} />
@@ -209,16 +212,7 @@ const SkinSelectorPage = () => {
                   <RadialMenu title={selectedType} items={weaponItems} onSelect={handleWeaponSelect} onHover={handleWeaponHover} />
                 )}
               </div>
-            </>
-          )}
-
-          {selectionStep === 'skin' && (
-            <div className="skin-selection-area-split">
-              <div className="weapon-glow-container skin-preview">
-                {glowImageUrl && (
-                  <img src={glowImageUrl} alt="Skin Preview" className="weapon-glow-image" style={{'--glow-color': glowColor}}/>
-                )}
-              </div>
+            ) : (
               <div className="skin-selection-container">
                 <div className="skin-selection-header">
                     <h2>{selectedWeapon}</h2>
@@ -240,8 +234,8 @@ const SkinSelectorPage = () => {
                   )}
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
           
           <div className="controls-area">
             {selectionStep !== 'category' && (
@@ -258,23 +252,25 @@ const SkinSelectorPage = () => {
           </div>
         </section>
 
-        <section className="results-section">
-          {loading && <div className="loader">A Carregar...</div>}
-          {!loading && results.length > 0 && (
-            <div className="results-grid">
-              {results.map((skin) => (
-                <Link key={skin.market_hash_name} to={`/skin/${encodeURIComponent(skin.market_hash_name)}`} className="skin-card-link">
-                  <SkinCard skin={skin} />
-                </Link>
-              ))}
-            </div>
-          )}
-          {!loading && results.length === 0 && hasSearched && (
-            <div className="no-results">
-              <p>Nenhuma skin encontrada.</p>
-            </div>
-          )}
-        </section>
+        {hasSearched && (
+          <section className="results-section">
+            {loading && <div className="loader">A Carregar...</div>}
+            {!loading && results.length > 0 && (
+              <div className="results-grid">
+                {results.map((skin) => (
+                  <Link key={skin.market_hash_name} to={`/skin/${encodeURIComponent(skin.market_hash_name)}`} className="skin-card-link">
+                    <SkinCard skin={skin} />
+                  </Link>
+                ))}
+              </div>
+            )}
+            {!loading && results.length === 0 && (
+              <div className="no-results">
+                <p>Nenhuma skin encontrada.</p>
+              </div>
+            )}
+          </section>
+        )}
       </div>
     </div>
   );
