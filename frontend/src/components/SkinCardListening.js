@@ -19,6 +19,54 @@ const SkinCardListening = ({ listing, inspectedData }) => {
   const float = floatvalue?.toFixed(10);
   const pattern = paintseed;
 
+  const handleBuyClick = async () => {
+    try {
+      // Convert price para cêntimos (remover símbolos e vírgulas)
+      const priceNumber = parseFloat(
+        price.replace(/[^\d,.-]/g, '').replace(',', '.')
+      );
+      const maxPriceCents = Math.round(priceNumber * 100);
+
+      // Chamar backend para obter token
+      console.log("[UI] a pedir token...");
+      const res = await fetch('http://localhost:3001/api/tokens/buy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          steamUrl: `https://steamcommunity.com/market/listings/730/${encodeURIComponent(listing.name)}`,
+          listingId: listing.listingid,
+          maxPriceCents,
+          itemName: item_name,
+        }),
+      });
+
+      const data = await res.json();
+      console.log("[UI] token?", res.ok, !!data.token);
+
+      if (!res.ok || !data.token) {
+        alert('Erro ao gerar token de compra.');
+        return;
+      }
+
+      // Enviar token e dados à extensão
+      // Em vez de chrome.runtime.sendMessage(...), usa:
+      console.log("[UI] a enviar SS_BUY_REQUEST");
+      window.postMessage({
+        type: 'SS_BUY_REQUEST',
+        steamUrl: `https://steamcommunity.com/market/listings/730/${encodeURIComponent(listing.name)}`,
+        listingId: listing.listingid,
+        expectedPrice: maxPriceCents / 100,
+        itemName: item_name,
+        token: data.token
+      }, window.origin);
+
+
+    } catch (err) {
+      console.error('Erro no handleBuyClick:', err);
+      alert('Falha ao processar compra.');
+    }
+  };
+
   return (
     <div className="skin-card">
       <div className="skin-header">
@@ -73,6 +121,9 @@ const SkinCardListening = ({ listing, inspectedData }) => {
         >
           Inspecionar
         </a>
+        <button className="buy-btn" onClick={handleBuyClick}>
+          Comprar
+        </button>
       </div>
     </div>
   );

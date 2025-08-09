@@ -3,10 +3,22 @@ const cors = require('cors');
 const cheerio = require('cheerio'); // Precisará do Cheerio no backend
 const { fetchSearchPage, fetchPage } = require('./fetch');
 const weaponData = require('./data');
+const fs = require('fs/promises');
+const crypto = require('crypto');
 
 const app = express();
 app.use(cors());
 const PORT = 3001; // Garanta que esta é a porta do seu backend
+
+const ISSUER = 'http://localhost:3001'; // igual ao sw.js
+const AUDIENCE = 'steamscraper-extension';
+
+async function loadPrivateKey() {
+  const privJwk = JSON.parse(await fs.readFile('./keys/private.jwk.json', 'utf8'));
+  const { importJWK } = await import('jose');
+  return await importJWK(privJwk, 'ES256');
+}
+
 
 // Endpoint para pesquisa
 app.get('/api/search', async (req, res) => {
@@ -89,6 +101,42 @@ app.get('/api/skin/:marketHashName', async (req, res) => {
     marketHashName: decodeURIComponent(marketHashName),
     listings,
   });
+});
+
+app.post('/api/tokens/buy', express.json(), async (req, res) => {
+  try {
+    const { SignJWT } = await import('jose');
+    const { steamUrl, listingId, maxPriceCents, itemName } = req.body || {};
+
+    // validação básica
+    if (typeof steamUrl !== 'string' ||
+        typeof listingId !== 'string' ||
+        !Number.isInteger(maxPriceCents) || maxPriceCents <= 0) {
+      return res.status(400).json({ error: 'Parâmetros inválidos' });
+    }
+
+    const nonce = crypto.randomBytes(16).toString('hex');
+    const key = await loadPrivateKey();
+
+    const token = await new SignJWT({
+        steamUrl,
+        listingId,
+        maxPriceCents,
+        itemName,
+        nonce
+      })
+      .setProtectedHeader({ alg: 'ES256', kid: 'steam-buy-key-1' })
+      .setIssuer(ISSUER)
+      .setAudience(AUDIENCE)
+      .setIssuedAt()
+      .setExpirationTime('60s') // expira em 60 segundos
+      .sign(key);
+
+    res.json({ token, exp: Date.now() + 60 * 1000 });
+  } catch (err) {
+    console.error('Erro ao gerar token:', err);
+    res.status(500).json({ error: 'Falha a gerar token' });
+  }
 });
 
 

@@ -1,0 +1,9 @@
+{
+  "kty": "EC",
+  "x": "jDFP5oyo6R4Nrd6sfkvUAVEcYrRIh-bmB6eV-FjNu2A",
+  "y": "ChHLcrQstGuHvj5RyZd2CdCZJRAkf9HogN1h9wcckig",
+  "crv": "P-256",
+  "kid": "steam-buy-key-1",
+  "alg": "ES256",
+  "use": "sig"
+}
