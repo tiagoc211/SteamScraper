@@ -87,7 +87,6 @@ const SkinDetailPage = () => {
     }
   }, [sortBy]);
 
-
   useEffect(() => {
     const fetchSkinData = async () => {
       setLoading(true);
@@ -116,7 +115,7 @@ const SkinDetailPage = () => {
         setError("Não foi possível carregar os dados desta skin.");
       }
       setLoading(false);
-     };
+    };
     fetchSkinData();
   }, [marketHashName]);
 
@@ -127,7 +126,7 @@ const SkinDetailPage = () => {
     return <div className="error-message">{error}</div>;
   }
 
- return (
+  return (
     <div className="skin-detail-page">
       <FilterSidebar 
         filters={filters} 
@@ -150,7 +149,12 @@ const SkinDetailPage = () => {
           <div className="skin-cards-grid">
             {listings.length > 0 ? (
               listings.map(listing => (
-                <SkinCardListening key={listing.listingid} listing={listing} inspectedData={inspectedData}/>
+                <SkinCardListening
+                  key={listing.listingid}
+                  listing={listing}
+                  inspectedData={inspectedData}
+                  marketHashName={marketHashName}
+                />
               ))
             ) : (
               <div>Nenhum listing encontrado para os filtros selecionados.</div>
