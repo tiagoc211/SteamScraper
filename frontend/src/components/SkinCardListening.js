@@ -13,13 +13,17 @@ const SkinCardListening = ({ listing, inspectedData, marketHashName }) => {
     paintseed,
     wear_name,
     imageurl,
-    stickers,
+    stickers, // Dos dados de inspeção
+    full_item_name,
   } = item;
   
+  // Os charms vêm do 'listing' original
+  const { keychains } = listing;
+
   const steamMarketUrl = `https://steamcommunity.com/market/listings/730/${encodeURIComponent(marketHashName)}`;
   const highResImageUrl = (imageurl || listing.image).replace('360fx360f', '512fx512f');
   const priceValue = parseFloat(listing.price);
-  const formattedPrice = listing.price.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
+  const formattedPrice = priceValue.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
 
   const getWearColor = (wearFloat) => {
     if (wearFloat < 0.07) return '#86c55c';
@@ -31,7 +35,7 @@ const SkinCardListening = ({ listing, inspectedData, marketHashName }) => {
 
   const handleBuyClick = async () => {
     try {
-      const maxPriceCents = formattedPrice;
+      const maxPriceCents = Math.round(priceValue * 100);
 
       const res = await fetch('http://localhost:3001/api/tokens/buy', {
         method: 'POST',
@@ -68,14 +72,25 @@ const SkinCardListening = ({ listing, inspectedData, marketHashName }) => {
   return (
     <div className="skin-card-listening">
       <div className="card-header">
-        <span className="item-name">★ {listing.name}</span>
-        <span className="item-wear" style={{ color: getWearColor(floatvalue) }}>
-          {wear_name}
-        </span>
+        <span className="item-name">★ {full_item_name}</span>
       </div>
       <div className="item-image-container">
         <div className="smoke-effect"></div>
         <img className="skin-image" src={highResImageUrl} alt={listing.name} />
+        {keychains && keychains.length > 0 && (
+          <div className="charms-wrapper">
+            {keychains.map((keychain, index) => (
+              <div key={index} className="charm-container">
+                <img 
+                    src={keychain.image_url} 
+                    alt={keychain.name}
+                    title={keychain.name}
+                    className="charm-image" 
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       <div className="card-body">
         <div className="item-price">{formattedPrice}</div>
@@ -91,19 +106,21 @@ const SkinCardListening = ({ listing, inspectedData, marketHashName }) => {
           <span>Float: {floatvalue?.toFixed(8)}</span>
           <span>Pattern: {paintseed}</span>
         </div>
-        <div className="item-stickers">
-          {listing.stickers && listing.stickers.length > 0 ? (
-            listing.stickers.map((stickerUrl, index) => (
-              <img 
-                key={index}
-                src={stickerUrl} 
-                alt={`Sticker ${index + 1}`}
-                title={`Sticker ${index + 1}`}
-                className="sticker-image" 
-              />
-            ))
-          ) : <span className="no-stickers">Sem stickers</span>}
-        </div>
+ <div className="item-stickers">
+        {listing.stickers && listing.stickers.length > 0 ? (
+          listing.stickers.map((stickerUrl, i) => (
+            <img
+              key={i}
+              src={stickerUrl}
+              alt={stickers[i].name}
+              title={stickers[i].name}
+              className="sticker-image"
+            />
+          ))
+        ) : (
+          <span className="no-stickers">Sem stickers</span>
+        )}
+      </div>
         <div className="card-actions">
           <button
             className="inspect-button"

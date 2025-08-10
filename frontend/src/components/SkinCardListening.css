@@ -15,7 +15,7 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
-@keyframes smokeAnimation1 {
+@keyframes smokeAnimation {
   0% { transform: scale(0.8) translate(50%, -30%); opacity: 0; }
   50% { opacity: 0.45; }
   100% { opacity: 0; transform: scale(1.4) translate(-40%, 20%); }
@@ -41,34 +41,33 @@
   opacity: 0;
   z-index: 1;
   mask-image: radial-gradient(circle, black 40%, transparent 70%);
-  transition: opacity 0.5s ease-out;
-  /* A animação foi removida daqui para ser aplicada apenas no hover */
+  transition: opacity 0.7s ease-out;
 }
 
 .skin-card-listening:hover .smoke-effect {
   opacity: 1;
-  /* CORREÇÃO: Animação aplicada aqui, mais rápida e suave */
   animation: 
-    smokeAnimation1 8s ease-in-out infinite,
+    smokeAnimation 7s ease-in-out infinite,
     smokeAnimation2 4s ease-in-out infinite 0.5s;
 }
 
 .card-header {
   padding: 0.8rem 1rem;
   background-color: var(--color-bg-lighter);
+  /* CORREÇÃO: Layout de coluna para o cabeçalho */
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
   position: relative;
   z-index: 2;
+  min-height: 50px;
 }
 
 .item-name {
   color: var(--color-text-bright);
   font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 1rem;
 }
 
 .item-wear {
@@ -89,14 +88,43 @@
   z-index: 2;
 }
 
+.charms-wrapper {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    z-index: 3;
+}
+
+.charm-container {
+    width: 52px;
+    height: 52px;
+    background-color: rgba(200, 220, 255, 0.1);
+    backdrop-filter: blur(2px);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.charm-image {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    transition: transform 0.2s;
+}
+.charm-image:hover {
+    transform: scale(1.1);
+}
+
 .card-body {
   padding: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
   flex-grow: 1;
-  position: relative;
-  z-index: 2;
   background-color: var(--color-bg-light);
 }
 
@@ -142,9 +170,9 @@
 .item-stickers {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  justify-content: center;
+  gap: 0.2rem;
   align-items: center;
+  align-self: center;
   min-height: 40px;
   padding: 0.25rem 0;
 }
@@ -156,8 +184,8 @@
 }
 
 .sticker-image {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     object-fit: contain;
     transition: transform 0.2s;
 }
