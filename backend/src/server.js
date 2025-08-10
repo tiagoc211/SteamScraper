@@ -70,9 +70,12 @@ app.get('/api/skin/:marketHashName', async (req, res) => {
 
     const listingid = $el.attr('id')?.replace('listing_', '');
     const name = $el.find('.market_listing_item_name').text().trim();
-    const price = $el.find('.market_listing_price_with_fee').text().trim();
+    const priceText = $el.find('.market_listing_price_with_fee').text().trim();
     const image = $el.find('img.market_listing_item_img').attr('src');
     const inspectLink = $el.find('.market_listing_row_action a').attr('href');
+
+    // CORREÇÃO: Limpa a string do preço e converte-a para um número
+    const price = parseFloat(priceText.replace(/[^\d,]/g, '').replace(',', '.'));
 
     const stickerImgs = [];
     $el.find('#sticker_info img').each((_, img) => {
@@ -80,21 +83,18 @@ app.get('/api/skin/:marketHashName', async (req, res) => {
       if (src) stickerImgs.push(src);
     });
 
-    // CORREÇÃO: Lógica de scraping para charms revertida para a sua versão funcional
     const keychains = [];
     $el.find('#keychain_info img').each((_, img) => {
         const src = $(img).attr('src');
         if (src) {
-            keychains.push({
-                image_url: src,
-            });
+            keychains.push({ image_url: src });
         }
     });
 
     listings.push({
       listingid,
       name,
-      price,
+      price, // O preço agora é um número
       image,
       inspectLink,
       stickers: stickerImgs.length > 0 ? stickerImgs : null,

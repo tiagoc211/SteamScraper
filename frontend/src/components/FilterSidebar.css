@@ -14,10 +14,12 @@
 
 .filter-section.disabled {
     opacity: 0.5;
-    pointer-events: none; /* Desativa interação no conteúdo */
+}
+.filter-section.disabled .section-content {
+    pointer-events: none;
 }
 .filter-section.disabled .filter-toggle {
-    pointer-events: all; /* Garante que o toggle pode ser reativado */
+    pointer-events: all;
 }
 
 .section-header {
@@ -39,9 +41,9 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    padding: 0;
 }
 
-/* NOVO: Estilos para o toggle */
 .filter-toggle {
     width: 40px;
     height: 22px;
@@ -68,17 +70,57 @@
     transform: translateX(18px);
 }
 
+.range-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.input-group.vertical {
+  width: 100%;
+}
+
+.input-group label {
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.input-group input[type="number"] {
+  width: 100%;
+  background-color: var(--color-bg-dark);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text-bright);
+  padding: 0.6rem;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  -moz-appearance: textfield;
+}
+.input-group input[type="number"]::-webkit-outer-spin-button,
+.input-group input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.input-group input[type="number"]:focus {
+    outline: none;
+    border-color: var(--color-accent);
+}
+
 .filter-actions {
     display: flex;
     flex-direction: column;
     gap: 1rem;
     margin-top: 1rem;
-    /* LINHA REMOVIDA DAQUI */
-    padding-top: 0;
 }
 
-
-/* NOVO: Estilo para o botão de aplicar */
 .apply-button {
   background-color: var(--color-accent);
   color: var(--color-bg-dark);
@@ -91,9 +133,8 @@
   transition: all 0.2s;
 }
 .apply-button:hover {
-    background-color: #8dd1f9; /* Um tom mais claro do accent para o hover */
+    background-color: #8dd1f9;
 }
-
 
 .reset-button {
   background-color: #ff4d4d;

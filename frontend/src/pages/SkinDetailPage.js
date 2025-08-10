@@ -9,11 +9,10 @@ const initialFilters = {
     price: ['', ''],
     wear: [0, 1],
     paintSeed: '',
-    fade: [80, 100],
     enabled: {
-        price: true,
-        wear: true,
-        paintSeed: true,
+        price: false,
+        wear: false,
+        paintSeed: false,
     }
 };
 
@@ -47,6 +46,7 @@ const SkinDetailPage = () => {
                 return (inspectedData[a.listingid]?.paintseed || 1001) - (inspectedData[b.listingid]?.paintseed || 1001);
             case 'price':
             default:
+                // CORREÇÃO: Usa a propriedade 'price', que agora é um número
                 return a.price - b.price;
         }
     });
@@ -57,10 +57,15 @@ const SkinDetailPage = () => {
     let filteredListings = [...originalListings];
 
     if (filters.enabled.price) {
-        const minPrice = parseFloat(filters.price[0]) || 0;
-        const maxPrice = parseFloat(filters.price[1]) || Infinity;
-        if (maxPrice > minPrice) {
-            filteredListings = filteredListings.filter(l => l.price >= minPrice && l.price <= maxPrice);
+        const minPrice = parseFloat(filters.price[0]);
+        const maxPrice = parseFloat(filters.price[1]);
+        if (!isNaN(minPrice)) {
+            // CORREÇÃO: Usa 'price'
+            filteredListings = filteredListings.filter(l => l.price >= minPrice);
+        }
+        if (!isNaN(maxPrice)) {
+            // CORREÇÃO: Usa 'price'
+            filteredListings = filteredListings.filter(l => l.price <= maxPrice);
         }
     }
 
@@ -81,6 +86,11 @@ const SkinDetailPage = () => {
     setListings(sortListings(filteredListings));
   };
 
+  const handleResetFilters = () => {
+    setFilters(initialFilters);
+    setListings(sortListings(originalListings));
+  };
+
   useEffect(() => {
     if (listings.length > 0) {
         setListings(sortListings(listings));
@@ -93,7 +103,9 @@ const SkinDetailPage = () => {
       setError(null);
       const data = await getSkinDetails(marketHashName);
       if (data && data.success) {
+        // CORREÇÃO: A conversão no frontend foi removida, pois o backend já envia um número
         const listingsData = data.listings || [];
+        
         setOriginalListings(listingsData);
         setListings(listingsData);
         
@@ -133,6 +145,7 @@ const SkinDetailPage = () => {
         setFilters={setFilters} 
         onApplyFilters={handleApplyFilters}
         onToggleFilter={handleToggleFilter}
+        onResetFilters={handleResetFilters}
       />
       <div className="main-content-column">
         <h1>{decodeURIComponent(marketHashName)}</h1>
@@ -149,12 +162,7 @@ const SkinDetailPage = () => {
           <div className="skin-cards-grid">
             {listings.length > 0 ? (
               listings.map(listing => (
-                <SkinCardListening
-                  key={listing.listingid}
-                  listing={listing}
-                  inspectedData={inspectedData}
-                  marketHashName={marketHashName}
-                />
+                <SkinCardListening key={listing.listingid} listing={listing} inspectedData={inspectedData} marketHashName={marketHashName}/>
               ))
             ) : (
               <div>Nenhum listing encontrado para os filtros selecionados.</div>

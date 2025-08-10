@@ -35,8 +35,7 @@ const SkinCardListening = ({ listing, inspectedData, marketHashName }) => {
 
   const handleBuyClick = async () => {
     try {
-      const maxPriceCents = Math.round(priceValue * 100);
-
+      const maxPriceCents = formattedPrice;
       const res = await fetch('http://localhost:3001/api/tokens/buy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
