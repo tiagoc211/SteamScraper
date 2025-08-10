@@ -68,5 +68,5 @@ app.get('/api/skins', async (req, res) => {
 
 const PORT = 3001;
 app.listen(PORT, () => {
-  console.log(`✅ API a correr em http://localhost:${PORT}/api/skins?weapon=AK-47`);
+  console.log(`✅ API a correr em http://localhost:${PORT}/api/skins?`);
 });

@@ -60,6 +60,7 @@ app.get('/api/search', async (req, res) => {
 });
 
 
+
 app.get('/api/skin/:marketHashName', async (req, res) => {
   const { marketHashName } = req.params;
   const data = await fetchPage(decodeURIComponent(marketHashName), 0);
@@ -76,10 +77,29 @@ app.get('/api/skin/:marketHashName', async (req, res) => {
 
     const listingid = $el.attr('id')?.replace('listing_', '');
     const name = $el.find('.market_listing_item_name').text().trim();
-    const price = $el.find('.market_listing_price_with_fee').text().trim();
     const image = $el.find('img.market_listing_item_img').attr('src');
     const inspectLink = $el.find('.market_listing_row_action a').attr('href');
 
+    // Obter dados da listinginfo original
+    const li = listingid ? data.listinginfo?.[listingid] : null;
+
+    // Usar SEMPRE os preços originais (não convertidos!)
+    const subtotalCents = Number.isInteger(li?.price) ? li.price : null;
+    const feeCents      = Number.isInteger(li?.fee)   ? li.fee   : null;
+    const totalCents    = (Number.isInteger(subtotalCents) && Number.isInteger(feeCents))
+      ? (subtotalCents + feeCents) : null;
+
+    const currency      = li?.currencyid ?? null;
+
+    // Resolver o asset bruto
+    let rawAsset = null;
+    const assetId   = li?.asset?.id;
+    const contextId = li?.asset?.contextid || '2';
+    if (assetId) {
+      rawAsset = data.assets?.[730]?.[contextId]?.[assetId] ?? null;
+    }
+
+    // Stickers
     const stickerImgs = [];
     $el.find('#sticker_info img').each((_, img) => {
       const src = $(img).attr('src');
@@ -89,10 +109,17 @@ app.get('/api/skin/:marketHashName', async (req, res) => {
     listings.push({
       listingid,
       name,
-      price,
+      price: li?.price ? (li.price / 100).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' }) : null,
       image,
       inspectLink,
       stickers: stickerImgs.length > 0 ? stickerImgs : null,
+      buy: {
+        currency,         // ex: 3 = EUR, 2003 etc.
+        subtotalCents,
+        feeCents,
+        totalCents
+      },
+      raw: rawAsset // pode conter market_hash_name, etc.
     });
   });
 
@@ -102,6 +129,7 @@ app.get('/api/skin/:marketHashName', async (req, res) => {
     listings,
   });
 });
+
 
 app.post('/api/tokens/buy', express.json(), async (req, res) => {
   try {

@@ -18,48 +18,65 @@ const SkinCardListening = ({ listing, inspectedData }) => {
   const price = listing.price;
   const float = floatvalue?.toFixed(10);
   const pattern = paintseed;
+  const fullMarketName = `${weapon_type} | ${item_name} (${wear_name})`;
 
   const handleBuyClick = async () => {
     try {
-      // Convert price para cêntimos (remover símbolos e vírgulas)
-      const priceNumber = parseFloat(
-        price.replace(/[^\d,.-]/g, '').replace(',', '.')
-      );
-      const maxPriceCents = Math.round(priceNumber * 100);
+      console.log("[DEBUG] listing RAW:", listing);
 
-      // Chamar backend para obter token
-      console.log("[UI] a pedir token...");
+      // Nome para URL Steam
+      const marketHashName = listing.raw?.market_hash_name || fullMarketName;
+      const listingPageUrl = `https://steamcommunity.com/market/listings/730/${encodeURIComponent(marketHashName)}`;
+
+      // Normalizar valores de preço e moeda
+      const subtotalCents = listing.buy?.subtotalCents ?? listing.price ?? null;
+      const feeCents = listing.buy?.feeCents ?? listing.fee ?? null;
+      const totalCents = listing.buy?.totalCents ?? 
+                         ((Number.isInteger(subtotalCents) && Number.isInteger(feeCents)) 
+                           ? subtotalCents + feeCents 
+                           : null);
+      const currency = listing.buy?.currency ?? listing.currencyid ?? 3;
+
+      // Validar
+      if (![subtotalCents, feeCents, totalCents, currency].every(Number.isInteger)) {
+        alert("subtotalCents/feeCents/totalCents/currency inválidos");
+        console.error("Valores recebidos:", { subtotalCents, feeCents, totalCents, currency });
+        return;
+      }
+
+      const expectedPrice = totalCents / 100;
+
+      // Pedir token ao backend
       const res = await fetch('http://localhost:3001/api/tokens/buy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          steamUrl: `https://steamcommunity.com/market/listings/730/${encodeURIComponent(listing.name)}`,
+          steamUrl: listingPageUrl,
           listingId: listing.listingid,
-          maxPriceCents,
+          maxPriceCents: totalCents,
           itemName: item_name,
         }),
       });
 
       const data = await res.json();
-      console.log("[UI] token?", res.ok, !!data.token);
-
       if (!res.ok || !data.token) {
         alert('Erro ao gerar token de compra.');
         return;
       }
 
-      // Enviar token e dados à extensão
-      // Em vez de chrome.runtime.sendMessage(...), usa:
-      console.log("[UI] a enviar SS_BUY_REQUEST");
+      // Enviar para extensão
       window.postMessage({
         type: 'SS_BUY_REQUEST',
-        steamUrl: `https://steamcommunity.com/market/listings/730/${encodeURIComponent(listing.name)}`,
+        steamUrl: listingPageUrl,
         listingId: listing.listingid,
-        expectedPrice: maxPriceCents / 100,
+        expectedPrice,
         itemName: item_name,
-        token: data.token
+        token: data.token,
+        subtotalCents,
+        feeCents,
+        totalCents,
+        currency
       }, window.origin);
-
 
     } catch (err) {
       console.error('Erro no handleBuyClick:', err);

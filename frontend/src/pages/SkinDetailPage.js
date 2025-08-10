@@ -95,6 +95,9 @@ const SkinDetailPage = () => {
       const data = await getSkinDetails(marketHashName);
       if (data && data.success) {
         const listingsData = data.listings || [];
+
+        console.log("[DEBUG] Listings RAW recebidos:", listingsData);
+        
         setOriginalListings(listingsData);
         setListings(listingsData);
         
