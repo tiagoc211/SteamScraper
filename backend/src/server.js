@@ -113,7 +113,8 @@ app.get('/api/skin/:marketHashName', async (req, res) => {
     listings.push({
       listingid,
       name,
-      price: li?.price ? (li.price / 100).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' }) : null, // O preço agora é um número
+      price: li?.price ? (li.price / 100).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' }) : null, 
+      priceNumber,
       image,
       inspectLink,
       stickers: stickerImgs.length > 0 ? stickerImgs : null,

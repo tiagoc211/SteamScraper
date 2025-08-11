@@ -28,8 +28,8 @@ const SkinCardListening = ({ listing, inspectedData, marketHashName }) => {
   const fullMarketName = `${weapon_type} | ${item_name} (${wear_name})`;
   const steamMarketUrl = `https://steamcommunity.com/market/listings/730/${encodeURIComponent(marketHashName)}`;
   const highResImageUrl = (imageurl || listing.image).replace('360fx360f', '512fx512f');
-  const priceValue = parseFloat(listing.price);
-  const formattedPrice = priceValue.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
+  const priceValue = parseFloat(listing.priceNumber);
+  const formattedPrice = listing.priceNumber.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
 
   const getWearColor = (wearFloat) => {
     if (wearFloat < 0.07) return '#86c55c';

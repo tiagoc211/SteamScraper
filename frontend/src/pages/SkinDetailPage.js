@@ -6,12 +6,13 @@ import FilterSidebar from '../components/FilterSidebar';
 import './SkinDetailPage.css';
 
 const initialFilters = {
-    price: ['', ''],
+    priceNumber: ['', ''],
     wear: [0, 1],
     paintSeed: '',
     fade: [80, 100],
     enabled: {
-        price: false,
+        // CORREÇÃO: A chave aqui deve ser 'priceNumber' para corresponder ao resto do código.
+        priceNumber: false, 
         wear: false,
         paintSeed: false,
     }
@@ -25,7 +26,7 @@ const SkinDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState(initialFilters);
-  const [sortBy, setSortBy] = useState('price');
+  const [sortBy, setSortBy] = useState('priceNumber');
 
   const handleToggleFilter = (filterName) => {
     setFilters(prev => ({
@@ -45,10 +46,10 @@ const SkinDetailPage = () => {
                 return (inspectedData[a.listingid]?.floatvalue || 1) - (inspectedData[b.listingid]?.floatvalue || 1);
             case 'pattern':
                 return (inspectedData[a.listingid]?.paintseed || 1001) - (inspectedData[b.listingid]?.paintseed || 1001);
-            case 'price':
+            case 'priceNumber':
             default:
-                // CORREÇÃO: Usa a propriedade 'price', que agora é um número
-                return a.price - b.price;
+                // Assegura que ambos os valores são números antes de subtrair
+                return (a.priceNumber || 0) - (b.priceNumber || 0);
         }
     });
     return sorted;
@@ -57,16 +58,14 @@ const SkinDetailPage = () => {
   const handleApplyFilters = () => {
     let filteredListings = [...originalListings];
 
-    if (filters.enabled.price) {
-        const minPrice = parseFloat(filters.price[0]);
-        const maxPrice = parseFloat(filters.price[1]);
+    if (filters.enabled.priceNumber) {
+        const minPrice = parseFloat(filters.priceNumber[0]);
+        const maxPrice = parseFloat(filters.priceNumber[1]);
         if (!isNaN(minPrice)) {
-            // CORREÇÃO: Usa 'price'
-            filteredListings = filteredListings.filter(l => l.price >= minPrice);
+            filteredListings = filteredListings.filter(l => (l.priceNumber || 0) >= minPrice);
         }
         if (!isNaN(maxPrice)) {
-            // CORREÇÃO: Usa 'price'
-            filteredListings = filteredListings.filter(l => l.price <= maxPrice);
+            filteredListings = filteredListings.filter(l => (l.priceNumber || 0) <= maxPrice);
         }
     }
 
@@ -94,9 +93,9 @@ const SkinDetailPage = () => {
 
   useEffect(() => {
     if (listings.length > 0) {
-        setListings(sortListings(listings));
+        setListings(currentListings => sortListings(currentListings));
     }
-  }, [sortBy]);
+  }, [sortBy, inspectedData]);
 
 
   useEffect(() => {
@@ -105,15 +104,19 @@ const SkinDetailPage = () => {
       setError(null);
       const data = await getSkinDetails(marketHashName);
       if (data && data.success) {
-        // CORREÇÃO: A conversão no frontend foi removida, pois o backend já envia um número
         const listingsData = data.listings || [];
-        setOriginalListings(listingsData);
-        setListings(listingsData);
+        // Ordena os dados assim que chegam
+        const sortedData = sortListings(listingsData);
+        setOriginalListings(sortedData);
+        setListings(sortedData);
         
+        // Inicia o processo de inspeção para cada item
         for (const listing of listingsData) {
           const inspectUrl = listing.inspectLink;
           if (inspectUrl) {
             try {
+              // NOTA: O endpoint 'http://localhost/' parece ser um proxy local. 
+              // Assumindo que está a funcionar como esperado.
               const res = await fetch(`http://localhost/?url=${encodeURIComponent(inspectUrl)}`);
               const json = await res.json();
               if (json && json.iteminfo) {
@@ -155,7 +158,7 @@ const SkinDetailPage = () => {
             <h2>Listings no Mercado</h2>
             <div className="sort-bar">
               <span>Ordenar por:</span>
-              <button className={`sort-button ${sortBy === 'price' ? 'active' : ''}`} onClick={() => setSortBy('price')}>Preço</button>
+              <button className={`sort-button ${sortBy === 'priceNumber' ? 'active' : ''}`} onClick={() => setSortBy('priceNumber')}>Preço</button>
               <button className={`sort-button ${sortBy === 'float' ? 'active' : ''}`} onClick={() => setSortBy('float')}>Float</button>
               <button className={`sort-button ${sortBy === 'pattern' ? 'active' : ''}`} onClick={() => setSortBy('pattern')}>Pattern</button>
             </div>

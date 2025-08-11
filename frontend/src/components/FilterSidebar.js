@@ -20,28 +20,42 @@ const FilterSection = ({ title, children, isEnabled, onToggle, defaultOpen = tru
 };
 
 const FilterSidebar = ({ filters, setFilters, onApplyFilters, onToggleFilter, onResetFilters }) => {
+  
+  // Este manipulador já estava correto.
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
   };
 
+  // CORREÇÃO: O manipulador de intervalos foi melhorado para evitar qualquer possibilidade de estado obsoleto.
+  // Toda a lógica agora acontece dentro do callback de setFilters.
   const handleRangeChange = (name, index, value) => {
-    const newRange = [...filters[name]];
-    newRange[index] = value;
-    setFilters(prev => ({ ...prev, [name]: newRange }));
+    setFilters(prevFilters => {
+      // Cria uma cópia da array que queremos modificar (ex: prevFilters.priceNumber)
+      const newRange = [...prevFilters[name]];
+      newRange[index] = value;
+      // Retorna o novo objeto de estado completo
+      return { 
+        ...prevFilters, 
+        [name]: newRange 
+      };
+    });
   };
 
   return (
     <aside className="filter-sidebar">
-      <FilterSection title="Price" isEnabled={filters.enabled.price} onToggle={() => onToggleFilter('price')}>
+      {/* CORREÇÃO: Alterado de 'price' para 'priceNumber' para corresponder ao estado do componente pai */}
+      <FilterSection title="Price" isEnabled={filters.enabled.priceNumber} onToggle={() => onToggleFilter('priceNumber')}>
         <div className="range-inputs">
           <div className="input-group">
             <label>From</label>
-            <input type="number" name="priceFrom" value={filters.price[0]} onChange={(e) => handleRangeChange('price', 0, e.target.value)} placeholder="0" />
+            {/* CORREÇÃO: Usa 'priceNumber' e o manipulador correto */}
+            <input type="number" name="priceFrom" value={filters.priceNumber[0]} onChange={(e) => handleRangeChange('priceNumber', 0, e.target.value)} placeholder="0" />
           </div>
           <div className="input-group">
             <label>To</label>
-            <input type="number" name="priceTo" value={filters.price[1]} onChange={(e) => handleRangeChange('price', 1, e.target.value)} placeholder="∞" />
+            {/* CORREÇÃO: Usa 'priceNumber' e o manipulador correto */}
+            <input type="number" name="priceTo" value={filters.priceNumber[1]} onChange={(e) => handleRangeChange('priceNumber', 1, e.target.value)} placeholder="∞" />
           </div>
         </div>
       </FilterSection>
@@ -50,6 +64,7 @@ const FilterSidebar = ({ filters, setFilters, onApplyFilters, onToggleFilter, on
         <div className="range-inputs">
             <div className="input-group">
                 <label>Minimum</label>
+                {/* O manipulador de 'wear' já estava a usar a lógica correta */}
                 <input type="number" step="0.01" value={filters.wear[0]} onChange={(e) => handleRangeChange('wear', 0, e.target.value)} />
             </div>
             <div className="input-group">
@@ -67,7 +82,7 @@ const FilterSidebar = ({ filters, setFilters, onApplyFilters, onToggleFilter, on
       </FilterSection>
       
       <FilterSection title="Stickers" isEnabled={false} onToggle={() => {}} defaultOpen={false}>
-        {/* Placeholder */}
+        {/* Este componente é um placeholder e não necessita de alterações */}
       </FilterSection>
 
       <div className="filter-actions">
