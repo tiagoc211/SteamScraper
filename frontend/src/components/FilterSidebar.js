@@ -19,23 +19,30 @@ const FilterSection = ({ title, children, isEnabled, onToggle, defaultOpen = tru
   );
 };
 
-const FilterSidebar = ({ filters, setFilters, onApplyFilters, onToggleFilter }) => {
+const FilterSidebar = ({ filters, setFilters, onApplyFilters, onToggleFilter, onResetFilters }) => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
   };
+
   const handleRangeChange = (name, index, value) => {
     const newRange = [...filters[name]];
     newRange[index] = value;
     setFilters(prev => ({ ...prev, [name]: newRange }));
   };
-  const handleReset = () => { /* ... */ };
 
   return (
     <aside className="filter-sidebar">
       <FilterSection title="Price" isEnabled={filters.enabled.price} onToggle={() => onToggleFilter('price')}>
         <div className="range-inputs">
-            {/* ... inputs de preço ... */}
+          <div className="input-group">
+            <label>From</label>
+            <input type="number" name="priceFrom" value={filters.price[0]} onChange={(e) => handleRangeChange('price', 0, e.target.value)} placeholder="0" />
+          </div>
+          <div className="input-group">
+            <label>To</label>
+            <input type="number" name="priceTo" value={filters.price[1]} onChange={(e) => handleRangeChange('price', 1, e.target.value)} placeholder="∞" />
+          </div>
         </div>
       </FilterSection>
 
@@ -67,7 +74,7 @@ const FilterSidebar = ({ filters, setFilters, onApplyFilters, onToggleFilter }) 
         <button className="apply-button" onClick={onApplyFilters}>
           Apply Filters
         </button>
-        <button className="reset-button" onClick={handleReset}>
+        <button className="reset-button" onClick={onResetFilters}>
           <span role="img" aria-label="reset">⟳</span> Reset All Filters
         </button>
       </div>

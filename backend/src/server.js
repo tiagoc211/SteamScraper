@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const cheerio = require('cheerio'); // Precisará do Cheerio no backend
+const cheerio = require('cheerio');
 const { fetchSearchPage, fetchPage } = require('./fetch');
 const weaponData = require('./data');
 const fs = require('fs/promises');
@@ -8,9 +8,9 @@ const crypto = require('crypto');
 
 const app = express();
 app.use(cors());
-const PORT = 3001; // Garanta que esta é a porta do seu backend
+const PORT = 3001;
 
-const ISSUER = 'http://localhost:3001'; // igual ao sw.js
+const ISSUER = 'http://localhost:3001';
 const AUDIENCE = 'steamscraper-extension';
 
 async function loadPrivateKey() {
@@ -23,14 +23,9 @@ async function loadPrivateKey() {
 // Endpoint para pesquisa
 app.get('/api/search', async (req, res) => {
   const { weapon, query } = req.query;
-
-  // 1. Juntar os parâmetros de pesquisa numa única string
   let initialSearch = `${weapon || ''} ${query || ''}`;
-
-  // 2. Agora, limpar a palavra "knife" da string completa e remover espaços extras
   const searchQuery = initialSearch.replace(/knife/gi, '').trim();
 
-  // Se a pesquisa ficar vazia após a limpeza, pode optar por não pesquisar
   if (!searchQuery) {
     return res.json({ results: [] });
   }
@@ -40,7 +35,6 @@ app.get('/api/search', async (req, res) => {
     return res.json({ results: [] });
   }
 
-  // Processar o HTML e devolver JSON limpo
   const $ = cheerio.load(data.results_html);
   const results = [];
   $('a.market_listing_row_link').each((_, el) => {
@@ -49,7 +43,7 @@ app.get('/api/search', async (req, res) => {
     const iconUrl = $(el).find('img.market_listing_item_img').attr('src');
 
     results.push({
-      market_hash_name: name, // O nome completo é o melhor identificador
+      market_hash_name: name,
       name: name.split(' | ')[1]?.split(' (')[0] || name,
       price: price,
       icon_url: iconUrl,
@@ -58,7 +52,6 @@ app.get('/api/search', async (req, res) => {
 
   res.json({ results });
 });
-
 
 
 app.get('/api/skin/:marketHashName', async (req, res) => {
@@ -77,42 +70,36 @@ app.get('/api/skin/:marketHashName', async (req, res) => {
 
     const listingid = $el.attr('id')?.replace('listing_', '');
     const name = $el.find('.market_listing_item_name').text().trim();
+    const priceText = $el.find('.market_listing_price_with_fee').text().trim();
     const image = $el.find('img.market_listing_item_img').attr('src');
     const inspectLink = $el.find('.market_listing_row_action a').attr('href');
 
-    // Obter dados da listinginfo original
-    const li = listingid ? data.listinginfo?.[listingid] : null;
+    // CORREÇÃO: Limpa a string do preço e converte-a para um número
+    const price = parseFloat(priceText.replace(/[^\d,]/g, '').replace(',', '.'));
 
-    // Usar SEMPRE os preços originais (não convertidos!)
-    const subtotalCents = Number.isInteger(li?.price) ? li.price : null;
-    const feeCents      = Number.isInteger(li?.fee)   ? li.fee   : null;
-    const totalCents    = (Number.isInteger(subtotalCents) && Number.isInteger(feeCents))
-      ? (subtotalCents + feeCents) : null;
-
-    const currency      = li?.currencyid ?? null;
-
-    // Resolver o asset bruto
-    let rawAsset = null;
-    const assetId   = li?.asset?.id;
-    const contextId = li?.asset?.contextid || '2';
-    if (assetId) {
-      rawAsset = data.assets?.[730]?.[contextId]?.[assetId] ?? null;
-    }
-
-    // Stickers
     const stickerImgs = [];
     $el.find('#sticker_info img').each((_, img) => {
       const src = $(img).attr('src');
       if (src) stickerImgs.push(src);
     });
 
+    const keychains = [];
+    $el.find('#keychain_info img').each((_, img) => {
+        const src = $(img).attr('src');
+        if (src) {
+            keychains.push({ image_url: src });
+        }
+    });
+
     listings.push({
       listingid,
       name,
       price: li?.price ? (li.price / 100).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' }) : null,
+      Realprice, // O preço agora é um número
       image,
       inspectLink,
       stickers: stickerImgs.length > 0 ? stickerImgs : null,
+      keychains: keychains.length > 0 ? keychains : null,
       buy: {
         currency,         // ex: 3 = EUR, 2003 etc.
         subtotalCents,
@@ -129,7 +116,6 @@ app.get('/api/skin/:marketHashName', async (req, res) => {
     listings,
   });
 });
-
 
 app.post('/api/tokens/buy', express.json(), async (req, res) => {
   try {
@@ -157,7 +143,7 @@ app.post('/api/tokens/buy', express.json(), async (req, res) => {
       .setIssuer(ISSUER)
       .setAudience(AUDIENCE)
       .setIssuedAt()
-      .setExpirationTime('60s') // expira em 60 segundos
+      .setExpirationTime('60s')
       .sign(key);
 
     res.json({ token, exp: Date.now() + 60 * 1000 });
@@ -166,7 +152,5 @@ app.post('/api/tokens/buy', express.json(), async (req, res) => {
     res.status(500).json({ error: 'Falha a gerar token' });
   }
 });
-
-
 
 app.listen(PORT, () => console.log(`Backend a correr em http://localhost:${PORT}`));
