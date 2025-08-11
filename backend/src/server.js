@@ -70,12 +70,31 @@ app.get('/api/skin/:marketHashName', async (req, res) => {
 
     const listingid = $el.attr('id')?.replace('listing_', '');
     const name = $el.find('.market_listing_item_name').text().trim();
-    const priceText = $el.find('.market_listing_price_with_fee').text().trim();
+    const price = $el.find('.market_listing_price_with_fee').text().trim();
     const image = $el.find('img.market_listing_item_img').attr('src');
     const inspectLink = $el.find('.market_listing_row_action a').attr('href');
 
+    const li = listingid ? data.listinginfo?.[listingid] : null;
+
+    // Usar SEMPRE os preços originais (não convertidos!)
+    const subtotalCents = Number.isInteger(li?.price) ? li.price : null;
+    const feeCents      = Number.isInteger(li?.fee)   ? li.fee   : null;
+    const totalCents    = (Number.isInteger(subtotalCents) && Number.isInteger(feeCents))
+      ? (subtotalCents + feeCents) : null;
+
+    const currency      = li?.currencyid ?? null;
+
+    // Resolver o asset bruto
+    let rawAsset = null;
+    const assetId   = li?.asset?.id;
+    const contextId = li?.asset?.contextid || '2';
+    if (assetId) {
+      rawAsset = data.assets?.[730]?.[contextId]?.[assetId] ?? null;
+    }
+
     // CORREÇÃO: Limpa a string do preço e converte-a para um número
-    const price = parseFloat(priceText.replace(/[^\d,]/g, '').replace(',', '.'));
+    const priceNumber = parseFloat(price.replace(/[^\d,]/g, '').replace(',', '.'));
+
 
     const stickerImgs = [];
     $el.find('#sticker_info img').each((_, img) => {
@@ -94,8 +113,7 @@ app.get('/api/skin/:marketHashName', async (req, res) => {
     listings.push({
       listingid,
       name,
-      price: li?.price ? (li.price / 100).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' }) : null,
-      Realprice, // O preço agora é um número
+      price: li?.price ? (li.price / 100).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' }) : null, // O preço agora é um número
       image,
       inspectLink,
       stickers: stickerImgs.length > 0 ? stickerImgs : null,
