@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaSteam } from 'react-icons/fa'; // Exemplo de ícone
+import { FaSteam } from 'react-icons/fa';
 import './Header.css';
 
 const Header = () => {
@@ -12,7 +12,6 @@ const Header = () => {
           <h1>Skin Inspector</h1>
         </Link>
         <nav>
-          {/* Pode adicionar mais links aqui no futuro */}
           <a href="#" className="nav-link">Home</a>
           <a href="#" className="nav-link">Sobre</a>
         </nav>

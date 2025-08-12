@@ -1,11 +1,9 @@
 .homepage {
-  background-image: url('../data/background.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   min-height: 100vh;
   width: 100%;
-  backdrop-filter: blur(3px); /* opcional para efeito desfocado */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -46,5 +44,5 @@
 }
 
 .start-button:hover {
-  background-color: #019875;
+  background-color: #019847;
 }

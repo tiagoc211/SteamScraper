@@ -19,22 +19,18 @@ const weaponTypes = { rifles, smgs, heavy, pistols, knives };
 const wearConditions = ["Factory New", "Minimal Wear", "Field-Tested", "Well-Worn", "Battle-Scarred"];
 const formatForUrl = (name) => name ? name.replace(/ /g, '_').replace(/[™|]/g, '') : '';
 
-
 const getWeaponImageUrl = (weaponName) => {
-  if (!weaponName) return null;
-  const formattedName = formatForUrl(weaponName);
-  return `https://www.csgodatabase.com/images/weapons/webp/${formattedName}.webp`;
+    if (!weaponName) return null;
+    const formattedName = formatForUrl(weaponName);
+    return `https://www.csgodatabase.com/images/weapons/webp/${formattedName}.webp`;
 };
 
 const getSkinImageUrl = (weapon, skin) => {
-    if (!weapon || !skin) return getWeaponImageUrl(weapon); // Fallback para a imagem da arma base
+    if (!weapon || !skin) return getWeaponImageUrl(weapon);
     const formattedWeapon = formatForUrl(weapon);
     const formattedSkin = formatForUrl(skin);
     const isKnife = knives.includes(weapon);
-    
-    if (isKnife) {
-        return `https://www.csgodatabase.com/images/knives/webp/${formattedWeapon}_${formattedSkin}.webp`;
-    }
+    if (isKnife) return `https://www.csgodatabase.com/images/knives/webp/${formattedWeapon}_${formattedSkin}.webp`;
     return `https://www.csgodatabase.com/images/skins/webp/${formattedWeapon}_${formattedSkin}.webp`;
 };
 
@@ -64,174 +60,156 @@ const categoryItems = [
 ];
 
 const SkinSelectorPage = () => {
-  const navigate = useNavigate();
-  const [searchMode, setSearchMode] = useState('simple');
+    const navigate = useNavigate();
+    const [searchMode, setSearchMode] = useState('simple');
 
-  // Estados da Pesquisa Simples
-  const [simpleStep, setSimpleStep] = useState('category');
-  const [simpleType, setSimpleType] = useState(null);
-  const [simpleWeapon, setSimpleWeapon] = useState('');
-  const [simpleSkin, setSimpleSkin] = useState('');
-  const [simpleWear, setSimpleWear] = useState('');
-  const [isSkinDropdownOpen, setSkinDropdownOpen] = useState(false);
-  const [isWearDropdownOpen, setWearDropdownOpen] = useState(false);
+    // Estados da Pesquisa Simples
+    const [simpleStep, setSimpleStep] = useState('category');
+    const [simpleType, setSimpleType] = useState(null);
+    const [simpleWeapon, setSimpleWeapon] = useState('');
+    const [simpleSkin, setSimpleSkin] = useState('');
+    const [simpleWear, setSimpleWear] = useState('');
+    const [isSkinDropdownOpen, setSkinDropdownOpen] = useState(false);
+    const [isWearDropdownOpen, setWearDropdownOpen] = useState(false);
 
-  // Estados da Pesquisa Avançada
-  const [advCategory, setAdvCategory] = useState('');
-  const [advWeapon, setAdvWeapon] = useState('');
-  const [advSkin, setAdvSkin] = useState('');
-  const [advWear, setAdvWear] = useState('');
-  const [minFloat, setMinFloat] = useState('');
-  const [maxFloat, setMaxFloat] = useState('');
-  const [pattern, setPattern] = useState('');
+    // Estados da Pesquisa Avançada
+    const [advCategory, setAdvCategory] = useState('');
+    const [advWeapon, setAdvWeapon] = useState('');
+    const [advSkin, setAdvSkin] = useState('');
+    const [advWear, setAdvWear] = useState('');
+    const [minFloat, setMinFloat] = useState('');
+    const [maxFloat, setMaxFloat] = useState('');
+    const [pattern, setPattern] = useState('');
 
-  const [glowImageUrl, setGlowImageUrl] = useState(null);
-  const [glowColor, setGlowColor] = useState('transparent');
+    const [glowImageUrl, setGlowImageUrl] = useState(null);
+    const [glowColor, setGlowColor] = useState('transparent');
 
-  const updateGlow = (imageUrl, color) => {
-    setGlowImageUrl(imageUrl);
-    setGlowColor(color || 'transparent');
-  };
+    const updateGlow = (imageUrl, color) => { setGlowImageUrl(imageUrl); setGlowColor(color || 'transparent'); };
+    const resetAllFields = () => {
+        setSimpleStep('category'); setSimpleType(null); setSimpleWeapon(''); setSimpleSkin(''); setSimpleWear('');
+        setAdvCategory(''); setAdvWeapon(''); setAdvSkin(''); setAdvWear(''); setMinFloat(''); setMaxFloat(''); setPattern('');
+        updateGlow(null);
+    };
+    useEffect(() => { resetAllFields(); }, [searchMode]);
 
-  const resetAllFields = () => {
-    setSimpleStep('category'); setSimpleType(null); setSimpleWeapon(''); setSimpleSkin(''); setSimpleWear('');
-    setAdvCategory(''); setAdvWeapon(''); setAdvSkin(''); setAdvWear(''); setMinFloat(''); setMaxFloat(''); setPattern('');
-    updateGlow(null);
-  };
-  
-  useEffect(() => { resetAllFields(); }, [searchMode]);
+    const handleSimpleCategorySelect = (categoryKey) => { setSimpleType(categoryKey); setSimpleStep('weapon'); updateGlow(getWeaponImageUrl(weaponTypes[categoryKey]?.[0]), glowColorMap[categoryKey]); };
+    const handleSimpleWeaponSelect = (weaponName) => { setSimpleWeapon(weaponName); setSimpleStep('skin'); updateGlow(getWeaponImageUrl(weaponName), glowColorMap[simpleType]); };
+    const handleSimpleSkinSelect = (skinName) => { setSimpleSkin(skinName); setSkinDropdownOpen(false); updateGlow(getSkinImageUrl(simpleWeapon, skinName), glowColorMap[simpleType]); };
+    const handleSimpleWearSelect = (wear) => { setSimpleWear(wear); setWearDropdownOpen(false); };
+    const handleSimpleSkinHover = (skinName) => { updateGlow(getSkinImageUrl(simpleWeapon, skinName), glowColorMap[simpleType]); };
+    const handleSimpleSearch = () => { if (!simpleWeapon || !simpleSkin || !simpleWear) { alert("Por favor, selecione todos os campos."); return; } const marketHashName = `${simpleWeapon} | ${simpleSkin} (${simpleWear})`; navigate(`/skin/${encodeURIComponent(marketHashName)}`); };
+    const handleSimpleBack = () => { if (simpleStep === 'skin') { setSimpleStep('weapon'); setSimpleSkin(''); setSimpleWear(''); updateGlow(getWeaponImageUrl(simpleWeapon), glowColorMap[simpleType]); } else if (simpleStep === 'weapon') { setSimpleStep('category'); setSimpleType(null); updateGlow(null); } };
 
-  // Lógica da Pesquisa Simples
-  const handleSimpleCategorySelect = (categoryKey) => { setSimpleType(categoryKey); setSimpleStep('weapon'); updateGlow(getWeaponImageUrl(weaponTypes[categoryKey]?.[0]), glowColorMap[categoryKey]); };
-  const handleSimpleWeaponSelect = (weaponName) => { setSimpleWeapon(weaponName); setSimpleStep('skin'); updateGlow(getWeaponImageUrl(weaponName), glowColorMap[simpleType]); };
-  const handleSimpleSkinSelect = (skinName) => { setSimpleSkin(skinName); setSkinDropdownOpen(false); updateGlow(getSkinImageUrl(simpleWeapon, skinName), glowColorMap[simpleType]); };
-  const handleSimpleWearSelect = (wear) => { setSimpleWear(wear); setWearDropdownOpen(false); };
-  const handleSimpleSkinHover = (skinName) => { updateGlow(getSkinImageUrl(simpleWeapon, skinName), glowColorMap[simpleType]); };
-  const handleSimpleSearch = () => { if (!simpleWeapon || !simpleSkin || !simpleWear) { alert("Por favor, selecione todos os campos."); return; } const marketHashName = `${simpleWeapon} | ${simpleSkin} (${simpleWear})`; navigate(`/skin/${encodeURIComponent(marketHashName)}`); };
-  const handleSimpleBack = () => { if (simpleStep === 'skin') { setSimpleStep('weapon'); setSimpleSkin(''); setSimpleWear(''); updateGlow(getWeaponImageUrl(simpleWeapon), glowColorMap[simpleType]); } else if (simpleStep === 'weapon') { setSimpleStep('category'); setSimpleType(null); updateGlow(null); } };
-  
-  // Lógica da Pesquisa Avançada
-  const handleAdvancedSearch = () => {
-    if (!advWeapon || !advSkin || !advWear) {
-      alert("Por favor, selecione Categoria, Arma, Skin e Condição.");
-      return;
-    }
-    const marketHashName = `${advWeapon} | ${advSkin} (${advWear})`;
-    const queryParams = new URLSearchParams();
-    if (minFloat) queryParams.set('minFloat', minFloat);
-    if (maxFloat) queryParams.set('maxFloat', maxFloat);
-    if (pattern) queryParams.set('pattern', pattern);
-    
-    navigate(`/skin/${encodeURIComponent(marketHashName)}?${queryParams.toString()}`);
-  };
-  
-  const simpleWeaponItems = useMemo(() => simpleType ? weaponTypes[simpleType].map(w => ({ key: w, label: w.replace(' Knife', '').replace('Revolver', '') })) : [], [simpleType]);
-  const availableSkins = useMemo(() => simpleWeapon ? getSkinsForWeapon(simpleWeapon) : [], [simpleWeapon]);
+    const handleAdvancedSearch = () => {
+        if (!advWeapon || !advSkin || !advWear) { alert("Por favor, selecione Categoria, Arma, Skin e Condição."); return; }
+        const marketHashName = `${advWeapon} | ${advSkin} (${advWear})`;
+        const queryParams = new URLSearchParams();
+        if (minFloat) queryParams.set('minFloat', minFloat);
+        if (maxFloat) queryParams.set('maxFloat', maxFloat);
+        if (pattern) queryParams.set('pattern', pattern);
+        navigate(`/skin/${encodeURIComponent(marketHashName)}?${queryParams.toString()}`);
+    };
 
-  return (
-    <div className="skinselectorpage">
-      <div className="page-content-wrapper">
-        <section className="interactive-selection-area">
-          <div className="search-mode-toggles">
-            <button className={`mode-toggle-button ${searchMode === 'simple' ? 'active' : ''}`} onClick={() => setSearchMode('simple')}>Pesquisa Simples</button>
-            <button className={`mode-toggle-button ${searchMode === 'advanced' ? 'active' : ''}`} onClick={() => setSearchMode('advanced')}>Pesquisa Avançada</button>
-          </div>
+    const simpleWeaponItems = useMemo(() => simpleType ? weaponTypes[simpleType].map(w => ({ key: w, label: w.replace(/ (Knife|Revolver)/g, '') })) : [], [simpleType]);
+    const availableSkins = useMemo(() => simpleWeapon ? getSkinsForWeapon(simpleWeapon) : [], [simpleWeapon]);
+    const advAvailableSkins = useMemo(() => advWeapon ? getSkinsForWeapon(advWeapon) : [], [advWeapon]);
 
-          <AnimatePresence mode="wait">
-            {searchMode === 'simple' ? (
-              <motion.div key="simple" className="selection-content" initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}} transition={{ duration: 0.3 }}>
-                <div className="content-half left-half">
-                  {glowImageUrl && <img src={glowImageUrl} alt="Preview" className="weapon-glow-image" style={{'--glow-color': glowColor}} />}
-                </div>
-
-                <div className="content-half right-half">
-                  <AnimatePresence mode="wait">
-                    {simpleStep === 'category' && (
-                      <motion.div key="cat" initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}>
-                        <RadialMenu title="Categoria" items={categoryItems} onSelect={handleSimpleCategorySelect} onHover={(key) => updateGlow(getWeaponImageUrl(weaponTypes[key]?.[0]), glowColorMap[key])} />
-                      </motion.div>
-                    )}
-                    {simpleStep === 'weapon' && (
-                      <motion.div key="wep" className="radial-menu-with-controls" initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}>
-                         <RadialMenu title={simpleType} items={simpleWeaponItems} onSelect={handleSimpleWeaponSelect} onHover={(key) => updateGlow(getWeaponImageUrl(key), glowColorMap[simpleType])} />
-                         <div className="simple-controls-area">
-                            <button onClick={handleSimpleBack} className="control-button back-button"><FaArrowLeft /> Voltar</button>
-                         </div>
-                      </motion.div>
-                    )}
-                    {simpleStep === 'skin' && (
-                      <motion.div key="skin" className="simple-selection-form" initial={{opacity: 0, x: 20}} animate={{opacity: 1, x: 0}} exit={{opacity: 0, x: -20}}>
-                          <div className="simple-selection-header"><h2>{simpleWeapon}</h2><p>Selecione a Skin e Condição</p></div>
-                          
-                          <div className="custom-dropdown-wrapper">
-                            <button className="custom-dropdown-toggle" onClick={() => setSkinDropdownOpen(!isSkinDropdownOpen)}>{simpleSkin || 'Selecione a Skin'}</button>
-                            {isSkinDropdownOpen && (
-                              <ul className="custom-dropdown-list" onMouseLeave={() => handleSimpleSkinHover(simpleSkin)}>
-                                {availableSkins.map(s => <li key={s} onMouseEnter={() => handleSimpleSkinHover(s)} onClick={() => handleSimpleSkinSelect(s)}>{s}</li>)}
-                              </ul>
-                            )}
-                          </div>
-
-                          <div className="custom-dropdown-wrapper">
-                            <button className="custom-dropdown-toggle" onClick={() => setWearDropdownOpen(!isWearDropdownOpen)} disabled={!simpleSkin}>{simpleWear || 'Selecione a Condição'}</button>
-                            {isWearDropdownOpen && (
-                              <ul className="custom-dropdown-list">
-                                {wearConditions.map(w => <li key={w} onClick={() => handleSimpleWearSelect(w)}>{w}</li>)}
-                              </ul>
-                            )}
-                          </div>
-
-                          <div className="simple-form-actions">
-                            <button onClick={handleSimpleBack} className="control-button back-button"><FaArrowLeft /> Voltar</button>
-                            <button className="control-button search-button" onClick={handleSimpleSearch} disabled={!simpleWear}><FaSearch /> Pesquisar</button>
-                          </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div key="advanced" className="selection-content advanced-mode" initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}} transition={{ duration: 0.3 }}>
-                <div className="advanced-search-form">
-                  <h3>Pesquisa Avançada</h3>
-                  <div className="form-row">
-                    <select className="custom-dropdown" value={advCategory} onChange={(e) => { setAdvCategory(e.target.value); setAdvWeapon(''); setAdvSkin(''); setAdvWear(''); }}>
-                      <option value="">Selecione a Categoria</option>
-                      {Object.keys(weaponTypes).map(cat => <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>)}
-                    </select>
-                    <select className="custom-dropdown" value={advWeapon} onChange={(e) => setAdvWeapon(e.target.value)} disabled={!advCategory}>
-                      <option value="">Selecione a Arma</option>
-                      {advCategory && weaponTypes[advCategory].map(w => <option key={w} value={w}>{w}</option>)}
-                    </select>
-                  </div>
-                  <div className="form-row">
-                    <select className="custom-dropdown" value={advSkin} onChange={(e) => setAdvSkin(e.target.value)} disabled={!advWeapon}>
-                      <option value="">Selecione a Skin</option>
-                      {advWeapon && getSkinsForWeapon(advWeapon).map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                    <select className="custom-dropdown" value={advWear} onChange={(e) => setAdvWear(e.target.value)} disabled={!advSkin}>
-                      <option value="">Selecione a Condição</option>
-                      {wearConditions.map(w => <option key={w} value={w}>{w}</option>)}
-                    </select>
-                  </div>
-                  <div className="form-row">
-                    <div className="input-group">
-                      <input type="number" placeholder="Min Float" value={minFloat} onChange={e => setMinFloat(e.target.value)} />
-                      <input type="number" placeholder="Max Float" value={maxFloat} onChange={e => setMaxFloat(e.target.value)} />
+    return (
+        <div className="skinselectorpage">
+            <div className="page-content-wrapper">
+                <section className="interactive-selection-area">
+                    <div className="search-mode-toggles">
+                        <button className={`mode-toggle-button ${searchMode === 'simple' ? 'active' : ''}`} onClick={() => setSearchMode('simple')}>Pesquisa Simples</button>
+                        <button className={`mode-toggle-button ${searchMode === 'advanced' ? 'active' : ''}`} onClick={() => setSearchMode('advanced')}>Pesquisa Avançada</button>
                     </div>
-                    <input type="number" placeholder="Pattern ID" value={pattern} onChange={e => setPattern(e.target.value)} className="pattern-input"/>
-                  </div>
-                  <button className="control-button search-button" onClick={handleAdvancedSearch} disabled={!advWeapon || !advSkin || !advWear}>
-                    <FaSearch /> Pesquisar
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </section>
-      </div>
-    </div>
-  );
+
+                    <AnimatePresence mode="wait">
+                        {searchMode === 'simple' ? (
+                            <motion.div key="simple" className="selection-content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                                <div className="content-half left-half">
+                                    {glowImageUrl && <img src={glowImageUrl} alt="Preview" className="weapon-glow-image" style={{ '--glow-color': glowColor }} />}
+                                </div>
+                                <div className="content-half right-half">
+                                    <AnimatePresence mode="wait">
+                                        {simpleStep === 'category' && (
+                                            <motion.div key="cat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                                <RadialMenu title="Categoria" items={categoryItems} onSelect={handleSimpleCategorySelect} onHover={(key) => updateGlow(getWeaponImageUrl(weaponTypes[key]?.[0]), glowColorMap[key])} />
+                                            </motion.div>
+                                        )}
+                                        {simpleStep === 'weapon' && (
+                                            <motion.div key="wep" className="radial-menu-with-controls" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                                <RadialMenu title={simpleType} items={simpleWeaponItems} onSelect={handleSimpleWeaponSelect} onHover={(key) => updateGlow(getWeaponImageUrl(key), glowColorMap[simpleType])} />
+                                                <div className="simple-controls-area">
+                                                    <button onClick={handleSimpleBack} className="control-button back-button"><FaArrowLeft /> Voltar</button>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                        {simpleStep === 'skin' && (
+                                            <motion.div key="skin" className="simple-selection-form" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                                                <div className="simple-selection-header"><h2>{simpleWeapon}</h2><p>Selecione a Skin e Condição</p></div>
+                                                <div className="custom-dropdown-wrapper">
+                                                    <button className="custom-dropdown-toggle" onClick={() => setSkinDropdownOpen(!isSkinDropdownOpen)}>{simpleSkin || 'Selecione a Skin'}</button>
+                                                    {isSkinDropdownOpen && (
+                                                        <ul className="custom-dropdown-list" onMouseLeave={() => handleSimpleSkinHover(simpleSkin)}>
+                                                            {availableSkins.map(s => <li key={s} onMouseEnter={() => handleSimpleSkinHover(s)} onClick={() => handleSimpleSkinSelect(s)}>{s}</li>)}
+                                                        </ul>
+                                                    )}
+                                                </div>
+                                                <div className="custom-dropdown-wrapper">
+                                                    <button className="custom-dropdown-toggle" onClick={() => setWearDropdownOpen(!isWearDropdownOpen)} disabled={!simpleSkin}>{simpleWear || 'Selecione a Condição'}</button>
+                                                    {isWearDropdownOpen && (
+                                                        <ul className="custom-dropdown-list">
+                                                            {wearConditions.map(w => <li key={w} onClick={() => handleSimpleWearSelect(w)}>{w}</li>)}
+                                                        </ul>
+                                                    )}
+                                                </div>
+                                                <div className="simple-form-actions">
+                                                    <button onClick={handleSimpleBack} className="control-button back-button"><FaArrowLeft /> Voltar</button>
+                                                    <button className="control-button search-button" onClick={handleSimpleSearch} disabled={!simpleWear}><FaSearch /> Pesquisar</button>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                            </motion.div>
+                        ) : (
+                            <motion.div key="advanced" className="selection-content advanced-mode" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                                <div className="advanced-search-form">
+                                    <h3>Pesquisa Avançada</h3>
+                                    <div className="form-column">
+                                        <select className="custom-dropdown" value={advCategory} onChange={(e) => { setAdvCategory(e.target.value); setAdvWeapon(''); setAdvSkin(''); setAdvWear(''); }}>
+                                            <option value="">Selecione a Categoria</option>
+                                            {Object.keys(weaponTypes).map(cat => <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>)}
+                                        </select>
+                                        <select className="custom-dropdown" value={advWeapon} onChange={(e) => setAdvWeapon(e.target.value)} disabled={!advCategory}>
+                                            <option value="">Selecione a Arma</option>
+                                            {advCategory && weaponTypes[advCategory].map(w => <option key={w} value={w}>{w}</option>)}
+                                        </select>
+                                        <select className="custom-dropdown" value={advSkin} onChange={(e) => setAdvSkin(e.target.value)} disabled={!advWeapon}>
+                                            <option value="">Selecione a Skin</option>
+                                            {advAvailableSkins.map(s => <option key={s} value={s}>{s}</option>)}
+                                        </select>
+                                        <select className="custom-dropdown" value={advWear} onChange={(e) => setAdvWear(e.target.value)} disabled={!advSkin}>
+                                            <option value="">Selecione a Condição</option>
+                                            {wearConditions.map(w => <option key={w} value={w}>{w}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="form-column">
+                                        <input type="number" placeholder="Min Float" value={minFloat} onChange={e => setMinFloat(e.target.value)} />
+                                        <input type="number" placeholder="Max Float" value={maxFloat} onChange={e => setMaxFloat(e.target.value)} />
+                                        <input type="number" placeholder="Pattern ID" value={pattern} onChange={e => setPattern(e.target.value)} />
+                                        <button className="control-button search-button" onClick={handleAdvancedSearch} disabled={!advWeapon || !advSkin || !advWear}>
+                                            <FaSearch /> Pesquisar
+                                        </button>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </section>
+            </div>
+        </div>
+    );
 };
 
 export default SkinSelectorPage;
