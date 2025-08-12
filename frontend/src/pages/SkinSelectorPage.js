@@ -148,7 +148,7 @@ const SkinSelectorPage = () => {
                                             <motion.div key="skin" className="simple-selection-form" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                                                 <div className="simple-selection-header"><h2>{simpleWeapon}</h2><p>Selecione a Skin e Condição</p></div>
                                                 <div className="custom-dropdown-wrapper">
-                                                    <button className="custom-dropdown-toggle" onClick={() => setSkinDropdownOpen(!isSkinDropdownOpen)}>{simpleSkin || 'Selecione a Skin'}</button>
+                                                    <button className={`custom-dropdown-toggle ${isSkinDropdownOpen ? 'open' : ''}`} onClick={() => setSkinDropdownOpen(!isSkinDropdownOpen)}>{simpleSkin || 'Selecione a Skin'}</button>
                                                     {isSkinDropdownOpen && (
                                                         <ul className="custom-dropdown-list" onMouseLeave={() => handleSimpleSkinHover(simpleSkin)}>
                                                             {availableSkins.map(s => <li key={s} onMouseEnter={() => handleSimpleSkinHover(s)} onClick={() => handleSimpleSkinSelect(s)}>{s}</li>)}
@@ -156,7 +156,7 @@ const SkinSelectorPage = () => {
                                                     )}
                                                 </div>
                                                 <div className="custom-dropdown-wrapper">
-                                                    <button className="custom-dropdown-toggle" onClick={() => setWearDropdownOpen(!isWearDropdownOpen)} disabled={!simpleSkin}>{simpleWear || 'Selecione a Condição'}</button>
+                                                    <button className={`custom-dropdown-toggle ${isWearDropdownOpen ? 'open' : ''}`} onClick={() => setWearDropdownOpen(!isWearDropdownOpen)} disabled={!simpleSkin}>{simpleWear || 'Selecione a Condição'}</button>
                                                     {isWearDropdownOpen && (
                                                         <ul className="custom-dropdown-list">
                                                             {wearConditions.map(w => <li key={w} onClick={() => handleSimpleWearSelect(w)}>{w}</li>)}
@@ -174,6 +174,7 @@ const SkinSelectorPage = () => {
                             </motion.div>
                         ) : (
                             <motion.div key="advanced" className="selection-content advanced-mode" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                                {/* CORREÇÃO: O código do formulário avançado foi restaurado aqui */}
                                 <div className="advanced-search-form">
                                     <h3>Pesquisa Avançada</h3>
                                     <div className="form-column">
@@ -185,6 +186,10 @@ const SkinSelectorPage = () => {
                                             <option value="">Selecione a Arma</option>
                                             {advCategory && weaponTypes[advCategory].map(w => <option key={w} value={w}>{w}</option>)}
                                         </select>
+                                        <input type="number" placeholder="Min Float" value={minFloat} onChange={e => setMinFloat(e.target.value)} />
+                                        <input type="number" placeholder="Max Float" value={maxFloat} onChange={e => setMaxFloat(e.target.value)} />
+                                    </div>
+                                    <div className="form-column">
                                         <select className="custom-dropdown" value={advSkin} onChange={(e) => setAdvSkin(e.target.value)} disabled={!advWeapon}>
                                             <option value="">Selecione a Skin</option>
                                             {advAvailableSkins.map(s => <option key={s} value={s}>{s}</option>)}
@@ -193,10 +198,6 @@ const SkinSelectorPage = () => {
                                             <option value="">Selecione a Condição</option>
                                             {wearConditions.map(w => <option key={w} value={w}>{w}</option>)}
                                         </select>
-                                    </div>
-                                    <div className="form-column">
-                                        <input type="number" placeholder="Min Float" value={minFloat} onChange={e => setMinFloat(e.target.value)} />
-                                        <input type="number" placeholder="Max Float" value={maxFloat} onChange={e => setMaxFloat(e.target.value)} />
                                         <input type="number" placeholder="Pattern ID" value={pattern} onChange={e => setPattern(e.target.value)} />
                                         <button className="control-button search-button" onClick={handleAdvancedSearch} disabled={!advWeapon || !advSkin || !advWear}>
                                             <FaSearch /> Pesquisar

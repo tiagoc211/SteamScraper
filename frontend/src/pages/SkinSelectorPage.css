@@ -20,7 +20,7 @@
     display: flex;
     flex-direction: column;
     position: relative;
-    overflow: hidden;
+    /* CORREÇÃO: Removido 'overflow: hidden' para permitir que os menus saiam */
     padding: 0;
     background: rgba(27, 40, 56, 0.4);
     backdrop-filter: blur(12px);
@@ -100,12 +100,8 @@
 }
 
 @keyframes floatAnimation {
-    0% {
-        transform: translateY(-8px);
-    }
-    100% {
-        transform: translateY(8px);
-    }
+    0% { transform: translateY(-8px); }
+    100% { transform: translateY(8px); }
 }
 
 .radial-menu-with-controls {
@@ -157,7 +153,25 @@
     transition: all 0.2s ease;
     text-align: left;
     cursor: pointer;
+    /* CORREÇÃO: Adicionado para alinhar o texto e a seta */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
+
+/* CORREÇÃO: Nova regra para a seta */
+.custom-dropdown-toggle::after {
+    content: '▼';
+    font-size: 0.8rem;
+    color: var(--color-text);
+    transition: transform 0.3s ease;
+}
+
+/* CORREÇÃO: Nova regra para rodar a seta quando o menu está aberto */
+.custom-dropdown-toggle.open::after {
+    transform: rotate(180deg);
+}
+
 
 .custom-dropdown-toggle:hover {
     border-color: var(--color-accent);
@@ -181,7 +195,7 @@
     list-style: none;
     padding: 0.5rem;
     margin: 0;
-    z-index: 1000;
+    z-index: 1000; /* Garante que fica por cima de outros elementos */
 }
 
 .custom-dropdown-list li {
