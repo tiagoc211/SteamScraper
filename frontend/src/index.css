@@ -20,10 +20,37 @@
 
 body {
   font-family: 'Poppins', sans-serif;
-  background-color: var(--color-bg-dark);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* CORREÇÃO: Novo background com 4 focos de luz distintos */
+  background-color: #12151a; /* Base de cinzento muito escuro */
+  background-image: 
+    /* Foco de luz 1: Canto Superior Esquerdo (mais intenso) */
+    radial-gradient(circle at 20% 25%, rgba(88, 181, 234, 0.25), transparent 30%),
+    
+    /* Foco de luz 2: Canto Superior Direito (mais subtil) */
+    radial-gradient(circle at 90% 10%, rgba(47, 160, 226, 0.15), transparent 25%),
+
+    /* Foco de luz 3: Canto Inferior Esquerdo (médio) */
+    radial-gradient(circle at 10% 80%, rgba(88, 181, 234, 0.2), transparent 35%),
+    
+    /* Foco de luz 4: Canto Inferior Direito (difuso) */
+    radial-gradient(circle at 80% 90%, rgba(47, 160, 226, 0.2), transparent 40%);
+  
+  background-size: 200% 200%;
+  background-attachment: fixed;
+  animation: pageBackgroundAnimation 18s ease-in-out infinite alternate;
+}
+
+@keyframes pageBackgroundAnimation {
+    from {
+        background-position: 0% 0%;
+    }
+    to {
+        background-position: 100% 100%;
+    }
 }
 
 a {

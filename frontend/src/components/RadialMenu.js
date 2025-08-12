@@ -43,8 +43,8 @@ const RadialMenu = ({ title, items, onSelect, onHover }) => {
           const textAngleRadians = textAngleDegrees * (Math.PI / 180);
 
           // Posição do texto (num raio de 0.65)
-          const textX = Math.cos(textAngleRadians) * 0.65;
-          const textY = Math.sin(textAngleRadians) * 0.65;
+          const textX = Math.cos(textAngleRadians) * 0.45;
+          const textY = Math.sin(textAngleRadians) * 0.45;
           
           // Lógica para garantir que o texto não fica de cabeça para baixo
           const isFlipped = textAngleDegrees > 180 && textAngleDegrees < 360;

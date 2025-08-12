@@ -19,6 +19,7 @@ const weaponTypes = { rifles, smgs, heavy, pistols, knives };
 const wearConditions = ["Factory New", "Minimal Wear", "Field-Tested", "Well-Worn", "Battle-Scarred"];
 const formatForUrl = (name) => name ? name.replace(/ /g, '_').replace(/[™|]/g, '') : '';
 
+
 const getWeaponImageUrl = (weaponName) => {
   if (!weaponName) return null;
   const formattedName = formatForUrl(weaponName);

@@ -1,8 +1,5 @@
 .skinselectorpage {
   min-height: calc(100vh - 70px);
-  background-image: url('../data/background.png');
-  background-size: cover;
-  background-position: center;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -17,8 +14,9 @@
 
 .interactive-selection-area {
   width: 100%;
-  min-height: 520px;
-  border: 1px solid var(--color-border);
+  /* CORREÇÃO: Altura mínima ainda mais reduzida */
+  min-height: 450px; 
+  border: 1px solid rgba(42, 71, 94, 0.8);
   border-radius: 12px;
   display: flex;
   flex-direction: column;
@@ -26,27 +24,15 @@
   overflow: hidden;
   isolation: isolate;
   padding: 1rem;
-  background: var(--color-bg-light);
+  background: rgba(27, 40, 56, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .interactive-selection-area::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0;
-  width: 200%; height: 200%;
-  z-index: -1;
-  background: radial-gradient(circle at 25% 25%, rgba(42, 71, 94, 0.6), var(--color-bg-light) 65%),
-              radial-gradient(circle at 75% 75%, rgba(102, 192, 244, 0.2), var(--color-bg-light) 65%);
-  animation: backgroundGradient 20s ease-in-out infinite;
+  display: none; /* O fundo agora vem do body */
 }
 
-@keyframes backgroundGradient {
-  0% { transform: translate(0%, 0%); }
-  25% { transform: translate(-25%, 10%); }
-  50% { transform: translate(-50%, -10%); }
-  75% { transform: translate(-25%, -20%); }
-  100% { transform: translate(0%, 0%); }
-}
 
 .search-mode-toggles {
   display: flex;
@@ -69,14 +55,8 @@
   position: relative;
 }
 
-.mode-toggle-button:hover {
-  color: var(--color-text-bright);
-}
-
-.mode-toggle-button.active {
-  color: var(--color-accent);
-}
-
+.mode-toggle-button:hover { color: var(--color-text-bright); }
+.mode-toggle-button.active { color: var(--color-accent); }
 .mode-toggle-button::after {
     content: '';
     position: absolute;
@@ -88,16 +68,13 @@
     transition: all 0.3s ease-in-out;
     transform: translateX(-50%);
 }
-
-.mode-toggle-button.active::after {
-    width: 100%;
-}
+.mode-toggle-button.active::after { width: 100%; }
 
 .selection-content {
   display: flex;
   flex: 1;
   width: 100%;
-  padding: 1rem;
+  padding: 0.5rem 1rem; /* Padding vertical reduzido */
   align-items: center;
 }
 
@@ -108,7 +85,6 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 1rem;
   position: relative;
 }
 
@@ -118,7 +94,7 @@
   object-fit: contain;
   filter: drop-shadow(0 0 15px var(--glow-color)) drop-shadow(0 0 30px var(--glow-color));
   animation: floatAnimation 4s ease-in-out infinite alternate;
-  min-height: 380px; /* Garante que o espaço está sempre reservado */
+  min-height: 350px; /* Reduzido para um layout mais compacto */
 }
 
 @keyframes floatAnimation {
@@ -126,15 +102,15 @@
     100% { transform: translateY(8px); }
 }
 
-/* --- Estilos para o Formulário da Pesquisa Simples --- */
 .radial-menu-with-controls {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
   width: 100%;
   height: 100%;
+  /* O gap aqui controla o espaço entre o menu e o botão */
+  gap: 0; 
 }
 
 .simple-selection-form {
@@ -149,12 +125,7 @@
 .simple-selection-header h2 { font-size: 2.2rem; font-weight: 600; text-align: center; }
 .simple-selection-header p { text-align: center; color: var(--color-text); margin-bottom: 1rem; }
 
-/* Wrapper para o dropdown personalizado */
-.custom-dropdown-wrapper {
-  position: relative;
-  width: 100%;
-}
-
+.custom-dropdown-wrapper { position: relative; width: 100%; }
 .custom-dropdown-toggle {
     width: 100%;
     height: 50px;
@@ -169,14 +140,8 @@
     text-align: left;
     cursor: pointer;
 }
-.custom-dropdown-toggle:hover {
-    border-color: var(--color-accent);
-}
-.custom-dropdown-toggle:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
+.custom-dropdown-toggle:hover { border-color: var(--color-accent); }
+.custom-dropdown-toggle:disabled { opacity: 0.5; cursor: not-allowed; }
 .custom-dropdown-list {
   position: absolute;
   top: 105%;
@@ -192,23 +157,20 @@
   margin: 0;
   z-index: 1000;
 }
-.custom-dropdown-list li {
-  padding: 0.75rem 1rem;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-.custom-dropdown-list li:hover {
-  background-color: var(--color-bg-lighter);
-  color: var(--color-text-bright);
+.custom-dropdown-list li { padding: 0.75rem 1rem; cursor: pointer; border-radius: 4px; transition: background-color 0.2s; }
+.custom-dropdown-list li:hover { background-color: var(--color-bg-lighter); color: var(--color-text-bright); }
+
+/* CORREÇÃO: Posicionamento do botão "Voltar" */
+.simple-controls-area {
+    /* Remove o posicionamento absoluto e coloca-o no fluxo normal */
+    margin-top: -1.5rem; /* Puxa o botão para cima, mais perto do menu */
 }
 
-/* --- Botões de Ação --- */
-.simple-controls-area, .simple-form-actions {
+.simple-form-actions {
     display: flex;
     justify-content: center;
     gap: 1rem;
-    margin-top: 2rem;
+    margin-top: 1rem;
     width: 100%;
 }
 .simple-form-actions .control-button {
@@ -216,7 +178,7 @@
 }
 
 .control-button {
-  height: 50px;
+  height: 45px;
   padding: 0 1.5rem;
   background-color: var(--color-bg-dark);
   color: var(--color-text);
@@ -232,26 +194,10 @@
   transition: all 0.2s;
 }
 
-.control-button.search-button {
-  background-color: var(--color-accent);
-  color: var(--color-bg-dark);
-  border: none;
-}
-.control-button.back-button:hover {
-    border-color: var(--color-accent);
-    color: var(--color-text-bright);
-}
-.control-button.search-button:hover:not(:disabled) {
-  background-color: #8dd1f9;
-}
-.control-button:disabled {
-  background-color: var(--color-bg-lighter);
-  color: var(--color-text);
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-/* --- Estilos da Pesquisa Avançada --- */
+.control-button.search-button { background-color: var(--color-accent); color: var(--color-bg-dark); border: none; }
+.control-button.back-button:hover { border-color: var(--color-accent); color: var(--color-text-bright); }
+.control-button.search-button:hover:not(:disabled) { background-color: #8dd1f9; }
+.control-button:disabled { background-color: var(--color-bg-lighter); color: var(--color-text); cursor: not-allowed; opacity: 0.7; }
 .selection-content.advanced-mode { justify-content: center; }
 .advanced-search-form {
   display: flex;
