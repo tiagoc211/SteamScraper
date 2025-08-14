@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { getSkinDetails } from '../api/Skins';
-import SkinCardListening from '../components/SkinCardListening';
+// CORREÇÃO: A importação do novo componente foi adicionada aqui
+import TiltSkinCard from '../components/TiltSkinCard'; 
 import FilterSidebar from '../components/FilterSidebar';
 import './SkinDetailPage.css';
 
@@ -157,7 +158,11 @@ const SkinDetailPage = () => {
                     <div className="skin-cards-grid">
                         {listings.length > 0 ? (
                             listings.map(listing => (
-                                <SkinCardListening key={listing.listingid} listing={listing} inspectedData={inspectedData} marketHashName={marketHashName} />
+                                <TiltSkinCard
+                                    key={listing.listingid}
+                                    listing={listing}
+                                    inspectedData={inspectedData}
+                                />
                             ))
                         ) : (
                             <div>Nenhum listing encontrado para os filtros selecionados.</div>

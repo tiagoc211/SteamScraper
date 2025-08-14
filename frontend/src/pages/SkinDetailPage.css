@@ -64,8 +64,10 @@
 
 .skin-cards-grid {
   display: grid;
+  /* CORREÇÃO: Ajustado para o novo tamanho dos cartões */
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
+  gap: 2.5rem; /* Aumenta o espaçamento para o efeito de brilho */
+  justify-items: center; /* Centra os cartões na grelha */
 }
 
 .loader, .error-message {
