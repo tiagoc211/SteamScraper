@@ -20,11 +20,21 @@
   text-align: center;
 }
 
-.home-landing h1 {
-  font-size: 3rem;
+/* Removemos o estilo do h1 antigo */
+/* .home-landing h1 { ... } */
+
+/* Adicionamos um container para o novo título */
+.home-title-container {
   margin-bottom: 1rem;
-  color: #f1f1f1;
 }
+
+/* Aplicamos o tamanho de fonte grande às palavras do TrueFocus */
+.home-title-container .focus-word {
+  font-size: 3rem;
+  color: #f1f1f1;
+  font-weight: 700;
+}
+
 
 .home-landing p {
   font-size: 1.2rem;

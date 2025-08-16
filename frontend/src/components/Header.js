@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaSteam } from 'react-icons/fa';
+import TrueFocus from './TrueFocus';
 import './Header.css';
 
 const Header = () => {
@@ -8,8 +8,15 @@ const Header = () => {
     <header className="app-header">
       <div className="header-content">
         <Link to="/" className="logo-container">
-          <FaSteam size={32} />
-          <h1>Skin Inspector</h1>
+          <TrueFocus 
+            sentence="CS:MARKET GLASSES"
+            manualMode={false}
+            blurAmount={5}
+            borderColor="rgba(102, 192, 244, 0.7)"
+            glowColor="rgba(102, 192, 244, 0.5)"
+            animationDuration={6}
+            pauseBetweenAnimations={1.5}
+          />
         </Link>
         <nav>
           <a href="#" className="nav-link">Home</a>
