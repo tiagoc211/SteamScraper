@@ -10,12 +10,6 @@
   --behind-gradient: none;
   --inner-gradient: none;
   --icon: none;
-  --sunpillar-1: hsl(170, 100%, 70%); /* Turquesa */
-  --sunpillar-2: hsl(140, 100%, 65%); /* Verde */
-  --sunpillar-3: hsl(170, 100%, 70%); /* Turquesa */
-  --sunpillar-4: hsl(210, 100%, 76%); /* Azul Claro */
-  --sunpillar-5: hsl(230, 100%, 74%); /* Azul */
-  --sunpillar-6: hsl(210, 100%, 76%); /* Azul Claro */
   --card-radius: 12px;
 }
 
@@ -49,12 +43,11 @@
 
 .tsc-card {
   width: 100%;
-  aspect-ratio: 280 / 400;
+  aspect-ratio: 280 / 430;
   border-radius: var(--card-radius);
   position: relative;
   transition: transform 1s ease;
   transform: translate3d(0, 0, 0.1px);
-  overflow: hidden;
   box-shadow: rgba(0, 0, 0, 0.8) calc((var(--pointer-from-left) * 10px) - 3px) calc((var(--pointer-from-top) * 20px) - 6px) 20px -5px;
 }
 
@@ -75,25 +68,11 @@
   inset: 1px;
   position: absolute;
   background-image: var(--inner-gradient);
-  background-color: #101822; /* Fundo mais escuro */
+  background-color: #101822;
 }
 
-.tsc-shine {
-  mask-image: var(--icon);
-  mask-mode: luminance;
-  mask-repeat: repeat;
-  mask-size: 200%;
-  mask-position: top calc(200% - (var(--background-y) * 5)) left calc(100% - var(--background-x));
-  transition: filter 0.6s ease;
-  filter: brightness(0.66) contrast(1.33) saturate(0.33) opacity(0.2);
-  mix-blend-mode: color-dodge;
+.tsc-shine, .tsc-glare {
   z-index: 1;
-}
-
-.tsc-glare {
-  background-image: radial-gradient(farthest-corner circle at var(--pointer-x) var(--pointer-y), hsla(0, 0%, 100%, 0.4) 12%, hsla(0, 0%, 100%, 0) 90%);
-  mix-blend-mode: overlay;
-  z-index: 4;
 }
 
 .tsc-avatar-content {
@@ -106,21 +85,24 @@
   width: 100%;
   padding: 1.5rem;
   position: absolute;
-  top: 50%;
+  top: 48%;
   left: 50%;
   transform: translate(-50%, -50%) scale(1.1);
   opacity: calc(1.5 - var(--pointer-from-center));
   object-fit: contain;
 }
 
-.tsc-content.tsc-header {
+.tsc-content.tsc-header, .tsc-price-display {
   position: absolute;
-  top: 0;
   left: 0;
   width: 100%;
+  z-index: 3;
+}
+
+.tsc-content.tsc-header {
+  top: 0;
   padding: 15px;
   text-align: left;
-  z-index: 3;
 }
 
 .tsc-header h3 {
@@ -131,17 +113,26 @@
   text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 
+.tsc-price-display {
+  top: 80px;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #89d142;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+}
+
 .tsc-stickers-wrapper {
   position: absolute;
-  bottom: 90px; /* Posicionado acima da barra de info */
+  bottom: 120px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   justify-content: center;
-  gap: 8px;
+  gap: 12px; /* Espaçamento aumentado */
   width: 100%;
   padding: 0 15px;
-  z-index: 3;
+  z-index: 10;
 }
 
 .tsc-sticker-image {
@@ -158,11 +149,11 @@
 
 .tsc-charms-wrapper {
   position: absolute;
-  top: 60px; /* Posicionado abaixo do header */
+  top: 80px;
   right: 15px;
   display: flex;
   gap: 8px;
-  z-index: 3;
+  z-index: 10;
 }
 
 .tsc-charm-container {
@@ -175,7 +166,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 4px; /* Adiciona padding */
+    padding: 4px;
 }
 
 .tsc-charm-image {
@@ -186,13 +177,13 @@
 
 .tsc-info-bar {
   position: absolute;
-  bottom: 15px;
+  bottom: 20px;
   left: 15px;
   right: 15px;
   z-index: 5;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0.8rem;
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
@@ -200,23 +191,6 @@
   border-radius: 10px;
   padding: 10px 12px;
   pointer-events: auto;
-}
-
-.tsc-info-line {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-}
-
-.tsc-handle, .tsc-status {
-  font-size: 12px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
-  line-height: 1;
-}
-
-.tsc-status {
-  color: rgba(255, 255, 255, 0.7);
 }
 
 .tsc-action-buttons {
@@ -236,7 +210,7 @@
   transition: all 0.2s ease;
   background: rgba(40, 40, 40, 0.5);
   flex-grow: 1;
-  pointer-events: all;
+  pointer-events: auto;
 }
 
 .tsc-action-btn.inspect-btn:hover {

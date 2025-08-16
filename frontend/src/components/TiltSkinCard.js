@@ -1,12 +1,12 @@
-import React, { useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useEffect, useRef, useCallback, useMemo, useState } from "react";
 import './TiltSkinCard.css';
+import HoverTooltip from './HoverTooltip';
+import FloatBar from './FloatBar';
 
-// CORREÇÃO: Nova paleta de cores (azul, verde, amarelo)
 const DEFAULT_BEHIND_GRADIENT = "radial-gradient(farthest-side circle at var(--pointer-x) var(--pointer-y), hsla(170, 100%, 75%, var(--card-opacity)) 4%, hsla(120, 100%, 70%, calc(var(--card-opacity) * 0.75)) 10%, hsla(210, 70%, 50%, calc(var(--card-opacity) * 0.5)) 50%, transparent 100%)";
 const DEFAULT_INNER_GRADIENT = "linear-gradient(145deg, rgba(10, 30, 60, 0.8), rgba(80, 200, 120, 0.1))";
 const ICON_URL = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='lucide lucide-swords'%3E%3Cpath d='m21.17 3.83-7.5 7.5.1.1a2.12 2.12 0 0 1 0 3l-2.22 2.22a2.12 2.12 0 0 1-3 0L3.83 21.17'/%3E%3Cpath d='m17.66 7.34 2.5 2.5.1.1a2.12 2.12 0 0 1 0 3l-2.22 2.22a2.12 2.12 0 0 1-3 0l-5-5a2.12 2.12 0 0 1 0-3l2.22-2.22a2.12 2.12 0 0 1 3 0l2.5 2.5'/%3E%3Cpath d='M19 5 22 2'/%3E%3Cpath d='m5 19-3 3'/%3E%3C/svg%3E";
 
-// Lógica de Animação (sem alterações)
 const ANIMATION_CONFIG = { SMOOTH_DURATION: 600, INITIAL_DURATION: 1500, INITIAL_X_OFFSET: 70, INITIAL_Y_OFFSET: 60 };
 const clamp = (value, min = 0, max = 100) => Math.min(Math.max(value, min), max);
 const round = (value, precision = 3) => parseFloat(value.toFixed(precision));
@@ -18,8 +18,9 @@ const TiltSkinCardComponent = ({ listing, inspectedData }) => {
     const cardRef = useRef(null);
     const enableTilt = true;
     const item = inspectedData[listing.listingid];
+    
+    const [mouseMoveNonce, setMouseMoveNonce] = useState(0);
 
-    // Hooks de animação (sem alterações na lógica)
     const animationHandlers = useMemo(() => {
         if (!enableTilt) return null;
         let rafId = null;
@@ -63,6 +64,7 @@ const TiltSkinCardComponent = ({ listing, inspectedData }) => {
         if (!card || !wrap || !animationHandlers) return;
         const rect = card.getBoundingClientRect();
         animationHandlers.updateCardTransform(event.clientX - rect.left, event.clientY - rect.top, card, wrap);
+        setMouseMoveNonce(n => n + 1);
     }, [animationHandlers]);
 
     const handlePointerEnter = useCallback(() => {
@@ -87,7 +89,7 @@ const TiltSkinCardComponent = ({ listing, inspectedData }) => {
         if (!enableTilt || !animationHandlers) return;
         const card = cardRef.current;
         const wrap = wrapRef.current;
-        if (!card || !wrap || wrap.clientWidth === 0) return; // CORREÇÃO: Impede a execução se o cartão não tiver dimensão
+        if (!card || !wrap || wrap.clientWidth === 0) return;
 
         card.addEventListener("pointerenter", handlePointerEnter);
         card.addEventListener("pointermove", handlePointerMove);
@@ -104,7 +106,7 @@ const TiltSkinCardComponent = ({ listing, inspectedData }) => {
             card.removeEventListener("pointerleave", handlePointerLeave);
             animationHandlers.cancelAnimation();
         };
-    }, [enableTilt, animationHandlers, handlePointerMove, handlePointerEnter, handlePointerLeave, item]); // Adiciona 'item' para re-executar se o cartão mudar
+    }, [enableTilt, animationHandlers, handlePointerMove, handlePointerEnter, handlePointerLeave, item]);
     
     const handleBuyClick = useCallback(async () => {
         if (!item) return;
@@ -141,10 +143,9 @@ const TiltSkinCardComponent = ({ listing, inspectedData }) => {
     if (!item) return null;
 
     const { floatvalue, paintseed, full_item_name, imageurl } = item;
-    const { stickers, keychains } = listing; // Puxa os stickers e keychains da fonte correta
+    const { stickers, keychains } = listing;
     const highResImageUrl = (imageurl || listing.image).replace('360fx360f', '512fx512f');
-    const floatValue = floatvalue?.toFixed(8) || "N/A";
-    const patternId = paintseed || "N/A";
+    const formattedPrice = (listing.priceNumber || 0).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' });
 
     return (
         <div ref={wrapRef} className="tsc-card-wrapper" style={cardStyle}>
@@ -157,30 +158,53 @@ const TiltSkinCardComponent = ({ listing, inspectedData }) => {
                         <h3>{full_item_name}</h3>
                     </div>
 
+                    <div className="tsc-price-display">
+                        {formattedPrice}
+                    </div>
+
                     <div className="tsc-content tsc-avatar-content">
                         <img className="avatar" src={highResImageUrl} alt={full_item_name} />
                     </div>
                     
                     <div className="tsc-attachments">
                         <div className="tsc-stickers-wrapper">
-                            {stickers && stickers.length > 0 && stickers.map((stickerUrl, i) => (
-                                <img key={i} src={stickerUrl} alt={item.stickers?.[i]?.name || ''} title={item.stickers?.[i]?.name || ''} className="tsc-sticker-image" />
-                            ))}
+                            {stickers && stickers.length > 0 && stickers.map((stickerUrl, i) => {
+                                const stickerInfo = item.stickers?.[i];
+                                const lines = [
+                                    `${(stickerInfo?.wear * 100 || 0).toFixed(1)}% Wear`,
+                                    `Slot ${stickerInfo?.slot + 1 || i + 1}`
+                                ];
+                                return (
+                                    <HoverTooltip
+                                        key={i}
+                                        title={stickerInfo?.name || 'Sticker'}
+                                        imageUrl={stickerUrl}
+                                        lines={lines}
+                                        mouseMoveNonce={mouseMoveNonce}
+                                    >
+                                        <img src={stickerUrl} alt={stickerInfo?.name || ''} className="tsc-sticker-image" />
+                                    </HoverTooltip>
+                                );
+                            })}
                         </div>
                         <div className="tsc-charms-wrapper">
                             {keychains && keychains.length > 0 && keychains.map((keychain, index) => (
-                                <div key={index} className="tsc-charm-container">
-                                    <img src={keychain.image_url} alt={`Charm ${index}`} className="tsc-charm-image" />
-                                </div>
+                                <HoverTooltip
+                                    key={index}
+                                    imageUrl={keychain.image_url}
+                                    title={item.keychains?.[index]?.name || 'Charm'}
+                                    mouseMoveNonce={mouseMoveNonce}
+                                >
+                                    <div className="tsc-charm-container">
+                                        <img src={keychain.image_url} alt={`Charm ${index}`} className="tsc-charm-image" />
+                                    </div>
+                                </HoverTooltip>
                             ))}
                         </div>
                     </div>
 
                     <div className="tsc-info-bar">
-                        <div className="tsc-info-line">
-                            <span className="tsc-handle">Pattern: {patternId}</span>
-                            <span className="tsc-status">Float: {floatValue}</span>
-                        </div>
+                        <FloatBar floatValue={floatvalue} paintSeed={paintseed} />
                         <div className="tsc-action-buttons">
                             <button className="tsc-action-btn inspect-btn" onClick={() => window.open(listing.inspectLink, '_blank')} style={{ pointerEvents: "auto" }}>Inspecionar</button>
                             <button className="tsc-action-btn buy-btn" onClick={handleBuyClick} style={{ pointerEvents: "auto" }}>Comprar</button>

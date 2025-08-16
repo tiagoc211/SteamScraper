@@ -1,0 +1,87 @@
+.tooltip-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.tooltip-content {
+  position: fixed;
+  min-width: 180px;
+  background-color: var(--color-bg-dark);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  opacity: 0; /* Começa invisível para a animação */
+}
+
+/* Animação para tooltips que aparecem em cima (stickers) */
+.tooltip-content.tooltip-top {
+  animation: tooltip-fade-in-top 0.2s ease-out forwards;
+}
+
+/* Animação para tooltips que aparecem em baixo (float/pattern) */
+.tooltip-content.tooltip-bottom {
+  animation: tooltip-fade-in-bottom 0.2s ease-out forwards;
+}
+
+.tooltip-title {
+  color: var(--color-text-bright);
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+  text-align: center;
+  width: 100%;
+}
+
+.tooltip-image {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+}
+
+.tooltip-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  width: 100%;
+}
+
+.tooltip-lines p {
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: center;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Animações de entrada */
+@keyframes tooltip-fade-in-top {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-100% - 5px));
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, calc(-100% - 10px));
+  }
+}
+@keyframes tooltip-fade-in-bottom {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 15px);
+  }
+}
