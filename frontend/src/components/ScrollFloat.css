@@ -1,0 +1,30 @@
+.scroll-float {
+  overflow: hidden;
+  padding: 0.2em 0;
+}
+
+.scroll-float-text {
+  display: inline-block;
+  text-align: left;
+  line-height: 1.2;
+}
+
+.scroll-float.title .scroll-float-text {
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: 700;
+}
+
+.scroll-float.description .scroll-float-text {
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  font-weight: 400;
+  color: var(--color-text);
+}
+
+/* Nova regra para impedir que as palavras quebrem */
+.scroll-float-word {
+  display: inline-block;
+}
+
+.char {
+  display: inline-block;
+}

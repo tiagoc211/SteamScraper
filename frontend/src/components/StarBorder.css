@@ -1,0 +1,78 @@
+.star-border-container {
+  display: inline-block;
+  position: relative;
+  border-radius: 100px; /* Borda de cápsula */
+  overflow: hidden;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.border-gradient-bottom,
+.border-gradient-top {
+  position: absolute;
+  width: 200%;
+  height: 100%; /* Aumentado para cobrir a altura total */
+  opacity: 0.7;
+  border-radius: 50%;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  z-index: 0;
+}
+
+.border-gradient-bottom {
+  bottom: -50%; /* Posição corrigida */
+  right: -150%;
+  animation-name: star-movement-bottom;
+}
+
+.border-gradient-top {
+  top: -50%; /* Posição corrigida */
+  left: -150%;
+  animation-name: star-movement-top;
+}
+
+.inner-content {
+  position: relative;
+  background: var(--color-bg-lighter);
+  color: var(--color-text-bright);
+  
+  /* Fonte corrigida */
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+
+  text-align: center;
+  padding: 14px 32px;
+  border-radius: 100px; /* Borda de cápsula */
+  border: 1px solid var(--color-border);
+  z-index: 1;
+  
+  /* Adiciona sombra interna para efeito 3D */
+  box-shadow: inset 0 0 1px 1px rgba(102, 192, 244, 0.2);
+}
+
+@keyframes star-movement-bottom {
+  0% {
+    transform: translate(0%, 0%);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-100%, 0%);
+    opacity: 0;
+  }
+}
+
+@keyframes star-movement-top {
+  0% {
+    transform: translate(0%, 0%);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(100%, 0%);
+    opacity: 0;
+  }
+}
