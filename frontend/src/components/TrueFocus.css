@@ -13,7 +13,7 @@
   font-weight: 700;   /* Ajustado para o header */
   cursor: pointer;
   transition:
-    filter 10s ease,
+    filter 0.3s ease,
     color 0.3s ease;
 }
 
