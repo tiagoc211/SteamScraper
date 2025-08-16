@@ -77,7 +77,7 @@
 
 .tsc-avatar-content {
   overflow: hidden;
-  z-index: 2;
+  z-index: 2; /* A imagem fica na camada 2 */
   mix-blend-mode: normal;
 }
 
@@ -122,6 +122,11 @@
   text-shadow: 0 2px 4px rgba(0,0,0,0.6);
 }
 
+/* Nova regra para o contentor dos stickers/charms */
+.tsc-attachments {
+  z-index: 10; /* Garante que esta camada fica à frente de tudo */
+}
+
 .tsc-stickers-wrapper {
   position: absolute;
   bottom: 120px;
@@ -129,10 +134,9 @@
   transform: translateX(-50%);
   display: flex;
   justify-content: center;
-  gap: 12px; /* Espaçamento aumentado */
+  gap: 12px;
   width: 100%;
   padding: 0 15px;
-  z-index: 10;
 }
 
 .tsc-sticker-image {
@@ -153,7 +157,6 @@
   right: 15px;
   display: flex;
   gap: 8px;
-  z-index: 10;
 }
 
 .tsc-charm-container {
@@ -177,13 +180,13 @@
 
 .tsc-info-bar {
   position: absolute;
-  bottom: 20px;
+  bottom: 15px;
   left: 15px;
   right: 15px;
   z-index: 5;
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 1rem;
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
