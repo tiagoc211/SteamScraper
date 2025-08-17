@@ -3,10 +3,16 @@
     "axios": "^1.11.0",
     "cheerio": "^1.1.2",
     "cors": "^2.8.5",
+    "db": "^6.0.3",
+    "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "express-rate-limit": "^8.0.1",
+    "express-session": "^1.18.2",
     "helmet": "^8.1.0",
     "jose": "^6.0.12",
-    "node-fetch": "^3.3.2"
+    "node-fetch": "^3.3.2",
+    "passport": "^0.7.0",
+    "passport-steam": "^1.0.18",
+    "pg": "^8.16.3"
   }
 }

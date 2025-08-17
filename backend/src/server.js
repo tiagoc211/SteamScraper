@@ -1,5 +1,7 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const setupSteamAuth = require('./auth/steam');
 const cheerio = require('cheerio');
 const { fetchSearchPage, fetchPage } = require('./fetch');
 const weaponData = require('./data');
@@ -8,6 +10,21 @@ const crypto = require('crypto');
 
 const app = express();
 app.use(cors());
+
+//Steam Auth ----------------
+
+const session = require('express-session');
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'fallback_secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false }
+}));
+
+
+setupSteamAuth(app);
+
 const PORT = 3001;
 
 const ISSUER = 'http://localhost:3001';
@@ -171,5 +188,6 @@ app.post('/api/tokens/buy', express.json(), async (req, res) => {
     res.status(500).json({ error: 'Falha a gerar token' });
   }
 });
+
 
 app.listen(PORT, () => console.log(`Backend a correr em http://localhost:${PORT}`));
