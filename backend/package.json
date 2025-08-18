@@ -6,7 +6,10 @@
     "express": "^5.1.0",
     "express-rate-limit": "^8.0.1",
     "helmet": "^8.1.0",
+    "https-proxy-agent": "^7.0.6",
     "jose": "^6.0.12",
-    "node-fetch": "^3.3.2"
+    "node-fetch": "^3.3.2",
+    "p-limit": "^5.0.0",
+    "socks-proxy-agent": "^8.0.5"
   }
 }
