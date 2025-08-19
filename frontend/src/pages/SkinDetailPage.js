@@ -7,7 +7,11 @@ import FilterSidebar from '../components/FilterSidebar';
 import PaginationControls from '../components/PaginationControls';
 import './SkinDetailPage.css';
 
+<<<<<<< Updated upstream
 const ITEMS_PER_PAGE = 16;
+=======
+const ITEMS_PER_PAGE = 24;
+>>>>>>> Stashed changes
 const CONCURRENT_REQUEST_LIMIT = 8;
 
 const initialFilters = {
@@ -34,6 +38,10 @@ const SkinDetailPage = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, totalListings: 0 });
     const [isLoadingMore, setIsLoadingMore] = useState(false);
+<<<<<<< Updated upstream
+=======
+    const [loadedCount, setLoadedCount] = useState(0);
+>>>>>>> Stashed changes
 
     const inspectListings = useCallback((listingsToInspect) => {
         for (const listing of listingsToInspect) {
@@ -105,7 +113,11 @@ const SkinDetailPage = () => {
         // --- CORREÇÃO PRINCIPAL ---
         // Primeiro, filtra a lista para incluir APENAS os itens que já foram inspecionados.
         let processedListings = originalListings.filter(l => inspectedData[l.listingid]);
+<<<<<<< Updated upstream
 
+=======
+        
+>>>>>>> Stashed changes
         if (filters.enabled.priceNumber) {
             const minPrice = parseFloat(filters.priceNumber[0]);
             const maxPrice = parseFloat(filters.priceNumber[1]);
@@ -115,7 +127,10 @@ const SkinDetailPage = () => {
         if (filters.enabled.wear) {
             const minWear = parseFloat(filters.wear[0]);
             const maxWear = parseFloat(filters.wear[1]);
+<<<<<<< Updated upstream
             // Já não precisamos de verificar se `float` é undefined, porque o primeiro filtro já garantiu isso.
+=======
+>>>>>>> Stashed changes
             processedListings = processedListings.filter(l => {
                 const float = inspectedData[l.listingid].floatvalue;
                 let match = true;
@@ -148,7 +163,10 @@ const SkinDetailPage = () => {
         setCurrentPage(1);
     }, [filters, sortBy]);
 
+<<<<<<< Updated upstream
     // 3. CALCULA a fatia de itens visíveis.
+=======
+>>>>>>> Stashed changes
     const visibleListings = useMemo(() => {
         const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
         const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -161,7 +179,11 @@ const SkinDetailPage = () => {
     if (loading && originalListings.length === 0) return <div className="loader">A carregar detalhes da skin...</div>;
     if (error) return <div className="error-message">{error}</div>;
 
+<<<<<<< Updated upstream
     const progress = pagination.totalListings ? (originalListings.length / pagination.totalListings) * 100 : 0;
+=======
+    const progress = pagination.totalListings ? (loadedCount / pagination.totalListings) * 100 : 0;
+>>>>>>> Stashed changes
     const totalPages = Math.ceil(filteredListings.length / ITEMS_PER_PAGE);
 
     return (
