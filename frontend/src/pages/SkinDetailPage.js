@@ -7,7 +7,7 @@ import FilterSidebar from '../components/FilterSidebar';
 import PaginationControls from '../components/PaginationControls';
 import './SkinDetailPage.css';
 
-const ITEMS_PER_PAGE = 16;
+const ITEMS_PER_PAGE = 24;
 const CONCURRENT_REQUEST_LIMIT = 8;
 
 const initialFilters = {
@@ -34,6 +34,7 @@ const SkinDetailPage = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, totalListings: 0 });
     const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [loadedCount, setLoadedCount] = useState(0);
 
     const inspectListings = useCallback((listingsToInspect) => {
         for (const listing of listingsToInspect) {
@@ -59,9 +60,11 @@ const SkinDetailPage = () => {
             setInspectedData({});
             const data = await getSkinDetails(marketHashName, controller.signal);
             if (data && data.success) {
-                setOriginalListings(data.listings || []);
+                const initialListings = data.listings || [];
+                setOriginalListings(initialListings);
+                setLoadedCount(initialListings.length);
                 setPagination(data.pagination);
-                inspectListings(data.listings || []);
+                inspectListings(initialListings);
             } else if (data !== null) {
                 setError("Não foi possível carregar os dados desta skin.");
             }
@@ -71,41 +74,46 @@ const SkinDetailPage = () => {
         return () => controller.abort();
     }, [marketHashName, inspectListings]);
 
-    // useEffect para buscar páginas restantes em segundo plano
+    // useEffect para buscar páginas restantes (LÓGICA CORRIGIDA)
     useEffect(() => {
         if (loading || pagination.currentPage >= pagination.totalPages) return;
+        
         const fetchRemainingPages = async () => {
             setIsLoadingMore(true);
             const limit = pLimit(CONCURRENT_REQUEST_LIMIT);
             const tasks = [];
+
             for (let i = pagination.currentPage + 1; i <= pagination.totalPages; i++) {
                 tasks.push(limit(async () => {
                     try {
                         const res = await fetch(`http://localhost:3001/api/skin/${encodeURIComponent(marketHashName)}/page/${i}`);
                         const data = await res.json();
-                        if (data.success) {
-                            setOriginalListings(prev => [...prev, ...data.listings]);
+                        if (data.success && data.listings) {
+                            setLoadedCount(prev => prev + data.listings.length);
                             inspectListings(data.listings);
+                            return data.listings;
                         }
-                    } catch (e) { console.error(`Erro ao buscar página ${i}`, e); }
+                    } catch (e) { 
+                        console.error(`Erro ao buscar página ${i}`, e); 
+                    }
+                    return null;
                 }));
             }
-            await Promise.all(tasks);
+
+            const pagesResults = await Promise.all(tasks);
+            const allNewListings = pagesResults.flat().filter(Boolean);
+            setOriginalListings(prev => [...prev, ...allNewListings]);
+
             setPagination(prev => ({ ...prev, currentPage: prev.totalPages }));
             setIsLoadingMore(false);
         };
+
         fetchRemainingPages();
     }, [loading, pagination, marketHashName, inspectListings]);
 
-
-    // LÓGICA DE FILTROS E PAGINAÇÃO COM useMemo
-
-    // 1. CALCULA a lista filtrada e ordenada.
     const filteredListings = useMemo(() => {
-        // --- CORREÇÃO PRINCIPAL ---
-        // Primeiro, filtra a lista para incluir APENAS os itens que já foram inspecionados.
         let processedListings = originalListings.filter(l => inspectedData[l.listingid]);
-
+        
         if (filters.enabled.priceNumber) {
             const minPrice = parseFloat(filters.priceNumber[0]);
             const maxPrice = parseFloat(filters.priceNumber[1]);
@@ -115,7 +123,6 @@ const SkinDetailPage = () => {
         if (filters.enabled.wear) {
             const minWear = parseFloat(filters.wear[0]);
             const maxWear = parseFloat(filters.wear[1]);
-            // Já não precisamos de verificar se `float` é undefined, porque o primeiro filtro já garantiu isso.
             processedListings = processedListings.filter(l => {
                 const float = inspectedData[l.listingid].floatvalue;
                 let match = true;
@@ -130,7 +137,6 @@ const SkinDetailPage = () => {
         }
         
         processedListings.sort((a, b) => {
-            // Acesso seguro aos dados de inspeção porque já garantimos que eles existem.
             const itemA = inspectedData[a.listingid];
             const itemB = inspectedData[b.listingid];
             switch (sortBy) {
@@ -143,12 +149,10 @@ const SkinDetailPage = () => {
         return processedListings;
     }, [originalListings, filters, sortBy, inspectedData]);
 
-    // 2. RESETA a página para 1 APENAS se os filtros ou a ordenação mudarem.
     useEffect(() => {
         setCurrentPage(1);
     }, [filters, sortBy]);
 
-    // 3. CALCULA a fatia de itens visíveis.
     const visibleListings = useMemo(() => {
         const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
         const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -161,7 +165,7 @@ const SkinDetailPage = () => {
     if (loading && originalListings.length === 0) return <div className="loader">A carregar detalhes da skin...</div>;
     if (error) return <div className="error-message">{error}</div>;
 
-    const progress = pagination.totalListings ? (originalListings.length / pagination.totalListings) * 100 : 0;
+    const progress = pagination.totalListings ? (loadedCount / pagination.totalListings) * 100 : 0;
     const totalPages = Math.ceil(filteredListings.length / ITEMS_PER_PAGE);
 
     return (
@@ -185,7 +189,7 @@ const SkinDetailPage = () => {
                             <div className="progress-bar-background">
                                 <div className="progress-bar-fill" style={{ width: `${progress}%` }} />
                                 <div className="progress-text">
-                                    A carregar... {originalListings.length} / {pagination.totalListings}
+                                    A carregar... {loadedCount} / {pagination.totalListings}
                                 </div>
                             </div>
                         </div>
