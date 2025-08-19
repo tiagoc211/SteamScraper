@@ -1,9 +1,12 @@
-// --- fetch.js Otimizado e Resiliente ---
-
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-
 const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args));
-const { HttpsProxyAgent } = require('https-proxy-agent');
+
+const SCRAPEDO_TOKEN = 'ce5b103fcb1f4c35b806930ffe77bf8a545567f2118';
+const BASE_LISTING_URL = 'https://steamcommunity.com/market/listings/730';
+const BASE_SEARCH_URL = 'https://steamcommunity.com/market/search/render/';
+
+function wrapWithScrapeDo(steamUrl) {
+  return `http://api.scrape.do/?url=${encodeURIComponent(steamUrl)}&token=${SCRAPEDO_TOKEN}`;
+}
 
 const fetcher = {
   fetchFirstPage: null,
@@ -13,64 +16,56 @@ const fetcher = {
 };
 
 async function initialize() {
-  const pLimit = (await import('p-limit')).default;
-  
-  const MUBENG_PROXY_URL = 'http://localhost:8089';
-  const agent = new HttpsProxyAgent(MUBENG_PROXY_URL);
-  const BASE_LISTING_URL = 'https://steamcommunity.com/market/listings/730';
-  const BASE_SEARCH_URL = 'https://steamcommunity.com/market/search/render/';
 
   async function fetchPage(url, itemName, pageNumber, maxRetries = 3) {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      console.log(`➡️  A buscar [${itemName}] (página ${pageNumber}, tentativa ${attempt})...`);
+      console.log(`➡️ A buscar [${itemName}] (página ${pageNumber}, tentativa ${attempt})...`);
       try {
-        const response = await fetch(url, { agent, headers: { 'User-Agent': 'Mozilla/5.0' } });
-        if (!response.ok) throw new Error(`Erro HTTP ${response.status}`);
-        
-        const text = await response.text();
-        const data = JSON.parse(text);
+        const response = await fetch(url, {
+          headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' }
+        });
 
-        console.log(`✔️  Sucesso para [${itemName}] (página ${pageNumber})`);
+        if (!response.ok) throw new Error(`Erro HTTP ${response.status}`);
+
+        const data = await response.json();
+        console.log(`✔️ Sucesso para [${itemName}] (página ${pageNumber})`);
         return data;
-      } catch (error) {
-        console.error(`❌  Falha para [${itemName}] (página ${pageNumber}, tentativa ${attempt}): ${error.message}`);
-        if (attempt === maxRetries) {
-          console.error(`Falha permanente para [${itemName}] após ${maxRetries} tentativas.`);
-          return null;
-        }
+      } catch (err) {
+        console.error(`❌ Falha para [${itemName}] (página ${pageNumber}, tentativa ${attempt}): ${err.message}`);
+        if (attempt === maxRetries) return null;
         await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
       }
     }
   }
 
-  // --- NOVAS FUNÇÕES ---
   async function fetchFirstPage(itemName) {
-    const url = `${BASE_LISTING_URL}/${encodeURIComponent(itemName)}/render/?start=0&count=100&country=PT&language=portuguese&currency=3`;
+    const url = wrapWithScrapeDo(`${BASE_LISTING_URL}/${encodeURIComponent(itemName)}/render/?start=0&count=100&country=PT&language=portuguese&currency=3`);
+    console.log('URL da Steam (primeira página):', url);
     return await fetchPage(url, itemName, 1);
   }
 
   async function fetchSpecificPage(itemName, pageNumber) {
     const start = (pageNumber - 1) * 100;
-    const url = `${BASE_LISTING_URL}/${encodeURIComponent(itemName)}/render/?start=${start}&count=100&country=PT&language=portuguese&currency=3`;
+    const url = wrapWithScrapeDo(`${BASE_LISTING_URL}/${encodeURIComponent(itemName)}/render/?start=${start}&count=100&country=PT&language=portuguese&currency=3`);
+    console.log('URL da Steam (Página especifica):', url);
     return await fetchPage(url, itemName, pageNumber);
   }
-  
-  async function fetchSearchPage(query, start, count) {
-      const params = new URLSearchParams({
-          query: query, start: start, count: count,
-          search_descriptions: 1, sort_column: 'popular', sort_dir: 'desc',
-          appid: 730, norender: 1
-      });
-      const url = `${BASE_SEARCH_URL}?${params.toString()}`;
-      return await fetchPage(url, `Busca por "${query}"`, 1);
+
+  async function fetchSearchPage(query, start = 0, count = 10) {
+    const url = wrapWithScrapeDo(`${BASE_SEARCH_URL}?query=${encodeURIComponent(query)}&appid=730&start=${start}&count=${count}&country=PT&language=portuguese&currency=3`);
+    return await fetchPage(url, `Busca por "${query}"`, 1);
   }
 
   fetcher.fetchFirstPage = fetchFirstPage;
   fetcher.fetchSpecificPage = fetchSpecificPage;
   fetcher.fetchSearchPage = fetchSearchPage;
-  console.log("Módulo de fetch (otimizado e resiliente) inicializado e pronto.");
+
+  console.log("Módulo fetch inicializado com ScrapeDo.");
 }
 
-fetcher.ready = initialize().catch(err => { console.error("Falha ao inicializar fetch.js:", err); process.exit(1); });
+fetcher.ready = initialize().catch(err => { 
+  console.error("Falha ao inicializar fetch.js:", err); 
+  process.exit(1); 
+});
 
 module.exports = fetcher;

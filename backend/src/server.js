@@ -55,30 +55,50 @@ async function loadPrivateKey() {
   // --- ROTA DE SKIN PRINCIPAL (AGORA SÓ DEVOLVE A 1ª PÁGINA) ---
   app.get('/api/skin/:marketHashName', async (req, res) => {
     const { marketHashName } = req.params;
-    const cacheKey = `firstpage_${marketHashName}`;
+    const cacheKey = `allpages_${marketHashName}`;
 
     if (skinCache.has(cacheKey)) {
-      console.log(`✔️  [Cache] A servir a primeira página de ${marketHashName}`);
+      console.log(`✔️  [Cache] A servir todas as páginas de ${marketHashName}`);
       return res.json(skinCache.get(cacheKey));
     }
 
-    console.log(`🔥 [Fetch] A obter a primeira página de ${marketHashName}`);
+    console.log(`🔥 [Fetch] A obter todas as páginas de ${marketHashName}`);
     const firstPageData = await fetcher.fetchFirstPage(decodeURIComponent(marketHashName));
+    
 
-    if (firstPageData === null) {
-      return res.status(500).json({ success: false, message: 'Erro crítico ao obter os dados da Steam' });
+    if (!firstPageData) {
+      return res.status(500).json({ success: false, message: 'Erro ao obter dados da Steam' });
     }
 
-    const listings = parseListings(firstPageData);
+    // Parse da primeira página
+    let allListings = parseListings(firstPageData);
     const totalPages = Math.ceil((firstPageData.total_count || 0) / 100);
+
+    for (let page = 2; page <= totalPages; page++) {
+      console.log(`📦 Fetch da página ${page} de ${marketHashName}`);
+      const pageData = await fetcher.fetchSpecificPage(decodeURIComponent(marketHashName), page);
+      if (pageData) {
+        console.log(`✅ Página ${page} trouxe ${pageData.results_html.match(/market_listing_row/g)?.length || 0} listings`);
+        allListings = allListings.concat(parseListings(pageData));
+      }
+    }
+
+
+    // Loop para as restantes páginas
+    for (let page = 2; page <= totalPages; page++) {
+      const pageData = await fetcher.fetchSpecificPage(decodeURIComponent(marketHashName), page);
+      if (pageData) {
+        allListings = allListings.concat(parseListings(pageData));
+      }
+    }
 
     const responseData = {
       success: true,
       marketHashName: decodeURIComponent(marketHashName),
-      listings: listings,
+      listings: allListings,
       pagination: {
         currentPage: 1,
-        totalPages: totalPages,
+        totalPages,
         totalListings: firstPageData.total_count
       }
     };
@@ -86,6 +106,7 @@ async function loadPrivateKey() {
     skinCache.set(cacheKey, responseData);
     res.json(responseData);
   });
+
 
   // --- NOVA ROTA PARA PAGINAÇÃO ---
   app.get('/api/skin/:marketHashName/page/:pageNumber', async (req, res) => {
