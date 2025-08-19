@@ -61,6 +61,7 @@ const SkinDetailPage = () => {
             const data = await getSkinDetails(marketHashName, controller.signal);
             if (data && data.success) {
                 const initialListings = data.listings || [];
+                console.log("🟢 Listings recebidas do backend:", initialListings); // <-- adiciona isto
                 setOriginalListings(initialListings);
                 setLoadedCount(initialListings.length);
                 setPagination(data.pagination);
@@ -112,7 +113,7 @@ const SkinDetailPage = () => {
     }, [loading, pagination, marketHashName, inspectListings]);
 
     const filteredListings = useMemo(() => {
-        let processedListings = originalListings.filter(l => inspectedData[l.listingid]);
+        let processedListings = [...originalListings]; // mantém todas as listings
         
         if (filters.enabled.priceNumber) {
             const minPrice = parseFloat(filters.priceNumber[0]);
