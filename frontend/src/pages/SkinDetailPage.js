@@ -1,16 +1,19 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
+import pLimit from 'p-limit';
 import { getSkinDetails } from '../api/Skins';
-// CORREÇÃO: A importação do novo componente foi adicionada aqui
 import TiltSkinCard from '../components/TiltSkinCard'; 
 import FilterSidebar from '../components/FilterSidebar';
+import PaginationControls from '../components/PaginationControls';
 import './SkinDetailPage.css';
+
+const ITEMS_PER_PAGE = 16;
+const CONCURRENT_REQUEST_LIMIT = 8;
 
 const initialFilters = {
     priceNumber: ['', ''],
     wear: ['', ''],
     paintSeed: '',
-    fade: [80, 100],
     enabled: {
         priceNumber: false,
         wear: false,
@@ -24,125 +27,146 @@ const SkinDetailPage = () => {
 
     const [inspectedData, setInspectedData] = useState({});
     const [originalListings, setOriginalListings] = useState([]);
-    const [listings, setListings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [filters, setFilters] = useState(initialFilters);
     const [sortBy, setSortBy] = useState('priceNumber');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, totalListings: 0 });
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-    const sortListings = useCallback((list) => {
-        const sorted = [...list];
-        sorted.sort((a, b) => {
-            switch (sortBy) {
-                case 'float':
-                    return (inspectedData[a.listingid]?.floatvalue || 1) - (inspectedData[b.listingid]?.floatvalue || 1);
-                case 'pattern':
-                    return (inspectedData[a.listingid]?.paintseed || 1001) - (inspectedData[b.listingid]?.paintseed || 1001);
-                case 'priceNumber':
-                default:
-                    return (a.priceNumber || 0) - (b.priceNumber || 0);
+    const inspectListings = useCallback((listingsToInspect) => {
+        for (const listing of listingsToInspect) {
+            if (listing.inspectLink) {
+                fetch(`http://localhost/?url=${encodeURIComponent(listing.inspectLink)}`)
+                    .then(res => res.json())
+                    .then(json => {
+                        if (json && json.iteminfo) {
+                            setInspectedData(prev => ({ ...prev, [listing.listingid]: json.iteminfo }));
+                        }
+                    }).catch(e => console.error(`Erro ao inspecionar item ${listing.listingid}`, e));
             }
-        });
-        return sorted;
-    }, [sortBy, inspectedData]);
+        }
+    }, []);
 
-    const applyFilters = useCallback((listingsToFilter) => {
-        let filteredListings = [...listingsToFilter];
+    // useEffect para buscar dados iniciais (1ª página)
+    useEffect(() => {
+        const controller = new AbortController();
+        const fetchInitialSkinData = async () => {
+            setLoading(true);
+            setError(null);
+            setOriginalListings([]);
+            setInspectedData({});
+            const data = await getSkinDetails(marketHashName, controller.signal);
+            if (data && data.success) {
+                setOriginalListings(data.listings || []);
+                setPagination(data.pagination);
+                inspectListings(data.listings || []);
+            } else if (data !== null) {
+                setError("Não foi possível carregar os dados desta skin.");
+            }
+            setLoading(false);
+        };
+        fetchInitialSkinData();
+        return () => controller.abort();
+    }, [marketHashName, inspectListings]);
+
+    // useEffect para buscar páginas restantes em segundo plano
+    useEffect(() => {
+        if (loading || pagination.currentPage >= pagination.totalPages) return;
+        const fetchRemainingPages = async () => {
+            setIsLoadingMore(true);
+            const limit = pLimit(CONCURRENT_REQUEST_LIMIT);
+            const tasks = [];
+            for (let i = pagination.currentPage + 1; i <= pagination.totalPages; i++) {
+                tasks.push(limit(async () => {
+                    try {
+                        const res = await fetch(`http://localhost:3001/api/skin/${encodeURIComponent(marketHashName)}/page/${i}`);
+                        const data = await res.json();
+                        if (data.success) {
+                            setOriginalListings(prev => [...prev, ...data.listings]);
+                            inspectListings(data.listings);
+                        }
+                    } catch (e) { console.error(`Erro ao buscar página ${i}`, e); }
+                }));
+            }
+            await Promise.all(tasks);
+            setPagination(prev => ({ ...prev, currentPage: prev.totalPages }));
+            setIsLoadingMore(false);
+        };
+        fetchRemainingPages();
+    }, [loading, pagination, marketHashName, inspectListings]);
+
+
+    // LÓGICA DE FILTROS E PAGINAÇÃO COM useMemo
+
+    // 1. CALCULA a lista filtrada e ordenada.
+    const filteredListings = useMemo(() => {
+        // --- CORREÇÃO PRINCIPAL ---
+        // Primeiro, filtra a lista para incluir APENAS os itens que já foram inspecionados.
+        let processedListings = originalListings.filter(l => inspectedData[l.listingid]);
 
         if (filters.enabled.priceNumber) {
             const minPrice = parseFloat(filters.priceNumber[0]);
             const maxPrice = parseFloat(filters.priceNumber[1]);
-            if (!isNaN(minPrice)) filteredListings = filteredListings.filter(l => (l.priceNumber || 0) >= minPrice);
-            if (!isNaN(maxPrice)) filteredListings = filteredListings.filter(l => (l.priceNumber || 0) <= maxPrice);
+            if (!isNaN(minPrice)) processedListings = processedListings.filter(l => (l.priceNumber || 0) >= minPrice);
+            if (!isNaN(maxPrice)) processedListings = processedListings.filter(l => (l.priceNumber || 0) <= maxPrice);
         }
-
         if (filters.enabled.wear) {
             const minWear = parseFloat(filters.wear[0]);
             const maxWear = parseFloat(filters.wear[1]);
-            filteredListings = filteredListings.filter(l => {
-                const float = inspectedData[l.listingid]?.floatvalue;
-                if (float === undefined) return false;
+            // Já não precisamos de verificar se `float` é undefined, porque o primeiro filtro já garantiu isso.
+            processedListings = processedListings.filter(l => {
+                const float = inspectedData[l.listingid].floatvalue;
                 let match = true;
                 if (!isNaN(minWear)) match = match && float >= minWear;
                 if (!isNaN(maxWear)) match = match && float <= maxWear;
                 return match;
             });
         }
-
         if (filters.enabled.paintSeed && filters.paintSeed) {
             const seed = parseInt(filters.paintSeed, 10);
-            if (!isNaN(seed)) filteredListings = filteredListings.filter(l => inspectedData[l.listingid]?.paintseed === seed);
+            if (!isNaN(seed)) processedListings = processedListings.filter(l => inspectedData[l.listingid].paintseed === seed);
         }
+        
+        processedListings.sort((a, b) => {
+            // Acesso seguro aos dados de inspeção porque já garantimos que eles existem.
+            const itemA = inspectedData[a.listingid];
+            const itemB = inspectedData[b.listingid];
+            switch (sortBy) {
+                case 'float': return (itemA?.floatvalue || 1) - (itemB?.floatvalue || 1);
+                case 'pattern': return (itemA?.paintseed || 1001) - (itemB?.paintseed || 1001);
+                default: return (a.priceNumber || 0) - (b.priceNumber || 0);
+            }
+        });
 
-        setListings(sortListings(filteredListings));
-    }, [filters, inspectedData, sortListings]);
+        return processedListings;
+    }, [originalListings, filters, sortBy, inspectedData]);
 
+    // 2. RESETA a página para 1 APENAS se os filtros ou a ordenação mudarem.
     useEffect(() => {
-        if (originalListings.length > 0) {
-            applyFilters(originalListings);
-        }
-    }, [originalListings, inspectedData, filters, applyFilters]);
+        setCurrentPage(1);
+    }, [filters, sortBy]);
 
-    useEffect(() => {
-        const minFloatParam = searchParams.get('minFloat');
-        const maxFloatParam = searchParams.get('maxFloat');
-        const patternParam = searchParams.get('pattern');
-
-        if (minFloatParam || maxFloatParam || patternParam) {
-            const newFilters = { ...initialFilters };
-            if (minFloatParam || maxFloatParam) {
-                newFilters.enabled.wear = true;
-                newFilters.wear = [minFloatParam || '', maxFloatParam || ''];
-            }
-            if (patternParam) {
-                newFilters.enabled.paintSeed = true;
-                newFilters.paintSeed = patternParam;
-            }
-            setFilters(newFilters);
-        }
-
-        const fetchSkinData = async () => {
-            setLoading(true);
-            setError(null);
-            const data = await getSkinDetails(marketHashName);
-            if (data && data.success) {
-                const listingsData = data.listings || [];
-                setOriginalListings(listingsData);
-
-                for (const listing of listingsData) {
-                    if (listing.inspectLink) {
-                        try {
-                            const res = await fetch(`http://localhost/?url=${encodeURIComponent(listing.inspectLink)}`);
-                            const json = await res.json();
-                            if (json && json.iteminfo) {
-                                setInspectedData(prev => ({ ...prev, [listing.listingid]: json.iteminfo }));
-                            }
-                        } catch (e) { console.error(`Erro ao inspecionar item ${listing.listingid}`, e); }
-                    }
-                }
-            } else {
-                setError("Não foi possível carregar os dados desta skin.");
-            }
-            setLoading(false);
-        };
-        fetchSkinData();
-    }, [marketHashName, searchParams]);
-
+    // 3. CALCULA a fatia de itens visíveis.
+    const visibleListings = useMemo(() => {
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        const endIndex = startIndex + ITEMS_PER_PAGE;
+        return filteredListings.slice(startIndex, endIndex);
+    }, [filteredListings, currentPage]);
+    
     const handleToggleFilter = (filterName) => setFilters(prev => ({ ...prev, enabled: { ...prev.enabled, [filterName]: !prev.enabled[filterName] } }));
     const handleResetFilters = () => setFilters(initialFilters);
 
     if (loading && originalListings.length === 0) return <div className="loader">A carregar detalhes da skin...</div>;
     if (error) return <div className="error-message">{error}</div>;
 
+    const progress = pagination.totalListings ? (originalListings.length / pagination.totalListings) * 100 : 0;
+    const totalPages = Math.ceil(filteredListings.length / ITEMS_PER_PAGE);
+
     return (
         <div className="skin-detail-page">
-            <FilterSidebar
-                filters={filters}
-                setFilters={setFilters}
-                onApplyFilters={() => applyFilters(originalListings)}
-                onToggleFilter={handleToggleFilter}
-                onResetFilters={handleResetFilters}
-            />
+            <FilterSidebar filters={filters} setFilters={setFilters} onApplyFilters={() => {}} onToggleFilter={handleToggleFilter} onResetFilters={handleResetFilters} />
             <div className="main-content-column">
                 <h1>{decodeURIComponent(marketHashName)}</h1>
                 <div className="skin-listings-section">
@@ -155,9 +179,27 @@ const SkinDetailPage = () => {
                             <button className={`sort-button ${sortBy === 'pattern' ? 'active' : ''}`} onClick={() => setSortBy('pattern')}>Pattern</button>
                         </div>
                     </div>
+
+                    {(isLoadingMore || (progress < 100 && progress > 0)) && pagination.totalPages > 1 && (
+                        <div className="loading-progress-container">
+                            <div className="progress-bar-background">
+                                <div className="progress-bar-fill" style={{ width: `${progress}%` }} />
+                                <div className="progress-text">
+                                    A carregar... {originalListings.length} / {pagination.totalListings}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <PaginationControls
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
+
                     <div className="skin-cards-grid">
-                        {listings.length > 0 ? (
-                            listings.map(listing => (
+                        {visibleListings.length > 0 ? (
+                            visibleListings.map(listing => (
                                 <TiltSkinCard
                                     key={listing.listingid}
                                     listing={listing}
@@ -165,9 +207,15 @@ const SkinDetailPage = () => {
                                 />
                             ))
                         ) : (
-                            <div>Nenhum listing encontrado para os filtros selecionados.</div>
+                            !isLoadingMore && <div>Nenhum listing encontrado para os filtros selecionados.</div>
                         )}
                     </div>
+
+                    <PaginationControls
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
                 </div>
             </div>
         </div>

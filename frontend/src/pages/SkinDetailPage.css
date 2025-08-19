@@ -158,3 +158,80 @@
     font-size: 1.5rem;
     color: var(--color-text-bright);
 }
+
+
+/* --- ESTILOS PARA A BARRA DE PROGRESSO (MAIS FINA E PEQUENA) --- */
+.loading-progress-container {
+  width: 100%;
+  margin-bottom: 1.5rem; /* Reduz o espaçamento inferior */
+}
+
+.progress-bar-background {
+  position: relative;
+  height: 18px; /* Mais fina */
+  background-color: var(--color-bg-dark);
+  border: 1px solid var(--color-border);
+  border-radius: 9px; /* Metade da altura para manter a forma de cápsula */
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background-color: var(--color-accent);
+  opacity: 0.6;
+  border-radius: 9px;
+  transition: width 0.3s ease-out; /* Transição mais rápida para uma atualização suave */
+}
+
+.progress-text {
+  position: relative;
+  z-index: 2;
+  color: var(--color-text-bright);
+  font-weight: 600;
+  font-size: 0.8rem; /* Fonte ligeiramente mais pequena */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+/* --- ESTILOS PARA OS CONTROLOS DE PAGINAÇÃO --- */
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.5rem 0; /* Adiciona espaçamento vertical */
+  width: 100%;
+}
+
+.pagination-button {
+  background-color: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.pagination-button:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-text-bright);
+}
+
+.pagination-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  color: var(--color-text-bright);
+  font-weight: 500;
+  font-size: 1rem;
+}

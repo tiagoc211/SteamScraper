@@ -10,6 +10,7 @@
     "axios": "^1.11.0",
     "framer-motion": "^12.23.12",
     "gsap": "^3.13.0",
+    "p-limit": "^7.0.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-icons": "^5.5.0",

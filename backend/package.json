@@ -8,6 +8,7 @@
     "helmet": "^8.1.0",
     "https-proxy-agent": "^7.0.6",
     "jose": "^6.0.12",
+    "node-cache": "^5.1.2",
     "node-fetch": "^3.3.2",
     "p-limit": "^5.0.0",
     "socks-proxy-agent": "^8.0.5"
