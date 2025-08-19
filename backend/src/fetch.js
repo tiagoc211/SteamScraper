@@ -1,10 +1,12 @@
 const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args));
+const { knives } = require('./data');
 
 const SCRAPEDO_TOKEN = 'ce5b103fcb1f4c35b806930ffe77bf8a545567f2118';
 const BASE_LISTING_URL = 'https://steamcommunity.com/market/listings/730';
 const BASE_SEARCH_URL = 'https://steamcommunity.com/market/search/render/';
 
 function wrapWithScrapeDo(steamUrl) {
+  console.log("debug: url generated", steamUrl);
   return `http://api.scrape.do/?url=${encodeURIComponent(steamUrl)}&token=${SCRAPEDO_TOKEN}`;
 }
 
@@ -38,16 +40,27 @@ async function initialize() {
     }
   }
 
+  function AddStar(itemName) {
+  // procura se começa com algum nome de faca da lista
+    if (!itemName.startsWith("★ ") && knives.some(knife => itemName.startsWith(knife))) {
+      return "★ " + itemName;
+    }
+    return itemName;
+  }
+
+
   async function fetchFirstPage(itemName) {
+    itemName = AddStar(itemName);
     const url = wrapWithScrapeDo(`${BASE_LISTING_URL}/${encodeURIComponent(itemName)}/render/?start=0&count=100&country=PT&language=portuguese&currency=3`);
     console.log('URL da Steam (primeira página):', url);
     return await fetchPage(url, itemName, 1);
   }
 
   async function fetchSpecificPage(itemName, pageNumber) {
+    itemName = AddStar(itemName);
     const start = (pageNumber - 1) * 100;
     const url = wrapWithScrapeDo(`${BASE_LISTING_URL}/${encodeURIComponent(itemName)}/render/?start=${start}&count=100&country=PT&language=portuguese&currency=3`);
-    console.log('URL da Steam (Página especifica):', url);
+    console.log('URL da Steam (Página específica):', url);
     return await fetchPage(url, itemName, pageNumber);
   }
 
