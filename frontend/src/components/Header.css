@@ -41,3 +41,68 @@
 .nav-link:hover {
   color: var(--color-text-bright);
 }
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* logo à esquerda, nav no centro, auth à direita */
+  height: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative; /* para poder posicionar nav-center */
+}
+
+.nav-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.user-popup {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  background-color: rgba(27, 40, 56, 0.95);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 2000;
+  white-space: nowrap;
+
+  /* animação de fade */
+  opacity: 0;
+  animation: fadeIn 0.15s forwards;
+}
+
+.user-popup .nav-link {
+  margin-left: 0;
+  display: flex;
+  align-items: center;
+  color: var(--color-text-bright);
+}
+
+.user-popup .nav-link:hover {
+  color: rgba(102, 192, 244, 0.8);
+}
+
+/* animação fade */
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+
+
+
+
+
+

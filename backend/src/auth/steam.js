@@ -35,8 +35,36 @@ function setupSteamAuth(app) {
   app.get("/auth/steam", passport.authenticate("steam"));
   app.get("/auth/steam/return",
     passport.authenticate("steam", { failureRedirect: "/" }),
-    (req, res) => res.json({ user: req.user }) // podes mudar para redirect se quiseres
+    (req, res) => {
+      // Redireciona de volta para o frontend
+      res.redirect("http://localhost:3000/");
+    }
   );
+
+
+  app.get("/api/me", (req, res) => {
+  if (req.isAuthenticated()) {
+    const u = req.user;
+    res.json({ 
+      user: {
+        displayName: u.displayName,
+        photos: u.photos // mantém array de fotos
+      }
+    });
+  } else {
+    res.json({ user: null });
+  }
+});
+
+
+  app.get("/auth/logout", (req, res) => {
+    req.logout(err => {
+      if (err) return res.status(500).json({ error: "Erro ao terminar sessão" });
+      res.redirect("http://localhost:3000/"); // volta para o frontend
+    });
+  });
+
+
 }
 
 module.exports = setupSteamAuth;

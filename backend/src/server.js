@@ -1,4 +1,5 @@
 require('dotenv').config();
+console.log('STEAM_API_KEY =', process.env.STEAM_API_KEY); // para testar
 const express = require('express');
 const cors = require('cors');
 const setupSteamAuth = require('./auth/steam');
@@ -15,7 +16,11 @@ async function startServer() {
   await fetcher.ready;
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000', // frontend
+  credentials: true
+}));
+
 
 //Steam Auth ----------------
 
