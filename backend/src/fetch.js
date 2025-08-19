@@ -1,82 +1,76 @@
+// --- fetch.js Otimizado e Resiliente ---
+
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
 const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args));
+const { HttpsProxyAgent } = require('https-proxy-agent');
 
-const SCRAPER_API_KEY = '4884690a8ffa8209e924678ba8c17e6c'; // <--- Coloca aqui a tua chave da ScraperAPI
-const SCRAPEDO_TOKEN = 'ce5b103fcb1f4c35b806930ffe77bf8a545567f2118';
-
-const BASE_LISTING_URL = 'https://steamcommunity.com/market/listings/730';
-const BASE_SEARCH_URL = 'https://steamcommunity.com/market/search/render/';
-
-/**
- * Envolve qualquer URL da Steam com o endpoint do ScraperAPI
- */
-function wrapWithScraperApi(steamUrl) {
-  return `http://api.scraperapi.com/?api_key=${SCRAPER_API_KEY}&url=${encodeURIComponent(steamUrl)}`;
-}
-
-function wrapWithScrapeDo(steamUrl) {
-  return `http://api.scrape.do/?url=${encodeURIComponent(steamUrl)}&token=${SCRAPEDO_TOKEN}`;
-}
-
-/**
- * Faz fetch a uma página de listagens da Steam Market.
- */
-async function fetchPage(itemName, start = 0, count = 100) {
-  const encodedItem = encodeURIComponent(itemName);
-  const steamUrl = `${BASE_LISTING_URL}/${encodedItem}/render/?start=${start}&count=${count}&country=PT&language=portuguese&currency=3`;
-  const url = wrapWithScrapeDo(steamUrl);
-
-  console.log(`📦 A obter [${itemName}] de ${start} a ${start + count}...`);
-
-  try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0',
-        'Accept': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      console.error(`❌ Erro HTTP ${response.status} em: ${steamUrl}`);
-      return null;
-    }
-    
-    return await response.json();
-  } catch (err) {
-    console.error(`⚠️ Erro ao tentar obter ${itemName} (${start}): ${err.message}`);
-    return null;
-  }
-}
-
-/**
- * Faz fetch a uma página da Steam Search API.
- */
-async function fetchSearchPage(query, start = 0, count = 10) {
-  const steamUrl = `${BASE_SEARCH_URL}?query=${encodeURIComponent(query)}&appid=730&start=${start}&count=${count}&country=PT&language=portuguese&currency=3`;
-  const url = wrapWithScrapeDo(steamUrl);
-
-  console.log(`🔍 Search: ${query} (start=${start}, count=${count})`);
-
-  try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0',
-        'Accept': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      console.error(`❌ Erro HTTP ${response.status} em: ${steamUrl}`);
-      return null;
-    }
-
-    return await response.json();
-  } catch (err) {
-    console.error(`⚠️ Erro ao fazer fetch da search page: ${err.message}`);
-    return null;
-  }
-}
-
-module.exports = {
-  fetchPage,
-  fetchSearchPage,
+const fetcher = {
+  fetchFirstPage: null,
+  fetchSpecificPage: null,
+  fetchSearchPage: null,
+  ready: null
 };
+
+async function initialize() {
+  const pLimit = (await import('p-limit')).default;
+  
+  const MUBENG_PROXY_URL = 'http://localhost:8089';
+  const agent = new HttpsProxyAgent(MUBENG_PROXY_URL);
+  const BASE_LISTING_URL = 'https://steamcommunity.com/market/listings/730';
+  const BASE_SEARCH_URL = 'https://steamcommunity.com/market/search/render/';
+
+  async function fetchPage(url, itemName, pageNumber, maxRetries = 3) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      console.log(`➡️  A buscar [${itemName}] (página ${pageNumber}, tentativa ${attempt})...`);
+      try {
+        const response = await fetch(url, { agent, headers: { 'User-Agent': 'Mozilla/5.0' } });
+        if (!response.ok) throw new Error(`Erro HTTP ${response.status}`);
+        
+        const text = await response.text();
+        const data = JSON.parse(text);
+
+        console.log(`✔️  Sucesso para [${itemName}] (página ${pageNumber})`);
+        return data;
+      } catch (error) {
+        console.error(`❌  Falha para [${itemName}] (página ${pageNumber}, tentativa ${attempt}): ${error.message}`);
+        if (attempt === maxRetries) {
+          console.error(`Falha permanente para [${itemName}] após ${maxRetries} tentativas.`);
+          return null;
+        }
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+    }
+  }
+
+  // --- NOVAS FUNÇÕES ---
+  async function fetchFirstPage(itemName) {
+    const url = `${BASE_LISTING_URL}/${encodeURIComponent(itemName)}/render/?start=0&count=100&country=PT&language=portuguese&currency=3`;
+    return await fetchPage(url, itemName, 1);
+  }
+
+  async function fetchSpecificPage(itemName, pageNumber) {
+    const start = (pageNumber - 1) * 100;
+    const url = `${BASE_LISTING_URL}/${encodeURIComponent(itemName)}/render/?start=${start}&count=100&country=PT&language=portuguese&currency=3`;
+    return await fetchPage(url, itemName, pageNumber);
+  }
+  
+  async function fetchSearchPage(query, start, count) {
+      const params = new URLSearchParams({
+          query: query, start: start, count: count,
+          search_descriptions: 1, sort_column: 'popular', sort_dir: 'desc',
+          appid: 730, norender: 1
+      });
+      const url = `${BASE_SEARCH_URL}?${params.toString()}`;
+      return await fetchPage(url, `Busca por "${query}"`, 1);
+  }
+
+  fetcher.fetchFirstPage = fetchFirstPage;
+  fetcher.fetchSpecificPage = fetchSpecificPage;
+  fetcher.fetchSearchPage = fetchSearchPage;
+  console.log("Módulo de fetch (otimizado e resiliente) inicializado e pronto.");
+}
+
+fetcher.ready = initialize().catch(err => { console.error("Falha ao inicializar fetch.js:", err); process.exit(1); });
+
+module.exports = fetcher;
