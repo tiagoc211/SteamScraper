@@ -1,5 +1,6 @@
 const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args));
 
+// CORREÇÃO: Apontar para o serviço Python na porta 8000
 const PROXY_MANAGER_URL = 'http://localhost:8000';
 
 const proxyManager = {
@@ -19,7 +20,8 @@ const proxyManager = {
       console.log(`🔌 Proxy adquirido para sessão '${sessionId}': ${proxyData.protocol}://${proxyData.ip}:${proxyData.port}`);
       return proxyData;
     } catch (err) {
-      console.error('❌ Falha crítica ao contactar o serviço de proxy manager:', err.message);
+      // Este erro acontece quando o serviço Python não está a correr ou a porta está errada
+      console.error('❌ Falha crítica ao contactar o serviço de proxy manager. Verifique se está a correr na porta 8000.', err.message);
       return null;
     }
   },
@@ -36,6 +38,8 @@ const proxyManager = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ proxy_key, success }),
       });
+      // Log para confirmar o reporte
+      // console.log(`📋 Proxy ${proxy_key} reportado com sucesso=${success}`);
     } catch (err) {
       console.error(`❌ Erro ao reportar uso do proxy ${proxy_key}:`, err.message);
     }
