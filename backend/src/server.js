@@ -32,15 +32,14 @@ async function startServer() {
   app.use(express.json());
 
   // --- CONFIGURAÇÃO DE SESSÃO ---
-  // É importante que isto venha antes do setupSteamAuth
   app.use(session({
     secret: process.env.SESSION_SECRET || 'fallback_secret_key',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: 'auto' } // Em produção, usa true com HTTPS
+    cookie: { secure: 'auto' }
   }));
 
-  // --- INICIALIZA A AUTENTICAÇÃO STEAM A PARTIR DO TEU FICHEIRO ---
+  // --- INICIALIZA A AUTENTICAÇÃO STEAM ---
   setupSteamAuth(app);
   
   // --- CARREGAR CHAVE PRIVADA PARA TOKENS DE COMPRA ---
@@ -56,7 +55,8 @@ async function startServer() {
     console.error('❌ ERRO CRÍTICO: Não foi possível carregar "jose" ou a chave privada.', err.message);
   }
 
-  // --- ROTAS DA API DE SKINS ---
+  // --- ROTAS DA API ---
+
   app.get('/api/search', async (req, res) => {
     const { query, start = 0, count = 10 } = req.query;
     if (!query) return res.status(400).json({ success: false, message: 'O parâmetro "query" é obrigatório.' });
@@ -99,7 +99,43 @@ async function startServer() {
     res.json(responseData);
   });
 
-  // --- ROTA PARA GERAR TOKENS DE COMPRA ---
+  // =============================================================
+  // ## << NOVO ENDPOINT >> PROXY PARA O SERVIÇO DE INSPEÇÃO LOCAL ##
+  // =============================================================
+  app.get('/api/inspect', async (req, res) => {
+    const inspectLink = req.query.url;
+    if (!inspectLink) {
+      return res.status(400).json({ success: false, error: 'O parâmetro "url" do link de inspeção é obrigatório.' });
+    }
+
+    // !! IMPORTANTE !!
+    // Altere a porta '80' se o seu serviço de inspeção local (ex: csgo-float/inspect-proxy)
+    // estiver a correr noutra porta.
+    const FLOAT_INSPECT_SERVICE_URL = `http://localhost:80/?url=${encodeURIComponent(inspectLink)}`;
+
+    console.log(`🔎  Backend a encaminhar pedido de inspeção para: ${FLOAT_INSPECT_SERVICE_URL}`);
+
+    try {
+      const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args));
+      
+      const response = await fetch(FLOAT_INSPECT_SERVICE_URL, {
+        timeout: 15000 // Timeout de 15 segundos
+      });
+
+      if (!response.ok) {
+        throw new Error(`Serviço de inspeção local retornou o estado ${response.status}`);
+      }
+      
+      const data = await response.json();
+      res.json(data);
+
+    } catch (err) {
+      console.error('❌ Erro ao contactar o serviço de inspeção local:', err.message);
+      res.status(503).json({ success: false, error: 'O serviço de inspeção de floats local não está acessível ou falhou.' });
+    }
+  });
+
+  // ROTA PARA GERAR TOKENS DE COMPRA
   app.post('/api/tokens/buy', async (req, res) => {
     if (!privateKey || !SignJWT) return res.status(500).json({ error: 'Serviço de tokens indisponível.' });
     
