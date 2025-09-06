@@ -1,9 +1,8 @@
-// --- fetch.js Otimizado e Resiliente ---
-
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args));
 const { HttpsProxyAgent } = require('https-proxy-agent');
+const { knives } = require('./data');
 
 const fetcher = {
   fetchFirstPage: null,
@@ -11,6 +10,15 @@ const fetcher = {
   fetchSearchPage: null,
   ready: null
 };
+
+function AddStar(itemName) {
+  // procura se começa com algum nome de faca da lista
+    if (!itemName.startsWith("★ ") && knives.some(knife => itemName.startsWith(knife))) {
+      return "★ " + itemName;
+    }
+    return itemName;
+  }
+
 
 async function initialize() {
   // ## NOTA IMPORTANTE ##
@@ -60,11 +68,13 @@ async function initialize() {
   }
 
   async function fetchFirstPage(itemName) {
+    itemName = AddStar(itemName);
     const url = `${BASE_LISTING_URL}/${encodeURIComponent(itemName)}/render/?start=0&count=100&country=PT&language=portuguese&currency=3`;
     return await fetchPage(url, itemName, 1);
   }
 
   async function fetchSpecificPage(itemName, pageNumber) {
+    itemName = AddStar(itemName);
     const start = (pageNumber - 1) * 100;
     const url = `${BASE_LISTING_URL}/${encodeURIComponent(itemName)}/render/?start=${start}&count=100&country=PT&language=portuguese&currency=3`;
     return await fetchPage(url, itemName, pageNumber);
