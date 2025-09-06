@@ -1,12 +1,9 @@
-// src/fetch.js
+// --- fetch.js Otimizado e Resiliente ---
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args));
 const { HttpsProxyAgent } = require('https-proxy-agent');
-const { SocksProxyAgent } = require('socks-proxy-agent');
-const proxyManager = require('./proxyManager');
-const { knives } = require('./data');
 
 const fetcher = {
   fetchFirstPage: null,
@@ -15,106 +12,67 @@ const fetcher = {
   ready: null
 };
 
-// --- ALTERAÇÃO: Função otimizada para lidar com autenticação ---
-function createProxyAgent(proxy) {
-  // O objeto 'proxy' vem da API Python com { ip, port, protocol, username?, password? }
-  const auth = (proxy.username && proxy.password)
-    ? `${encodeURIComponent(proxy.username)}:${encodeURIComponent(proxy.password)}@`
-    : '';
-  
-  const proxyUrl = `${proxy.protocol}://${auth}${proxy.ip}:${proxy.port}`;
-
-  console.log(`🔌 A utilizar proxy: ${proxy.protocol}://...:@${proxy.ip}:${proxy.port}`);
-
-  if (proxy.protocol.startsWith('socks')) {
-    return new SocksProxyAgent(proxyUrl);
-  }
-  // Para 'http' e 'https', usamos HttpsProxyAgent
-  return new HttpsProxyAgent(proxyUrl);
-}
-// --- FIM DA ALTERAÇÃO ---
-
 async function initialize() {
+  // ## NOTA IMPORTANTE ##
+  // Esta abordagem usa um ÚNICO endpoint de proxy fixo. Se este proxy falhar
+  // ou for bloqueado, TODOS os pedidos irão falhar.
+  // A sua lista de proxies anterior não será usada aqui.
+  const MUBENG_PROXY_URL = 'http://pool-basic-cc-mt:d8zcnxc0e6kvlcit@residential.byteproxies.io:8888';
+  const agent = new HttpsProxyAgent(MUBENG_PROXY_URL);
+  
   const BASE_LISTING_URL = 'https://steamcommunity.com/market/listings/730';
   const BASE_SEARCH_URL = 'https://steamcommunity.com/market/search/render/';
 
-  async function fetchPage(url, itemName, pageNumber, maxRetries = 3) {
+  async function fetchPage(url, itemName, pageNumber, maxRetries = 5) { // Aumentado para 5 tentativas
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       console.log(`➡️  A buscar [${itemName}] (página ${pageNumber}, tentativa ${attempt})...`);
-      
-      const proxy = await proxyManager.acquire(`${itemName}-page-${pageNumber}`);
-      if (!proxy) {
-        console.error("❌ Não foi possível adquirir um proxy. A aguardar 5 segundos...");
-        await new Promise(resolve => setTimeout(resolve, 5000));
-        continue;
-      }
-      
-      const agent = createProxyAgent(proxy);
-      let success = false;
-
       try {
-        const response = await fetch(url, {
-          agent,
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
-            'Accept': 'application/json, text/javascript, */*; q=0.01',
-            'X-Requested-With': 'XMLHttpRequest',
-            'Referer': 'https://steamcommunity.com/market/search?appid=730'
+        const response = await fetch(url, { 
+          agent, 
+          headers: { 
+            // Cabeçalhos mais realistas para evitar bloqueios
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Referer': 'https://steamcommunity.com/market/'
           },
-          timeout: 20000 // Aumentado para dar mais tempo a proxies lentos
+          timeout: 25000 // Timeout mais longo
         });
-
-        if (!response.ok) throw new Error(`Erro HTTP ${response.status}`);
-        const text = await response.text();
-        let data;
-        try {
-            data = JSON.parse(text);
-        } catch (e) {
-            console.error('Resposta da Steam não é um JSON válido. Conteúdo:', text);
-            throw new Error('A resposta da Steam não é um JSON válido.');
-        }
-        if (data.success === false) throw new Error(`A API da Steam retornou "success": false. (Pode ser um soft ban ou item inválido)`);
         
-        console.log(`✔️  Sucesso para [${itemName}] (página ${pageNumber}) com o proxy ${proxy.proxy_key}`);
-        success = true;
+        if (!response.ok) throw new Error(`Erro HTTP ${response.status}`);
+        
+        const text = await response.text();
+        if (!text) throw new Error('Resposta vazia da Steam.');
+
+        const data = JSON.parse(text);
+        if (data.success === false) throw new Error('API da Steam retornou "success": false.');
+
+        console.log(`✔️  Sucesso para [${itemName}] (página ${pageNumber})`);
         return data;
       } catch (error) {
-        console.error(`❌  Falha para [${itemName}] (página ${pageNumber}, tentativa ${attempt}) com proxy ${proxy.proxy_key}:`, error.message);
-      } finally {
-        await proxyManager.report(proxy.proxy_key, success);
-      }
-      if (attempt < maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, 2000 * attempt)); // Aumentado o tempo de espera entre tentativas
+        console.error(`❌  Falha para [${itemName}] (página ${pageNumber}, tentativa ${attempt}): ${error.message}`);
+        if (attempt === maxRetries) {
+          console.error(`Falha permanente para [${itemName}] após ${maxRetries} tentativas.`);
+          return null;
+        }
+        await new Promise(resolve => setTimeout(resolve, 2000 * attempt)); // Espera crescente
       }
     }
-    
-    console.error(`❌ Falha permanente para [${itemName}] após ${maxRetries} tentativas.`);
-    return null;
-  }
-
-  function addStarToKnife(itemName) {
-    if (!itemName.startsWith("★ ") && knives.some(knife => itemName.startsWith(knife))) {
-      return "★ " + itemName;
-    }
-    return itemName;
   }
 
   async function fetchFirstPage(itemName) {
-    const finalItemName = addStarToKnife(itemName);
-    const url = `${BASE_LISTING_URL}/${encodeURIComponent(finalItemName)}/render/?start=0&count=100&country=PT&language=portuguese&currency=3`;
-    return await fetchPage(url, finalItemName, 1);
+    const url = `${BASE_LISTING_URL}/${encodeURIComponent(itemName)}/render/?start=0&count=100&country=PT&language=portuguese&currency=3`;
+    return await fetchPage(url, itemName, 1);
   }
 
   async function fetchSpecificPage(itemName, pageNumber) {
-    const finalItemName = addStarToKnife(itemName);
     const start = (pageNumber - 1) * 100;
-    const url = `${BASE_LISTING_URL}/${encodeURIComponent(finalItemName)}/render/?start=${start}&count=100&country=PT&language=portuguese&currency=3`;
-    return await fetchPage(url, finalItemName, pageNumber);
+    const url = `${BASE_LISTING_URL}/${encodeURIComponent(itemName)}/render/?start=${start}&count=100&country=PT&language=portuguese&currency=3`;
+    return await fetchPage(url, itemName, pageNumber);
   }
   
   async function fetchSearchPage(query, start, count) {
       const params = new URLSearchParams({
-          query, start, count,
+          query: query, start: start, count: count,
           search_descriptions: 1, sort_column: 'popular', sort_dir: 'desc',
           appid: 730, norender: 1
       });
@@ -125,7 +83,7 @@ async function initialize() {
   fetcher.fetchFirstPage = fetchFirstPage;
   fetcher.fetchSpecificPage = fetchSpecificPage;
   fetcher.fetchSearchPage = fetchSearchPage;
-  console.log("Módulo de fetch (ligado ao Proxy Manager) inicializado e pronto.");
+  console.log("Módulo de fetch (Proxy Fixo) inicializado e pronto.");
 }
 
 fetcher.ready = initialize().catch(err => { console.error("Falha ao inicializar fetch.js:", err); process.exit(1); });

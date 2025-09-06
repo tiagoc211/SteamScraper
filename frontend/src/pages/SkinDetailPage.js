@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import pLimit from 'p-limit';
-// << CORREÇÃO >> Importa todas as funções da nossa nova API centralizada
 import { getSkinDetails, getSkinPage, inspectSkin } from '../api/Skins';
-import TiltSkinCard from '../components/TiltSkinCard'; 
+import TiltSkinCard from '../components/TiltSkinCard';
 import FilterSidebar from '../components/FilterSidebar';
 import PaginationControls from '../components/PaginationControls';
 import './SkinDetailPage.css';
 
+// --- CONFIGURAÇÃO ESTRATÉGICA ---
 const ITEMS_PER_PAGE = 24;
-const CONCURRENT_REQUEST_LIMIT = 50;
+// << A ESTRATÉGIA IDEAL >>: Um limite de concorrência que é rápido, mas não agressivo.
+const CONCURRENT_REQUEST_LIMIT = 100;
 
 const initialFilters = {
     priceNumber: ['', ''], wear: ['', ''], paintSeed: '',
@@ -43,9 +44,11 @@ const SkinDetailPage = () => {
 
     useEffect(() => {
         const controller = new AbortController();
+        // << A ESTRATÉGIA IDEAL >>: Criar a nossa fila de "caixas rápidas".
         const limit = pLimit(CONCURRENT_REQUEST_LIMIT);
 
         const fetchAllSkinData = async () => {
+            // Resetar estados para uma nova pesquisa
             setIsInitialLoad(true);
             setError(null);
             setAllListings([]);
@@ -54,6 +57,7 @@ const SkinDetailPage = () => {
             setLoadingProgress({ loaded: 0, total: 0 });
 
             try {
+                // 1. Buscar a primeira página para obter os totais
                 const firstPageData = await getSkinDetails(marketHashName, controller.signal);
                 if (!firstPageData || !firstPageData.success) {
                     throw new Error("Não foi possível carregar os dados desta skin.");
@@ -66,17 +70,22 @@ const SkinDetailPage = () => {
                 initialListings.forEach(listing => inspectListing(listing));
                 setLoadingProgress({ loaded: initialListings.length, total: totalListings });
 
+                // 2. Se houver mais páginas, buscá-las em paralelo controlado
                 if (totalPages > 1) {
+                    // Criar uma tarefa para cada página restante
                     const pagePromises = Array.from({ length: totalPages - 1 }, (_, i) => i + 2)
-                        .map(pageNumber => limit(async () => {
-                            const pageData = await getSkinPage(marketHashName, pageNumber, controller.signal);
-                            if (pageData?.success && pageData.listings) {
-                                setLoadingProgress(prev => ({ ...prev, loaded: prev.loaded + pageData.listings.length }));
-                                pageData.listings.forEach(listing => inspectListing(listing));
-                                return pageData.listings;
-                            }
-                            return [];
-                        }));
+                        .map(pageNumber => 
+                            // Adicionar a tarefa à nossa fila de "caixas rápidas"
+                            limit(async () => {
+                                const pageData = await getSkinPage(marketHashName, pageNumber, controller.signal);
+                                if (pageData?.success && pageData.listings) {
+                                    setLoadingProgress(prev => ({ ...prev, loaded: prev.loaded + pageData.listings.length }));
+                                    pageData.listings.forEach(listing => inspectListing(listing));
+                                    return pageData.listings;
+                                }
+                                return []; // Retornar array vazio em caso de falha
+                            })
+                        );
                     
                     const subsequentListingsArrays = await Promise.all(pagePromises);
                     setAllListings(prev => [...prev, ...subsequentListingsArrays.flat()]);
@@ -90,19 +99,21 @@ const SkinDetailPage = () => {
         return () => controller.abort();
     }, [marketHashName, inspectListing]);
 
+    // Efeito para controlar o fim do carregamento inicial (sem alterações)
     useEffect(() => {
         if (!isInitialLoad) return;
         const inspectedCount = Object.keys(inspectedData).length;
         const totalFetched = allListings.length;
         const targetCount = Math.min(ITEMS_PER_PAGE, loadingProgress.total > 0 ? loadingProgress.total : totalFetched);
 
-        if (loadingProgress.total === 0 && totalFetched > 0 && inspectedCount >= totalFetched) {
+        if (!loadingProgress.total && totalFetched > 0 && inspectedCount >= totalFetched) {
             setIsInitialLoad(false);
         } else if (targetCount > 0 && inspectedCount >= targetCount) {
             setIsInitialLoad(false);
         }
-    }, [inspectedData, allListings, loadingProgress.total, isInitialLoad]);
+    }, [inspectedData, allListings.length, loadingProgress.total, isInitialLoad]);
     
+    // Lógica de filtragem, ordenação e paginação (sem alterações)
     const filteredAndSortedListings = useMemo(() => {
         let processed = allListings.filter(l => inspectedData[l.listingid]);
         
@@ -134,7 +145,6 @@ const SkinDetailPage = () => {
 
     useEffect(() => { setCurrentPage(1); }, [filters, sortBy]);
 
-    // << CORREÇÃO >> A paginação agora corta a lista MESTRA já filtrada. Isto impede duplicados.
     const totalPages = Math.ceil(filteredAndSortedListings.length / ITEMS_PER_PAGE);
     const paginatedListings = useMemo(() => {
         const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
