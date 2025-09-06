@@ -11,6 +11,8 @@ import './SkinDetailPage.css';
 const ITEMS_PER_PAGE = 24;
 // << A ESTRATÉGIA IDEAL >>: Um limite de concorrência que é rápido, mas não agressivo.
 const CONCURRENT_REQUEST_LIMIT = 100;
+const INSPECT_CONCURRENT_LIMIT = 33;
+const inspectLimit = pLimit(INSPECT_CONCURRENT_LIMIT);
 
 const initialFilters = {
     priceNumber: ['', ''], wear: ['', ''], paintSeed: '',
@@ -35,12 +37,22 @@ const SkinDetailPage = () => {
 
     const inspectListing = useCallback(async (listing) => {
         if (listing.inspectLink) {
+            console.log("Enviado para inspeção:", listing.listingid);
             const data = await inspectSkin(listing.inspectLink);
             if (data && data.iteminfo) {
+                console.log("Recebido inspect:", listing.listingid);
                 setInspectedData(prev => ({ ...prev, [listing.listingid]: data.iteminfo }));
+            } else {
+                console.warn("Falhou inspect:", listing.listingid);
             }
         }
     }, []);
+
+
+    const enqueueInspect = (listing) => {
+        inspectLimit(() => inspectListing(listing))
+            .catch(err => console.warn(`Erro ao inspecionar ${listing.listingid}:`, err));
+    };
 
     useEffect(() => {
         const controller = new AbortController();
@@ -67,8 +79,10 @@ const SkinDetailPage = () => {
                 const { totalPages, totalListings } = firstPageData.pagination;
                 
                 setAllListings(initialListings);
-                initialListings.forEach(listing => inspectListing(listing));
+                // Em vez de chamar inspectListing diretamente, usamos o limitador
+                initialListings.forEach(listing => enqueueInspect(listing));
                 setLoadingProgress({ loaded: initialListings.length, total: totalListings });
+
 
                 // 2. Se houver mais páginas, buscá-las em paralelo controlado
                 if (totalPages > 1) {
@@ -80,7 +94,7 @@ const SkinDetailPage = () => {
                                 const pageData = await getSkinPage(marketHashName, pageNumber, controller.signal);
                                 if (pageData?.success && pageData.listings) {
                                     setLoadingProgress(prev => ({ ...prev, loaded: prev.loaded + pageData.listings.length }));
-                                    pageData.listings.forEach(listing => inspectListing(listing));
+                                    pageData.listings.forEach(listing => enqueueInspect(listing));
                                     return pageData.listings;
                                 }
                                 return []; // Retornar array vazio em caso de falha
