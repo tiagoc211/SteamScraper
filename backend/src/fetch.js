@@ -15,7 +15,7 @@ const fetcher = {
 async function initialize() {
   const pLimit = (await import('p-limit')).default;
   
-  const MUBENG_PROXY_URL = 'http://localhost:8089';
+  const MUBENG_PROXY_URL = 'http://pool-basic-cc-mt:d8zcnxc0e6kvlcit@residential.byteproxies.io:8888';
   const agent = new HttpsProxyAgent(MUBENG_PROXY_URL);
   const BASE_LISTING_URL = 'https://steamcommunity.com/market/listings/730';
   const BASE_SEARCH_URL = 'https://steamcommunity.com/market/search/render/';
