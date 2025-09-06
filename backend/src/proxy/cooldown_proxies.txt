@@ -1,4 +1,0 @@
-http://pool-basic-cc-de-sid-30624428-ttl-5:d8zcnxc0e6kvlcit@residential.byteproxies.io:8888
-http://pool-basic-cc-fr-sid-25329759-ttl-5:d8zcnxc0e6kvlcit@residential.byteproxies.io:8888
-http://pool-basic-cc-fr-sid-71789417-ttl-5:d8zcnxc0e6kvlcit@residential.byteproxies.io:8888
-http://pool-basic-cc-pt-sid-98054009-ttl-5:d8zcnxc0e6kvlcit@residential.byteproxies.io:8888
