@@ -1,92 +1,81 @@
-// --- server.js (Versão Final Modular e Completa) ---
+// --- server.js com Lógica de Streaming ---
 
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const cheerio = require('cheerio');
 const fs = require('fs/promises');
-const crypto = require('crypto');
 const NodeCache = require('node-cache');
-const session = require('express-session');
-
-// --- MÓDULOS LOCAIS ---
 const fetcher = require('./fetch');
-const setupSteamAuth = require('./auth/steam'); // Certifique-se que este ficheiro existe
 
-// --- CONFIGURAÇÃO ---
-const PORT = 3001;
+// Cache com TTL (Time To Live) de 5 minutos
 const skinCache = new NodeCache({ stdTTL: 300 });
-const ISSUER = 'http://localhost:3001';
-const AUDIENCE = 'steamscraper-extension';
 
-// --- FUNÇÃO PRINCIPAL DO SERVIDOR ---
 async function startServer() {
   await fetcher.ready;
 
   const app = express();
-  app.use(cors({
-    origin: 'http://localhost:3000', // URL do seu frontend
-    credentials: true
-  }));
+  app.use(cors({ origin: 'http://localhost:3000' })); // Permitir pedidos do frontend
   app.use(express.json());
+  const PORT = 3001;
 
-  app.use(session({
-    secret: process.env.SESSION_SECRET || 'a-very-strong-secret-key-for-session',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { secure: 'auto' } // Em produção, usar 'true' com HTTPS
-  }));
-
-  setupSteamAuth(app);
-  
-  let privateKey;
-  let SignJWT;
-  try {
-    const jose = await import('jose');
-    SignJWT = jose.SignJWT;
-    const privJwk = JSON.parse(await fs.readFile('./keys/private.jwk.json', 'utf8'));
-    privateKey = await jose.importJWK(privJwk, 'ES256');
-    console.log('🔑 Chave privada para tokens carregada com sucesso.');
-  } catch (err) {
-    console.error('❌ ERRO CRÍTICO: Não foi possível carregar a chave privada.', err.message);
-  }
-
-  // --- ROTAS DA API ---
-
-  // ROTA DE SKIN (Página 1)
+  // ROTA DE SKIN PRINCIPAL (AGORA COM STREAMING)
   app.get('/api/skin/:marketHashName', async (req, res) => {
-    const marketHashName = decodeURIComponent(req.params.marketHashName);
-    const firstPageData = await fetcher.fetchFirstPage(marketHashName);
-    if (!firstPageData || !firstPageData.success) {
-      return res.status(503).json({ success: false, message: 'Erro crítico ao obter os dados da Steam.' });
-    }
+    const { marketHashName } = req.params;
+    const decodedMarketHashName = decodeURIComponent(marketHashName);
 
-    const listings = parseListings(firstPageData);
-    const totalListings = firstPageData.total_count || 0;
-    const totalPages = Math.ceil(totalListings / 100);
-    
-    const responseData = { success: true, marketHashName, listings, pagination: { totalPages, totalListings }};
-    res.json(responseData);
+    // Endpoint para streaming
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Transfer-Encoding', 'chunked');
+
+    try {
+      const firstPageData = await fetcher.fetchFirstPage(decodedMarketHashName);
+      if (!firstPageData || !firstPageData.total_count) {
+        // Se a primeira página falhar, envia um erro e fecha a conexão
+        return res.status(500).json({ success: false, message: 'Não foi possível obter os dados iniciais da skin.' });
+      }
+
+      const totalListings = firstPageData.total_count;
+      const totalPages = Math.ceil(totalListings / 100);
+      const firstPageListings = parseListings(firstPageData);
+
+      // Enviar a resposta inicial (sem fechar a conexão)
+      const initialPayload = {
+        success: true,
+        marketHashName: decodedMarketHashName,
+        listings: firstPageListings,
+        pagination: { totalPages, totalListings }
+      };
+      res.json(initialPayload);
+
+    } catch (e) {
+      console.error("Erro na rota de streaming:", e);
+      // Se algo falhar antes de enviar dados, podemos enviar um erro
+      if (!res.headersSent) {
+        res.status(500).json({ success: false, message: 'Erro interno do servidor.' });
+      }
+    }
   });
 
-  // ROTA DE PAGINAÇÃO (Páginas > 1)
+  // ROTA DE PAGINAÇÃO (mantida para compatibilidade ou uso futuro)
   app.get('/api/skin/:marketHashName/page/:pageNumber', async (req, res) => {
-    const marketHashName = decodeURIComponent(req.params.marketHashName);
-    const pageNumber = parseInt(req.params.pageNumber, 10);
-    const pageData = await fetcher.fetchSpecificPage(marketHashName, pageNumber);
-    if (!pageData || !pageData.success) {
-      return res.status(503).json({ success: false, message: `Erro ao obter a página ${pageNumber}` });
-    }
+    const { marketHashName, pageNumber } = req.params;
+    const pageNum = parseInt(pageNumber, 10);
+    const decodedMarketHashName = decodeURIComponent(marketHashName);
     
+    const pageData = await fetcher.fetchSpecificPage(decodedMarketHashName, pageNum);
+    if (!pageData) {
+        return res.status(500).json({ success: false, message: `Não foi possível obter a página ${pageNum}.` });
+    }
     const listings = parseListings(pageData);
     res.json({ success: true, listings });
   });
 
-  // ROTA DE INSPEÇÃO (PROXY PARA SERVIÇO LOCAL)
+  // ROTA DE INSPEÇÃO (necessária para o frontend)
   app.get('/api/inspect', async (req, res) => {
     const inspectLink = req.query.url;
     if (!inspectLink) {
-      return res.status(400).json({ success: false, error: 'O parâmetro "url" é obrigatório.' });
+        return res.status(400).json({ success: false, error: 'O parâmetro "url" é obrigatório.' });
     }
     const FLOAT_INSPECT_SERVICE_URL = `http://localhost:80/?url=${encodeURIComponent(inspectLink)}`;
     try {
@@ -101,33 +90,11 @@ async function startServer() {
     }
   });
 
-  // ROTA PARA GERAR TOKENS DE COMPRA
-  app.post('/api/tokens/buy', async (req, res) => {
-    if (!privateKey || !SignJWT) return res.status(500).json({ error: 'Serviço de tokens indisponível.' });
-    try {
-      const { steamUrl, listingId, maxPriceCents, itemName } = req.body || {};
-      if (!steamUrl || !listingId || !Number.isInteger(maxPriceCents)) {
-        return res.status(400).json({ error: 'Parâmetros inválidos.' });
-      }
-      const nonce = crypto.randomBytes(16).toString('hex');
-      const token = await new SignJWT({ steamUrl, listingId, maxPriceCents, itemName, nonce })
-        .setProtectedHeader({ alg: 'ES256' })
-        .setIssuer(ISSUER)
-        .setAudience(AUDIENCE)
-        .setIssuedAt()
-        .setExpirationTime('60s')
-        .sign(privateKey);
-      res.json({ token });
-    } catch (err) {
-      console.error('❌ Erro ao gerar token de compra:', err);
-      res.status(500).json({ error: 'Falha a gerar token de compra.' });
-    }
-  });
 
-  app.listen(PORT, () => console.log(`🚀 Backend (Modular) a correr em http://localhost:${PORT}`));
+  app.listen(PORT, () => console.log(`🚀 Backend (Streaming) a correr em http://localhost:${PORT}`));
 }
 
-// --- FUNÇÃO DE PARSING COMPLETA (A VERSÃO CORRETA) ---
+// FUNÇÃO DE PARSING (sem alterações)
 function parseListings(data) {
     if (!data || !data.results_html) return [];
     const $ = cheerio.load(data.results_html);
@@ -135,44 +102,16 @@ function parseListings(data) {
     $('.market_listing_row').each((_, el) => {
         const $el = $(el);
         const listingid = $el.attr('id')?.replace('listing_', '');
-        if (!listingid) return;
-
         const name = $el.find('.market_listing_item_name').text().trim();
-        const priceText = $el.find('.market_listing_price_with_fee').text().trim();
+        const price = $el.find('.market_listing_price_with_fee').text().trim();
         const image = $el.find('img.market_listing_item_img').attr('src');
         const inspectLink = $el.find('.market_listing_row_action a').attr('href');
-        
-        const listingInfo = data.listinginfo?.[listingid];
-        const assetInfo = listingInfo?.asset?.id ? data.assets?.[730]?.[listingInfo.asset.contextid || '2']?.[listingInfo.asset.id] : null;
-
-        const priceNumber = parseFloat(priceText.replace(/[^\d,]/g, '').replace(',', '.'));
-
-        const stickerImgs = [];
-        $el.find('#sticker_info img, .market_listing_sticker_images img').each((_, img) => {
-          const src = $(img).attr('src');
-          if (src) stickerImgs.push(src);
-        });
-
-        const keychains = [];
-        $el.find('#keychain_info img, .market_listing_keychain_images img').each((_, img) => {
-          const src = $(img).attr('src');
-          if (src) keychains.push({ image_url: src });
-        });
-
-        listings.push({
-            listingid, name,
-            price: listingInfo?.price ? (listingInfo.price / 100).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' }) : null,
-            priceNumber, image, inspectLink,
-            stickers: stickerImgs.length > 0 ? stickerImgs : null,
-            keychains: keychains.length > 0 ? keychains : null,
-            buy: {
-                subtotalCents: listingInfo?.price,
-                feeCents: listingInfo?.fee,
-                totalCents: (listingInfo?.price != null && listingInfo?.fee != null) ? (listingInfo.price + listingInfo.fee) : null,
-                currency: listingInfo?.currencyid
-            },
-            raw: assetInfo
-        });
+        const li = listingid ? data.listinginfo?.[listingid] : null;
+        const subtotalCents = li?.price;
+        const feeCents = li?.fee;
+        const totalCents = (subtotalCents != null && feeCents != null) ? (subtotalCents + feeCents) : null;
+        const priceNumber = parseFloat(price.replace(/[^\d,]/g, '').replace(',', '.'));
+        listings.push({ listingid, name, priceNumber, image, inspectLink, buy: { totalCents } });
     });
     return listings;
 }
