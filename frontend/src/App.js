@@ -3,8 +3,9 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import SkinDetailPage from './pages/SkinDetailPage';
 import SkinSelectorPage from './pages/SkinSelectorPage';
+import AdminPage from './pages/admin/AdminPage'; 
 import Header from './components/Header';
-import './App.css'; // Vamos criar este ficheiro para estilos gerais
+import './App.css';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/skins" element={<SkinSelectorPage />} />
             <Route path="/skin/:marketHashName" element={<SkinDetailPage />} />
+            <Route path="/admin" element={<AdminPage />} /> {/*rota do admin */}
           </Routes>
         </main>
       </div>

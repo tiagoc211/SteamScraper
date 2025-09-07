@@ -1,0 +1,231 @@
+.roles-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  color: var(--color-text-bright);
+}
+
+.roles-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.roles-header h1 {
+  margin: 0;
+  color: var(--color-text-bright);
+}
+
+.create-btn {
+  background-color: var(--color-accent);
+  color: var(--color-bg-dark);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.create-btn:hover {
+  background-color: #e0a800;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(224, 168, 0, 0.3);
+}
+
+.roles-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--color-bg-light);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.roles-table th, .roles-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.roles-table th {
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-bright);
+  font-weight: 600;
+}
+
+.roles-table tr:hover {
+  background-color: var(--color-bg-dark);
+}
+
+.role-name {
+  display: flex;
+  align-items: center;
+}
+
+.role-badge {
+  background: linear-gradient(135deg, var(--color-accent), #e0a800);
+  color: var(--color-bg-dark);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.permissions-cell {
+  max-width: 200px;
+}
+
+.view-permissions-btn {
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-bright);
+  border: 1px solid var(--color-accent);
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.view-permissions-btn:hover {
+  background-color: var(--color-accent);
+  color: var(--color-bg-dark);
+  border-color: var(--color-accent);
+  transform: translateY(-1px);
+}
+
+.delete-btn {
+  background-color: var(--color-accent);
+  color: var(--color-bg-dark);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.delete-btn:hover {
+  background-color: #dc3545;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.edit-btn {
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-bright);
+  border: 1px solid var(--color-accent);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-right: 0.5rem;
+  font-weight: 500;
+}
+
+.edit-btn:hover {
+  background-color: var(--color-accent);
+  color: var(--color-bg-dark);
+  border-color: var(--color-accent);
+  transform: translateY(-1px);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 2rem;
+  background-color: var(--color-bg-light);
+  border-radius: 8px;
+  border: 2px dashed var(--color-border);
+}
+
+.empty-state p {
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+.loader {
+  text-align: center;
+  padding: 2rem;
+  color: var(--color-text-bright);
+  font-size: 1.1rem;
+}
+
+.error-message {
+  text-align: center;
+  padding: 2rem;
+  color: #dc3545;
+  background-color: rgba(220, 53, 69, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+/* SweetAlert2 Customizations */
+.swal2-textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
+}
+
+.swal2-input, .swal2-textarea {
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-light);
+  color: var(--color-text-bright);
+}
+
+.swal2-input:focus, .swal2-textarea:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(224, 168, 0, 0.2);
+}
+
+/* Permissions Modal Styles */
+.permissions-popup {
+  background-color: var(--color-bg-light) !important;
+  color: var(--color-text-bright) !important;
+}
+
+.permissions-popup .swal2-title {
+  color: var(--color-text-bright) !important;
+}
+
+.permissions-popup pre {
+  background-color: var(--color-bg-dark) !important;
+  color: var(--color-text-bright) !important;
+  border: 1px solid var(--color-border) !important;
+  font-family: 'Courier New', monospace !important;
+  font-size: 0.875rem !important;
+  line-height: 1.4 !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .roles-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .roles-table {
+    font-size: 0.875rem;
+  }
+  
+  .roles-table th, .roles-table td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .permissions-cell {
+    max-width: 200px;
+  }
+  
+  .edit-btn, .delete-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+}

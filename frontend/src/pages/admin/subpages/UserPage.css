@@ -1,0 +1,90 @@
+.users-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  color: var(--color-text-bright);
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--color-bg-light);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.users-table th, .users-table td {
+  padding: 0.8rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.users-table th {
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-bright);
+}
+
+.users-table tr:hover {
+  background-color: var(--color-bg-dark);
+}
+
+.delete-btn {
+  background-color: var(--color-accent);
+  color: var(--color-bg-dark);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.delete-btn:hover {
+  opacity: 0.8;
+}
+
+.edit-btn {
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-bright);
+  border: 1px solid var(--color-accent);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-right: 0.5rem; /* Para separar do botão Remover */
+}
+
+.edit-btn:hover {
+  background-color: var(--color-accent);
+  color: var(--color-bg-dark);
+  border-color: var(--color-accent);
+}
+
+/* Status Indicator Styles */
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot.active {
+  background-color: #10b981; /* Verde para status ativo */
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.status-dot.inactive {
+  background-color: #ef4444; /* Vermelho para status inativo */
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+.status-text {
+  font-size: 0.875rem;
+  color: var(--color-text-bright);
+  font-weight: 500;
+}

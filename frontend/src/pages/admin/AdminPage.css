@@ -1,0 +1,12 @@
+.admin-page {
+  display: flex;
+  gap: 2rem;
+}
+
+.admin-content {
+  flex: 1;
+  padding: 2rem;
+  background-color: var(--color-bg-dark);
+  min-height: 100vh;
+  color: var(--color-text-bright);
+}

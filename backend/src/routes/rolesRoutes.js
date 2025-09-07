@@ -1,5 +1,7 @@
 const express = require('express');
 const rolesDb = require('../db/roles.js');
+const logsDb = require('../db/logs.js');
+const ensureAuthenticated = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
@@ -13,10 +15,18 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Criar nova role
-router.post('/', async (req, res) => {
+// Criar nova role (protegida pelo middleware e com log)
+router.post('/', ensureAuthenticated, async (req, res) => {
   try {
     const role = await rolesDb.createRole(req.body);
+
+    // Criar log da ação
+    await logsDb.createLog({
+      user_id: req.userId,
+      action: 'CREATE_ROLE',
+      details: { role_id: role.id, name: role.name }
+    });
+
     res.status(201).json(role);
   } catch (err) {
     res.status(500).json({ error: err.message });
