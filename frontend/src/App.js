@@ -6,6 +6,7 @@ import SkinSelectorPage from './pages/SkinSelectorPage';
 import AdminPage from './pages/admin/AdminPage'; 
 import Header from './components/Header';
 import './App.css';
+import PrivateRoute from './utils/PrivateRoute';
 
 function App() {
   return (
@@ -17,7 +18,9 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/skins" element={<SkinSelectorPage />} />
             <Route path="/skin/:marketHashName" element={<SkinDetailPage />} />
-            <Route path="/admin" element={<AdminPage />} /> {/*rota do admin */}
+            <Route path="/admin" element={<PrivateRoute> <AdminPage /> </PrivateRoute>
+              } 
+            />
           </Routes>
         </main>
       </div>

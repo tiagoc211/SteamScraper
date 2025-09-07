@@ -35,19 +35,31 @@ router.post('/', ensureAuthenticated, async (req, res) => {
 // Atualizar role (protegida + log)
 router.put('/:id', ensureAuthenticated, async (req, res) => {
   try {
-    const role = await rolesDb.updateRole(req.params.id, req.body);
+    // Buscar estado antigo antes da atualização
+    const oldRole = await rolesDb.getRoleById(req.params.id);
+    if (!oldRole) return res.status(404).json({ error: 'Role não encontrada' });
 
+    // Fazer a atualização
+    const updatedRole = await rolesDb.updateRole(req.params.id, req.body);
+    if (!updatedRole) return res.status(500).json({ error: 'Erro ao atualizar role' });
+
+    // Criar log com antes e depois
     await createLog({
       userId: req.userId,
       action: 'UPDATE_ROLE',
-      details: { role_id: role.id, name: role.name }
+      details: {
+        before: oldRole,
+        after: updatedRole
+      }
     });
 
-    res.json(role);
+    res.json(updatedRole);
   } catch (err) {
+    console.error("Erro ao atualizar role:", err);
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // Remover role (protegida + log)
 router.delete('/:id', ensureAuthenticated, async (req, res) => {

@@ -6,6 +6,7 @@ const AdminSideBar = ({ selectedTab, onSelectTab }) => {
   const tabs = [
     { id: 'users', label: 'Utilizadores' },
     { id: 'roles', label: 'Roles' },
+    { id: 'logs', label: 'Logs'},
     { id: 'settings', label: 'Configurações' }, // podes adicionar mais depois
   ];
 

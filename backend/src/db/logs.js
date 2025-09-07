@@ -49,9 +49,19 @@ async function deleteLog(id) {
   return result.rows[0];
 }
 
+// Obter logs por utilizador
+async function getLogsByUser(userId) {
+  const result = await db.query(
+    'SELECT * FROM logs_activity WHERE user_id = $1 ORDER BY created_at DESC',
+    [userId]
+  );
+  return result.rows;
+}
+
 module.exports = {
   getLogs,
   getLogById,
+  getLogsByUser, // 👈 adicionar aqui
   createLog,
   updateLog,
   deleteLog

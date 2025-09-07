@@ -6,6 +6,7 @@ const rolesRoutes = require('./routes/rolesRoutes');
 const listeningsRoutes = require('./routes/listeningsRoutes');
 const inspectRoutes = require('./routes/inspectRoutes');
 const buysRoutes = require('./routes/buysRoutes');
+const logsRoutes = require('./routes/logsRoutes');
 
 // MODELS
 const express = require('express');
@@ -51,6 +52,7 @@ async function startServer() {
   app.use('/api/roles', rolesRoutes);
   app.use('/api/skin', listeningsRoutes);
   app.use('/api/inspect', inspectRoutes);
+  app.use('/api/logs', logsRoutes);
 
   app.listen(PORT, () => console.log(`🚀 Backend (Modular) a correr em http://localhost:${PORT}`));
 }

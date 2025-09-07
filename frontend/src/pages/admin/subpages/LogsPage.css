@@ -1,0 +1,113 @@
+/* src/pages/admin/subpages/LogsPage.css */
+
+.logs-page {
+  padding: 2rem;
+  min-height: calc(100vh - 70px);
+  background: rgba(27, 40, 56, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--color-text);
+  font-family: 'Poppins', sans-serif;
+}
+
+.logs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.logs-header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--color-text-bright);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.logs-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 6px; /* Espaço entre linhas */
+}
+
+.logs-table th,
+.logs-table td {
+  padding: 12px 15px;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.logs-table th {
+  background: var(--color-bg-lighter);
+  font-weight: 600;
+  color: var(--color-text-bright);
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+
+.logs-table tr {
+  background: var(--color-bg-light);
+  border-radius: 6px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.logs-table tr:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.logs-table td {
+  color: var(--color-text);
+  vertical-align: top;
+}
+
+.log-details {
+  background: rgba(42, 71, 94, 0.4);
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-family: monospace;
+  white-space: pre-wrap;
+  max-height: 120px;
+  overflow-y: auto;
+  color: var(--color-text-bright);
+}
+
+.loader {
+  font-size: 1.2rem;
+  color: var(--color-text);
+  text-align: center;
+  margin-top: 3rem;
+}
+
+.error-message {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.2);
+  padding: 12px;
+  border-radius: 6px;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.empty-state {
+  margin-top: 2rem;
+  text-align: center;
+  color: var(--color-text);
+  font-style: italic;
+}
+
+/* Scrollbar personalizada para detalhes */
+.log-details::-webkit-scrollbar {
+  width: 6px;
+}
+.log-details::-webkit-scrollbar-track {
+  background: var(--color-bg-dark);
+  border-radius: 3px;
+}
+.log-details::-webkit-scrollbar-thumb {
+  background: var(--color-accent);
+  border-radius: 3px;
+}
+.log-details::-webkit-scrollbar-thumb:hover {
+  background: #8dd1f9;
+}

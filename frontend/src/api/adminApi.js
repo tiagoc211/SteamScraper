@@ -99,3 +99,46 @@ export const deleteRole = async (id) => {
     return null;
   }
 };
+
+// ---------------------- LOGS ---------------------- //
+
+export const getLogs = async () => {
+  try {
+    const response = await apiClient.get('/logs');
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao obter logs:", error);
+    return [];
+  }
+};
+
+export const getLogById = async (id) => {
+  try {
+    const response = await apiClient.get(`/logs/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Erro ao obter log ${id}:`, error);
+    return null;
+  }
+};
+
+export const getLogsByUser = async (userId) => {
+  try {
+    const response = await apiClient.get(`/logs/user/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Erro ao obter logs do utilizador ${userId}:`, error);
+    return [];
+  }
+};
+
+export const deleteLog = async (id) => {
+  try {
+    const response = await apiClient.delete(`/logs/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Erro ao remover log ${id}:`, error);
+    return null;
+  }
+};
+
