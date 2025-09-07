@@ -100,7 +100,28 @@
   }
 }
 
+/* Adicionar ao final do seu Header.css */
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
 
+.currency-selector select {
+  background-color: var(--color-bg-light);
+  color: var(--color-text-bright);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.4rem 0.6rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.currency-selector select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
 
 
 

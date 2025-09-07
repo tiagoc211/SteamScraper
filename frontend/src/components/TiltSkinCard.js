@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useCallback, useMemo, useState } from "react"
 import './TiltSkinCard.css';
 import HoverTooltip from './HoverTooltip';
 import FloatBar from './FloatBar';
+import { useCurrency } from '../context/CurrencyContext';
 
 const DEFAULT_BEHIND_GRADIENT = "radial-gradient(farthest-side circle at var(--pointer-x) var(--pointer-y), hsla(170, 100%, 75%, var(--card-opacity)) 4%, hsla(120, 100%, 70%, calc(var(--card-opacity) * 0.75)) 10%, hsla(210, 70%, 50%, calc(var(--card-opacity) * 0.5)) 50%, transparent 100%)";
 const DEFAULT_INNER_GRADIENT = "linear-gradient(145deg, rgba(10, 30, 60, 0.8), rgba(80, 200, 120, 0.1))";
@@ -14,12 +15,28 @@ const adjust = (value, fromMin, fromMax, toMin, toMax) => round(toMin + ((toMax 
 const easeInOutCubic = (x) => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
 
 const TiltSkinCardComponent = ({ listing, inspectedData }) => {
+    const { currency } = useCurrency();
     const wrapRef = useRef(null);
     const cardRef = useRef(null);
     const enableTilt = true;
     const item = inspectedData[listing.listingid];
     
     const [mouseMoveNonce, setMouseMoveNonce] = useState(0);
+
+
+    const formattedPrice = useMemo(() => {
+        const priceInCents = listing.buy?.totalCents;
+        if (priceInCents === null || priceInCents === undefined) {
+            return (listing.priceNumber || 0).toLocaleString(undefined, {
+                style: 'currency', currency: currency.code
+            });
+        }
+        return (priceInCents / 100).toLocaleString(undefined, {
+            style: 'currency', currency: currency.code
+        });
+    }, [listing.buy?.totalCents, listing.priceNumber, currency]);
+
+    if (!item) return null;
 
     const animationHandlers = useMemo(() => {
         if (!enableTilt) return null;
@@ -145,7 +162,6 @@ const TiltSkinCardComponent = ({ listing, inspectedData }) => {
     const { floatvalue, paintseed, full_item_name, imageurl } = item;
     const { stickers, keychains } = listing;
     const highResImageUrl = (imageurl || listing.image).replace('360fx360f', '512fx512f');
-    const formattedPrice = (listing.priceNumber || 0).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' });
 
     return (
         <div ref={wrapRef} className="tsc-card-wrapper" style={cardStyle}>

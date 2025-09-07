@@ -12,9 +12,11 @@ const apiClient = axios.create({
  * @param {AbortSignal} signal - O sinal para cancelar o pedido.
  * @returns {Promise<Object|null>} - Os detalhes da skin ou null em caso de erro.
  */
-export const getSkinDetails = async (marketHashName, signal) => {
+export const getSkinDetails = async (marketHashName, signal, currencyId = 3) => {
   try {
-    const response = await apiClient.get(`/skin/${encodeURIComponent(marketHashName)}`, { signal });
+    const response = await apiClient.get(`/skin/${encodeURIComponent(marketHashName)}?currency=${currencyId}`, {
+      signal
+    });
     return response.data;
   } catch (error) {
     if (axios.isCancel(error)) {
@@ -33,9 +35,11 @@ export const getSkinDetails = async (marketHashName, signal) => {
  * @param {AbortSignal} signal - O sinal para cancelar o pedido.
  * @returns {Promise<Object|null>} - Os listings da página ou null em caso de erro.
  */
-export const getSkinPage = async (marketHashName, pageNumber, signal) => {
+export const getSkinPage = async (marketHashName, pageNumber, signal, currencyId = 3) => {
   try {
-    const response = await apiClient.get(`/skin/${encodeURIComponent(marketHashName)}/page/${pageNumber}`, { signal });
+    const response = await apiClient.get(`/skin/${encodeURIComponent(marketHashName)}/page/${pageNumber}?currency=${currencyId}`, {
+      signal
+    });
     return response.data;
   } catch (error) {
     if (axios.isCancel(error)) {

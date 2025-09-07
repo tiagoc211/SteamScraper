@@ -5,11 +5,12 @@ import { getSkinDetails, getSkinPage, inspectSkin } from '../api/Skins';
 import TiltSkinCard from '../components/TiltSkinCard';
 import FilterSidebar from '../components/FilterSidebar';
 import PaginationControls from '../components/PaginationControls';
+import { useCurrency } from '../context/CurrencyContext';
 import './SkinDetailPage.css';
 
 const ITEMS_PER_PAGE = 24;
-const FETCH_CONCURRENT_LIMIT = 200;
-const INSPECT_CONCURRENT_LIMIT = 200;
+const FETCH_CONCURRENT_LIMIT = 20;
+const INSPECT_CONCURRENT_LIMIT = 30;
 
 const initialFilters = {
     priceNumber: ['', ''], wear: ['', ''], paintSeed: '',
@@ -22,6 +23,7 @@ const FullPageLoader = () => (
 
 const SkinDetailPage = () => {
     const { marketHashName } = useParams();
+    const { currency } = useCurrency();
 
     const [allListings, setAllListings] = useState([]);
     const [inspectedData, setInspectedData] = useState({});
@@ -52,7 +54,7 @@ const SkinDetailPage = () => {
             setInspectedData({}); setCurrentPage(1); setLoadingProgress({ loaded: 0, total: 0 });
 
             try {
-                const firstPageData = await getSkinDetails(marketHashName, controller.signal);
+                const firstPageData = await getSkinDetails(marketHashName, controller.signal, currency.id);
                 if (!firstPageData || !firstPageData.success) throw new Error("Não foi possível carregar os dados desta skin.");
 
                 const initialListings = firstPageData.listings || [];
@@ -64,7 +66,7 @@ const SkinDetailPage = () => {
                 if (totalPages > 1) {
                     const pagePromises = Array.from({ length: totalPages - 1 }, (_, i) => i + 2)
                         .map(pageNumber => fetchQueue(async () => {
-                            const pageData = await getSkinPage(marketHashName, pageNumber, controller.signal);
+                            const pageData = await getSkinPage(marketHashName, pageNumber, controller.signal, currency.id);
                             if (pageData?.success && pageData.listings) {
                                 setLoadingProgress(prev => ({ ...prev, loaded: prev.loaded + pageData.listings.length }));
                                 return pageData.listings;
@@ -85,7 +87,7 @@ const SkinDetailPage = () => {
 
         fetchAllSkinData();
         return () => { controller.abort(); inspectQueue.clearQueue(); };
-    }, [marketHashName, inspectQueue]);
+    }, [marketHashName, inspectQueue, currency.id]);
 
     useEffect(() => {
         const listingsToInspect = allListings.filter(l => l.inspectLink && !inspectedData[l.listingid]);
@@ -107,8 +109,11 @@ const SkinDetailPage = () => {
         }
     }, [inspectedData, loadingProgress, allListings.length, isInitialLoad]);
     
-    const filteredAndSortedListings = useMemo(() => {
+        const filteredAndSortedListings = useMemo(() => {
+        // Passo 1: A defesa mais importante. Começar apenas com listings que já têm dados de inspeção.
         let processed = allListings.filter(l => inspectedData[l.listingid]);
+        
+        // Passo 2: Aplicar os filtros ativados
         if (filters.enabled.priceNumber) {
             const min = parseFloat(filters.priceNumber[0] || 0);
             const max = parseFloat(filters.priceNumber[1] || Infinity);
@@ -117,22 +122,38 @@ const SkinDetailPage = () => {
         if (filters.enabled.wear) {
             const min = parseFloat(filters.wear[0] || 0);
             const max = parseFloat(filters.wear[1] || 1);
-            processed = processed.filter(l => inspectedData[l.listingid]?.floatvalue >= min && inspectedData[l.listingid]?.floatvalue <= max);
+            processed = processed.filter(l => {
+                const float = inspectedData[l.listingid]?.floatvalue;
+                return float >= min && float <= max;
+            });
         }
-        if (filters.enabled.paintSeed) {
+        if (filters.enabled.paintSeed && filters.paintSeed) {
             const seed = parseInt(filters.paintSeed, 10);
-            processed = processed.filter(l => inspectedData[l.listingid]?.paintseed === seed);
+            if (!isNaN(seed)) {
+                 processed = processed.filter(l => inspectedData[l.listingid]?.paintseed === seed);
+            }
         }
+        
+        // Passo 3: Ordenar a lista resultante
         return processed.sort((a, b) => {
             const itemA = inspectedData[a.listingid];
             const itemB = inspectedData[b.listingid];
-            if (sortBy === 'float') return (itemA?.floatvalue || 1) - (itemB?.floatvalue || 1);
-            if (sortBy === 'pattern') return (itemA?.paintseed || 0) - (itemB?.paintseed || 0);
-            return (a.priceNumber || 0) - (b.priceNumber || 0);
+            
+            switch (sortBy) {
+                case 'float':
+                    // Ordenar por float value, ascendente (menor para o maior)
+                    return (itemA?.floatvalue || 1) - (itemB?.floatvalue || 1);
+                case 'pattern':
+                    // Ordenar por pattern ID, ascendente
+                    return (itemA?.paintseed || 0) - (itemB?.paintseed || 0);
+                default: // 'priceNumber'
+                    // Ordenar por preço, ascendente
+                    return (a.priceNumber || 0) - (b.priceNumber || 0);
+            }
         });
     }, [allListings, filters, sortBy, inspectedData]);
 
-    useEffect(() => { setCurrentPage(1); }, [filters, sortBy]);
+        useEffect(() => { setCurrentPage(1); }, [filters, sortBy]);
 
     const totalPages = Math.ceil(filteredAndSortedListings.length / ITEMS_PER_PAGE);
     const paginatedListings = useMemo(() => {
@@ -158,7 +179,7 @@ const SkinDetailPage = () => {
                     <div className="listings-header">
                         <h2>{`A mostrar ${filteredAndSortedListings.length} de ${loadingProgress.total} listings`}</h2>
                         <div className="sort-bar">
-                            <span>Ordenar por:</span>
+                           <span>Ordenar por:</span>
                             <button className={`sort-button ${sortBy === 'priceNumber' ? 'active' : ''}`} onClick={() => setSortBy('priceNumber')}>Preço</button>
                             <button className={`sort-button ${sortBy === 'float' ? 'active' : ''}`} onClick={() => setSortBy('float')}>Float</button>
                             <button className={`sort-button ${sortBy === 'pattern' ? 'active' : ''}`} onClick={() => setSortBy('pattern')}>Pattern</button>
