@@ -1,15 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import pLimit from 'p-limit';
-import { getSkinDetails, getSkinPage, inspectSkin } from '../api/Skins';
+import { getSkinDetails, getSkinPage, inspectSkin } from '../api/api';
 import TiltSkinCard from '../components/TiltSkinCard';
 import FilterSidebar from '../components/FilterSidebar';
 import PaginationControls from '../components/PaginationControls';
 import './SkinDetailPage.css';
 
-// --- CONFIGURAÇÃO ESTRATÉGICA ---
 const ITEMS_PER_PAGE = 24;
-// << A ESTRATÉGIA IDEAL >>: Um limite de concorrência que é rápido, mas não agressivo.
 const CONCURRENT_REQUEST_LIMIT = 100;
 const INSPECT_CONCURRENT_LIMIT = 33;
 const inspectLimit = pLimit(INSPECT_CONCURRENT_LIMIT);

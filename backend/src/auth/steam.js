@@ -1,6 +1,6 @@
 const passport = require("passport");
 const SteamStrategy = require("passport-steam").Strategy;
-const pool = require("./db");
+const pool = require("../db/index.js");
 
 function setupSteamAuth(app) {
   app.use(passport.initialize());
