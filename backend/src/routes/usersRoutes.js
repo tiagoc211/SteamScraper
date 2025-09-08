@@ -1,10 +1,12 @@
 const express = require('express');
-const usersDb = require('../db/users.js'); // require em vez de import
+const usersDb = require('../db/users.js');
+const ensureAuthenticated = require('../middleware/authMiddleware');
+const { createLog } = require('../utils/logsHelper');
 
 const router = express.Router();
 
 // Listar todos os utilizadores
-router.get('/', async (req, res) => {
+router.get('/', ensureAuthenticated, async (req, res) => {
   try {
     const users = await usersDb.getUsers();
     res.json(users);
@@ -14,7 +16,7 @@ router.get('/', async (req, res) => {
 });
 
 // Obter utilizador por ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', ensureAuthenticated, async (req, res) => {
   try {
     const user = await usersDb.getUserById(req.params.id);
     res.json(user);
@@ -23,36 +25,59 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Criar novo utilizador
-router.post('/', async (req, res) => {
+// Criar novo utilizador (protegido + log)
+router.post('/', ensureAuthenticated, async (req, res) => {
   try {
     const user = await usersDb.createUser(req.body);
+
+    await createLog({
+      userId: req.userId,
+      action: 'CREATE_USER',
+      details: { user_id: user.id, display_name: user.display_name }
+    });
+
     res.status(201).json(user);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Atualizar utilizador
-router.put('/:id', async (req, res) => {
+// Atualizar utilizador (protegido + log)
+router.put('/:id', ensureAuthenticated, async (req, res) => {
   try {
-    const user = await usersDb.updateUser(req.params.id, req.body);
-    res.json(user);
+    const oldUser = await usersDb.getUserById(req.params.id);
+    const updatedUser = await usersDb.updateUser(req.params.id, req.body);
+
+    await createLog({
+      userId: req.userId,
+      action: 'UPDATE_USER',
+      details: {
+        before: oldUser,
+        after: updatedUser
+      }
+    });
+
+    res.json(updatedUser);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Remover utilizador
-router.delete('/:id', async (req, res) => {
+// Remover utilizador (protegido + log)
+router.delete('/:id', ensureAuthenticated, async (req, res) => {
   try {
     const user = await usersDb.deleteUser(req.params.id);
+
+    await createLog({
+      userId: req.userId,
+      action: 'DELETE_USER',
+      details: { user_id: user.id, display_name: user.display_name }
+    });
+
     res.json(user);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-module.exports = router; 
-
-
+module.exports = router;
