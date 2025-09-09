@@ -154,3 +154,61 @@ export const deleteLog = async (id) => {
   }
 };
 
+// ---------------------- SUBSCRIPTIONS ---------------------- //
+
+// Obter todos os tipos de subscrição ativos
+export const getActiveSubscriptionTypes = async () => {
+  try {
+    const response = await apiClient.get('/subscriptions');
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao obter tipos de subscrição:", error);
+    return [];
+  }
+};
+
+// Obter total geral de subscrições
+export const getTotalSubscriptions = async () => {
+  try {
+    const response = await apiClient.get('/subscriptions/total');
+    return response.data.total;
+  } catch (error) {
+    console.error("Erro ao obter total de subscrições:", error);
+    return 0;
+  }
+};
+
+// Obter total de subscrições ativas
+export const getTotalActiveSubscriptions = async () => {
+  try {
+    const response = await apiClient.get('/subscriptions/total-active');
+    return response.data.totalActive;
+  } catch (error) {
+    console.error("Erro ao obter total de subscrições ativas:", error);
+    return 0;
+  }
+};
+
+// Obter contagem de subscrições por tipo
+export const getSubscriptionCountsByType = async () => {
+  try {
+    const response = await apiClient.get('/subscriptions/counts-by-type');
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao obter contagem de subscrições por tipo:", error);
+    return [];
+  }
+};
+
+// Total de receita
+export const getTotalRevenue = async () => {
+  try {
+    const response = await apiClient.get('/subscriptions/total-revenue');
+    return response.data.totalRevenue;
+  } catch (error) {
+    console.error("Erro ao obter total de receita:", error);
+    return 0;
+  }
+};
+
+

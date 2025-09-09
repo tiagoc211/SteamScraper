@@ -3,6 +3,7 @@ import AdminSideBar from '../../components/admin/AdminSideBar';
 import UsersPage from './subpages/UserPage';
 import RolesPage from './subpages/RolePage';
 import LogsPage from './subpages/LogsPage';
+import DashboardPage from './subpages/DashboardPage';
 
 import './AdminPage.css';
 
@@ -16,6 +17,7 @@ const AdminPage = () => {
         {selectedTab === 'users' && <UsersPage />}
         {selectedTab === 'roles' && <RolesPage />}
         {selectedTab === 'logs' && <LogsPage />}
+        {selectedTab === 'dashboard' && <DashboardPage />}
         {selectedTab === 'settings' && <div>Configurações aqui</div>}
       </div>
     </div>
