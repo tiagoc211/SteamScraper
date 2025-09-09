@@ -1,7 +1,7 @@
 /* src/pages/admin/subpages/LogsPage.css */
 
 .logs-page {
-  padding: 2rem;
+  padding: 1rem;
   min-height: calc(100vh - 70px);
   background: rgba(27, 40, 56, 0.6);
   backdrop-filter: blur(10px);

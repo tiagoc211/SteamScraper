@@ -31,19 +31,42 @@ async function createUser(data) {
 }
 
 async function updateUser(id, data) {
-  const { display_name, avatar_url, email, roleId } = data;
+  const { display_name, avatar_url = null, email, roleId } = data;
+  await db.query(`
+    UPDATE users
+    SET display_name = $1, 
+        avatar_url = COALESCE($2, avatar_url),
+        email = NULLIF($3, ''),   -- se vier string vazia, guarda NULL
+        role_id = $4, 
+        updated_at = now()
+    WHERE id = $5;
+  `, [display_name, avatar_url, email, roleId, id]);
+
+  return await getUserById(id); // para devolver também role_name
+}
+
+
+/**
+ * Soft delete → coloca status = 'INATIVO'
+ */
+async function deactivateUser(id) {
   const { rows } = await db.query(`
     UPDATE users
-    SET display_name = $1, avatar_url = $2, email = $3, role_id = $4, updated_at = now()
-    WHERE id = $5
+    SET status = 'INATIVO',
+        updated_at = now()
+    WHERE id = $1
     RETURNING *;
-  `, [display_name, avatar_url, email, roleId, id]);
+  `, [id]);
   return rows[0];
 }
 
-async function deleteUser(id) {
+async function activateUser(id) {
   const { rows } = await db.query(`
-    DELETE FROM users WHERE id = $1 RETURNING *;
+    UPDATE users
+    SET status = 'ATIVO',
+        updated_at = now()
+    WHERE id = $1
+    RETURNING *;
   `, [id]);
   return rows[0];
 }
@@ -53,5 +76,6 @@ module.exports = {
   getUserById,
   createUser,
   updateUser,
-  deleteUser
+  deactivateUser,
+  activateUser
 };

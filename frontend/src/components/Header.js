@@ -2,7 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import TrueFocus from './TrueFocus';
 import './Header.css';
-import { FiLogOut } from 'react-icons/fi'; // ícone de logout
+import { FiLogOut, FiSettings } from 'react-icons/fi'; 
+
 
 const Header = () => {
   const [user, setUser] = useState(null);
@@ -63,6 +64,10 @@ const Header = () => {
 
               {showPopup && (
                 <div className="user-popup">
+                  <Link to="/settings" className="nav-link">
+                    <FiSettings style={{ marginRight: '6px' }} />
+                    Settings
+                  </Link>
                   <a href="http://localhost:3001/auth/logout" className="nav-link">
                     <FiLogOut style={{ marginRight: '6px' }} />
                     Logout

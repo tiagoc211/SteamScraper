@@ -4,6 +4,7 @@ import HomePage from './pages/HomePage';
 import SkinDetailPage from './pages/SkinDetailPage';
 import SkinSelectorPage from './pages/SkinSelectorPage';
 import AdminPage from './pages/admin/AdminPage'; 
+import UserSettingsPage from './pages/settings/UserSettingsPage';
 import Header from './components/Header';
 import './App.css';
 import PrivateRoute from './utils/PrivateRoute';
@@ -18,6 +19,8 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/skins" element={<SkinSelectorPage />} />
             <Route path="/skin/:marketHashName" element={<SkinDetailPage />} />
+            <Route path="/settings" element={<PrivateRoute> <UserSettingsPage/> </PrivateRoute>} />
+
             <Route path="/admin" element={<PrivateRoute> <AdminPage /> </PrivateRoute>
               } 
             />

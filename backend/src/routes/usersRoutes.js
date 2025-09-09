@@ -63,21 +63,36 @@ router.put('/:id', ensureAuthenticated, async (req, res) => {
   }
 });
 
-// Remover utilizador (protegido + log)
-router.delete('/:id', ensureAuthenticated, async (req, res) => {
+// Marcar utilizador como INATIVO (soft delete)
+router.put('/:id/deactivate', ensureAuthenticated, async (req, res) => {
   try {
-    const user = await usersDb.deleteUser(req.params.id);
+    console.log('ID recebido para desativar:', req.params.id);
+    const user = await usersDb.deactivateUser(req.params.id);
 
-    await createLog({
-      userId: req.userId,
-      action: 'DELETE_USER',
-      details: { user_id: user.id, display_name: user.display_name }
-    });
+    if (!user) {
+      return res.status(404).json({ error: 'Utilizador não encontrado' });
+    }
 
     res.json(user);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
+router.put('/:id/activate', ensureAuthenticated, async (req, res) => {
+  try {
+    console.log('ID recebido para ativar:', req.params.id);
+    const user = await usersDb.activateUser(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ error: 'Utilizador não encontrado' });
+    }
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 module.exports = router;

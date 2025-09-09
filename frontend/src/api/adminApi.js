@@ -48,15 +48,27 @@ export const updateUser = async (id, userData) => {
   }
 };
 
-export const deleteUser = async (id) => {
+
+export const deactivateUser = async (id) => {
   try {
-    const response = await apiClient.delete(`/users/${id}`);
-    return response.data;
+    const response = await apiClient.put(`/users/${id}/deactivate`);
+    return response.data;  
   } catch (error) {
     console.error(`Erro ao remover utilizador ${id}:`, error);
     return null;
   }
 };
+
+export const activateUser = async (id) => {
+  try {
+    const response = await apiClient.put(`/users/${id}/activate`);
+    return response.data;  
+  } catch (error) {
+    console.error(`Erro ao remover utilizador ${id}:`, error);
+    return null;
+  }
+};
+
 
 // ---------------------- ROLES ---------------------- //
 
