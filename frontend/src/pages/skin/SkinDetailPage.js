@@ -1,32 +1,42 @@
-// frontend/src/pages/SkinDetailPage.js
-import React, { useState, useEffect, useCallback, useMemo } from 'react'; // <-- Adicione 'useCallback'
+// frontend/src/pages/skin/SkinDetailPage.js
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import pLimit from 'p-limit';
+import { useVirtualizer } from '@tanstack/react-virtual';
+
+// Componentes e API
 import { getSkinDetails, getSkinPage, inspectSkin } from '../../api/api';
 import TiltSkinCard from '../../components/skin/TiltSkinCard/TiltSkinCard';
 import FilterSidebar from '../../components/skin/FilterSidebar/FilterSidebar';
 import PaginationControls from '../../components/ui/PaginationControls/PaginationControls';
 import './SkinDetailPage.css';
 
+// --- Constantes de Configuração ---
+// Número de itens a mostrar por página na UI
 const ITEMS_PER_PAGE = 24;
+// Limites de concorrência para otimização de performance da rede
 const CONCURRENT_REQUEST_LIMIT = 100;
 const INSPECT_CONCURRENT_LIMIT = 33;
 const inspectLimit = pLimit(INSPECT_CONCURRENT_LIMIT);
 
+// Estado inicial para os filtros
 const initialFilters = {
     priceNumber: ['', ''], wear: ['', ''], paintSeed: '',
     enabled: { priceNumber: false, wear: false, paintSeed: false }
 };
 
+// Componente de loading para a carga inicial
 const FullPageLoader = () => (
     <div className="loader">A preparar as melhores skins para si...</div>
 );
 
 const SkinDetailPage = () => {
+    // --- Hooks de Estado ---
     const { marketHashName } = useParams();
-
+    // Estado dos dados
     const [allListings, setAllListings] = useState([]);
     const [inspectedData, setInspectedData] = useState({});
+    // Estado da UI (loading, erros, paginação)
     const [isInitialLoad, setIsInitialLoad] = useState(true);
     const [error, setError] = useState(null);
     const [loadingProgress, setLoadingProgress] = useState({ loaded: 0, total: 0 });
@@ -34,32 +44,29 @@ const SkinDetailPage = () => {
     const [sortBy, setSortBy] = useState('priceNumber');
     const [currentPage, setCurrentPage] = useState(1);
 
+    // --- Lógica de Callbacks (Memoizados para performance) ---
     const inspectListing = useCallback(async (listing) => {
         if (listing.inspectLink) {
-            console.log("Enviado para inspeção:", listing.listingid);
             const data = await inspectSkin(listing.inspectLink);
             if (data && data.iteminfo) {
-                console.log("Recebido inspect:", listing.listingid);
                 setInspectedData(prev => ({ ...prev, [listing.listingid]: data.iteminfo }));
-            } else {
-                console.warn("Falhou inspect:", listing.listingid);
             }
         }
     }, []);
 
-
-    const enqueueInspect = (listing) => {
+    const enqueueInspect = useCallback((listing) => {
         inspectLimit(() => inspectListing(listing))
             .catch(err => console.warn(`Erro ao inspecionar ${listing.listingid}:`, err));
-    };
+    }, [inspectListing]);
 
+    // --- Efeitos (Lifecycle) ---
+    // Efeito principal para buscar todos os dados da skin
     useEffect(() => {
         const controller = new AbortController();
-        // << A ESTRATÉGIA IDEAL >>: Criar a nossa fila de "caixas rápidas".
         const limit = pLimit(CONCURRENT_REQUEST_LIMIT);
 
         const fetchAllSkinData = async () => {
-            // Resetar estados para uma nova pesquisa
+            // Reset de todos os estados para uma nova pesquisa
             setIsInitialLoad(true);
             setError(null);
             setAllListings([]);
@@ -68,35 +75,27 @@ const SkinDetailPage = () => {
             setLoadingProgress({ loaded: 0, total: 0 });
 
             try {
-                // 1. Buscar a primeira página para obter os totais
                 const firstPageData = await getSkinDetails(marketHashName, controller.signal);
-                if (!firstPageData || !firstPageData.success) {
-                    throw new Error("Não foi possível carregar os dados desta skin.");
-                }
+                if (!firstPageData || !firstPageData.success) throw new Error("Não foi possível carregar os dados desta skin.");
 
                 const initialListings = firstPageData.listings || [];
                 const { totalPages, totalListings } = firstPageData.pagination;
                 
                 setAllListings(initialListings);
-                // Em vez de chamar inspectListing diretamente, usamos o limitador
-                initialListings.forEach(listing => enqueueInspect(listing));
+                initialListings.forEach(enqueueInspect);
                 setLoadingProgress({ loaded: initialListings.length, total: totalListings });
 
-
-                // 2. Se houver mais páginas, buscá-las em paralelo controlado
                 if (totalPages > 1) {
-                    // Criar uma tarefa para cada página restante
                     const pagePromises = Array.from({ length: totalPages - 1 }, (_, i) => i + 2)
                         .map(pageNumber => 
-                            // Adicionar a tarefa à nossa fila de "caixas rápidas"
                             limit(async () => {
                                 const pageData = await getSkinPage(marketHashName, pageNumber, controller.signal);
                                 if (pageData?.success && pageData.listings) {
                                     setLoadingProgress(prev => ({ ...prev, loaded: prev.loaded + pageData.listings.length }));
-                                    pageData.listings.forEach(listing => enqueueInspect(listing));
+                                    pageData.listings.forEach(enqueueInspect);
                                     return pageData.listings;
                                 }
-                                return []; // Retornar array vazio em caso de falha
+                                return [];
                             })
                         );
                     
@@ -110,23 +109,22 @@ const SkinDetailPage = () => {
 
         fetchAllSkinData();
         return () => controller.abort();
-    }, [marketHashName, inspectListing]);
+    }, [marketHashName, enqueueInspect]);
 
-    // Efeito para controlar o fim do carregamento inicial (sem alterações)
+    // Efeito para determinar o fim do carregamento inicial
     useEffect(() => {
         if (!isInitialLoad) return;
         const inspectedCount = Object.keys(inspectedData).length;
         const totalFetched = allListings.length;
-        const targetCount = Math.min(ITEMS_PER_PAGE, loadingProgress.total > 0 ? loadingProgress.total : totalFetched);
-
-        if (!loadingProgress.total && totalFetched > 0 && inspectedCount >= totalFetched) {
+        if (loadingProgress.total > 0 && inspectedCount >= loadingProgress.total) {
             setIsInitialLoad(false);
-        } else if (targetCount > 0 && inspectedCount >= targetCount) {
+        } else if (totalFetched > 0 && inspectedCount >= totalFetched && loadingProgress.loaded >= loadingProgress.total) {
             setIsInitialLoad(false);
         }
-    }, [inspectedData, allListings.length, loadingProgress.total, isInitialLoad]);
+    }, [inspectedData, allListings.length, loadingProgress, isInitialLoad]);
     
-    // Lógica de filtragem, ordenação e paginação (sem alterações)
+    // --- Lógica de Derivação de Estado (Memoizada para performance) ---
+    // Lista completa, filtrada e ordenada
     const filteredAndSortedListings = useMemo(() => {
         let processed = allListings.filter(l => inspectedData[l.listingid]);
         
@@ -156,6 +154,7 @@ const SkinDetailPage = () => {
         });
     }, [allListings, filters, sortBy, inspectedData]);
 
+    // Efeito que reseta a página para 1 quando os filtros mudam
     useEffect(() => { setCurrentPage(1); }, [filters, sortBy]);
 
     const totalPages = Math.ceil(filteredAndSortedListings.length / ITEMS_PER_PAGE);
@@ -164,10 +163,24 @@ const SkinDetailPage = () => {
         return filteredAndSortedListings.slice(startIndex, startIndex + ITEMS_PER_PAGE);
     }, [filteredAndSortedListings, currentPage]);
     
+    // --- Lógica de Virtualização ---
+    const parentRef = useRef(null);
+    const rowVirtualizer = useVirtualizer({
+        count: paginatedListings.length,
+        getScrollElement: () => parentRef.current,
+        estimateSize: () => 450,
+        overscan: 5,
+    });
+    
+    // SOLUÇÃO PARA O BUG: Chave que força a re-montagem da lista
+    const listKey = useMemo(() => `${currentPage}-${sortBy}-${JSON.stringify(filters.enabled)}`, [currentPage, sortBy, filters.enabled]);
+
+    // --- Manipuladores de Eventos ---
     const handleToggleFilter = (filterName) => setFilters(prev => ({ ...prev, enabled: { ...prev.enabled, [filterName]: !prev.enabled[filterName] } }));
     const handleResetFilters = () => setFilters(initialFilters);
 
-    if (isInitialLoad) return <FullPageLoader />;
+    // --- Lógica de Renderização ---
+    if (isInitialLoad && allListings.length === 0) return <FullPageLoader />;
     if (error) return <div className="error-message">{error}</div>;
 
     const isLoadingInBackground = loadingProgress.loaded < loadingProgress.total;
@@ -197,15 +210,29 @@ const SkinDetailPage = () => {
                         </div>
                     )}
                     <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
-                    <div className="skin-cards-grid">
-                        {paginatedListings.length > 0 ? (
-                            paginatedListings.map(listing => (
-                                <TiltSkinCard key={listing.listingid} listing={listing} inspectedData={inspectedData} />
-                            ))
-                        ) : (
-                            !isLoadingInBackground && <div>Nenhum listing encontrado para os filtros selecionados.</div>
-                        )}
+                    
+                    <div key={listKey} ref={parentRef} className="skin-cards-grid-virtualized">
+                        <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
+                            {rowVirtualizer.getVirtualItems().map(virtualItem => {
+                                const listing = paginatedListings[virtualItem.index];
+                                if (!listing) return null;
+
+                                return (
+                                    <div
+                                        key={listing.listingid}
+                                        className="virtual-item"
+                                        style={{ transform: `translateY(${virtualItem.start}px)` }}
+                                    >
+                                        <TiltSkinCard
+                                            listing={listing}
+                                            inspectedData={inspectedData}
+                                        />
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
+
                     <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
                 </div>
             </div>
