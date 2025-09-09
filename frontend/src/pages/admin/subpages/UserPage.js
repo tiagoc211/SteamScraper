@@ -115,6 +115,7 @@ const UsersPage = () => {
             <th>Email</th>
             <th>Role</th>
             <th>Status</th>
+            <th>Subscription</th>
             <th>Ações</th>
           </tr>
         </thead>
@@ -132,6 +133,7 @@ const UsersPage = () => {
                   <span className="status-text">{user.status || 'ATIVO'}</span>
                 </div>
               </td>
+              <td>{user.subscription_id || '-'}</td>
               <td>
                 <button onClick={() => handleEdit(user)} className="edit-btn">Editar</button>
                 <button onClick={() => handleDelete(user)} className="delete-btn">ATIVAR/DESATIVAR</button>
