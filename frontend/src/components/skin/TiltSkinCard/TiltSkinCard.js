@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useCallback, useMemo, useState } from "react";
 import './TiltSkinCard.css';
-import HoverTooltip from './HoverTooltip';
-import FloatBar from './FloatBar';
+import HoverTooltip from '../../ui/HoverTooltip/HoverTooltip';
+import FloatBar from '../FloatBar/FloatBar';
 
 const DEFAULT_BEHIND_GRADIENT = "radial-gradient(farthest-side circle at var(--pointer-x) var(--pointer-y), hsla(170, 100%, 75%, var(--card-opacity)) 4%, hsla(120, 100%, 70%, calc(var(--card-opacity) * 0.75)) 10%, hsla(210, 70%, 50%, calc(var(--card-opacity) * 0.5)) 50%, transparent 100%)";
 const DEFAULT_INNER_GRADIENT = "linear-gradient(145deg, rgba(10, 30, 60, 0.8), rgba(80, 200, 120, 0.1))";

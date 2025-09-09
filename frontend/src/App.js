@@ -1,12 +1,11 @@
-// src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import SkinDetailPage from './pages/SkinDetailPage';
 import SkinSelectorPage from './pages/SkinSelectorPage';
-import SubscriptionPage from './pages/SubscriptionPage'; 
-import AdminPage from './pages/admin/AdminPage'; 
-import Header from './components/Header';
+import AdminPage from './pages/admin/AdminPage';
+import SubscriptionPage from './pages/SubscriptionPage';
+import Header from './components/layout/Header/Header'; 
 import './App.css';
 import PrivateRoute from './utils/PrivateRoute';
 

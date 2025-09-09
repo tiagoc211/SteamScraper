@@ -1,12 +1,15 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { FaSearch, FaArrowLeft } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import './SkinSelectorPage.css';
-
+// frontend/src/pages/SkinDetailPage.js
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
+import pLimit from 'p-limit';
+import { getSkinDetails, getSkinPage, inspectSkin } from '../api/api';
+import TiltSkinCard from '../components/skin/TiltSkinCard/TiltSkinCard';
+import FilterSidebar from '../components/skin/FilterSidebar/FilterSidebar';
+import PaginationControls from '../components/ui/PaginationControls/PaginationControls';
+import './SkinDetailPage.css';
 // Componentes e Dados
 import { rifles, smgs, heavy, pistols, knives } from '../data/Weapons';
-import RadialMenu from '../components/RadialMenu';
+import RadialMenu from '../components/ui/RadialMenu/RadialMenu';
 import * as rifleSkins from '../data/Rifles';
 import * as smgSkins from '../data/Smgs';
 import * as heavySkins from '../data/Heavy';

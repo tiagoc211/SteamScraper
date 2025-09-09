@@ -1,5 +1,5 @@
 import React from 'react';
-import HoverTooltip from './HoverTooltip';
+import HoverTooltip from '../../ui/HoverTooltip/HoverTooltip';
 import './FloatBar.css';
 
 const FloatBar = ({ floatValue, paintSeed }) => {

@@ -1,8 +1,7 @@
-// src/pages/SubscriptionPage.js
+// frontend/src/pages/SubscriptionPage.js
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { getSubscriptionPlans } from '../api/api';
-import ChromaGrid from '../components/ChromaGrid';
+import ChromaGrid from '../components/subscriptions/ChromaGrid/ChromaGrid'; // <-- CAMINHO CORRIGIDO
 import './SubscriptionPage.css';
 
 // Paleta de estilos para os Tiers (Bronze, Prata, Ouro, etc.)
