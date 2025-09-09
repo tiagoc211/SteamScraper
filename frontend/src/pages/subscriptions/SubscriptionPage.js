@@ -1,7 +1,8 @@
-// frontend/src/pages/SubscriptionPage.js
+// src/pages/subscriptions/SubscriptionPage.js
 import React, { useState, useEffect, useMemo } from 'react';
-import { getSubscriptionPlans } from '../api/api';
-import ChromaGrid from '../components/subscriptions/ChromaGrid/ChromaGrid'; // <-- CAMINHO CORRIGIDO
+// A importação de 'useNavigate' foi removida, pois não é necessária.
+import { getSubscriptionPlans } from '../../api/api'; // Corrigido o caminho para a API
+import ChromaGrid from '../../components/subscriptions/ChromaGrid/ChromaGrid'; // Corrigido o caminho para o componente
 import './SubscriptionPage.css';
 
 // Paleta de estilos para os Tiers (Bronze, Prata, Ouro, etc.)
@@ -19,7 +20,7 @@ const SubscriptionPage = () => {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
+  // const navigate = useNavigate(); // <-- LINHA REMOVIDA
   const [isCardHovered, setIsCardHovered] = useState(false);
 
   useEffect(() => {

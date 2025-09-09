@@ -1,10 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import HomePage from './pages/HomePage';
-import SkinDetailPage from './pages/SkinDetailPage';
-import SkinSelectorPage from './pages/SkinSelectorPage';
+import HomePage from './pages/home/HomePage';
+import SkinDetailPage from './pages/skin/SkinDetailPage';
+import SkinSelectorPage from './pages/skin/SkinSelectorPage';
+import SubscriptionPage from './pages/subscriptions/SubscriptionPage';
 import AdminPage from './pages/admin/AdminPage';
-import SubscriptionPage from './pages/SubscriptionPage';
 import Header from './components/layout/Header/Header';
 import UserSettingsPage from './pages/settings/UserSettingsPage';
 

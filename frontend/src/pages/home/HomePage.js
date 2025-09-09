@@ -1,10 +1,10 @@
 // frontend/src/pages/HomePage.js
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import TrueFocus from '../components/ui/TrueFocus/TrueFocus'; // <-- Caminho corrigido
-import StickerPeel from '../components/ui/StickerPeel/StickerPeel'; // <-- Caminho corrigido
-import FeaturesSection from '../components/home/FeaturesSection/FeaturesSection'; // <-- Caminho corrigido
-import StarBorder from '../components/ui/StarBorder/StarBorder'; // <-- Caminho corrigido
+import TrueFocus from '../../components/ui/TrueFocus/TrueFocus'; // <-- Caminho corrigido
+import StickerPeel from '../../components/ui/StickerPeel/StickerPeel'; // <-- Caminho corrigido
+import FeaturesSection from '../../components/home/FeaturesSection/FeaturesSection'; // <-- Caminho corrigido
+import StarBorder from '../../components/ui/StarBorder/StarBorder'; // <-- Caminho corrigido
 import './HomePage.css';
 
 const stickerIBP = 'https://cdn.tradeit.gg/csgo%2FSticker%20-%20iBUYPOWER%20(Holo)%20-%20Katowice%202014_240x152.webp';
