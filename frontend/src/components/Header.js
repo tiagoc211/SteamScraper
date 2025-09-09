@@ -1,8 +1,9 @@
+// src/components/Header.js
 import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import TrueFocus from './TrueFocus';
 import './Header.css';
-import { FiLogOut } from 'react-icons/fi'; // ícone de logout
+import { FiLogOut } from 'react-icons/fi';
 
 const Header = () => {
   const [user, setUser] = useState(null);
@@ -18,7 +19,6 @@ const Header = () => {
 
   const togglePopup = () => setShowPopup(!showPopup);
 
-  // Fecha o popup ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (popupRef.current && !popupRef.current.contains(event.target)) {
@@ -35,18 +35,18 @@ const Header = () => {
         <Link to="/" className="logo-container">
           <TrueFocus 
             sentence="CS:MARKET GLASSES"
-            manualMode={false}
+            manualMode={true}
             blurAmount={5}
             borderColor="rgba(102, 192, 244, 0.7)"
             glowColor="rgba(102, 192, 244, 0.5)"
-            animationDuration={6}
-            pauseBetweenAnimations={1.5}
+            animationDuration={0.3}
           />
         </Link>
 
         <nav className="nav-center">
-          <a href="#" className="nav-link">Home</a>
-          <a href="#" className="nav-link">Sobre</a>
+          <Link to="/" className="nav-link">Home</Link>
+          <Link to="/skins" className="nav-link">Skins</Link>
+          <Link to="/subscriptions" className="nav-link">Subscrições</Link>
         </nav>
 
         <div className="nav-right">
@@ -60,7 +60,6 @@ const Header = () => {
                 style={{ borderRadius: '50%', marginRight: '8px' }}
               />
               <span>{user.displayName}</span>
-
               {showPopup && (
                 <div className="user-popup">
                   <a href="http://localhost:3001/auth/logout" className="nav-link">

@@ -61,3 +61,17 @@ export const inspectSkin = async (inspectLink) => {
     return null;
   }
 };
+
+/**
+ * Busca os planos de subscrição ativos do backend.
+ * @returns {Promise<Array|null>} - Uma lista de planos ou null em caso de erro.
+ */
+export const getSubscriptionPlans = async () => {
+  try {
+    const response = await apiClient.get('/subscriptions');
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao obter planos de subscrição:", error);
+    return null;
+  }
+};
