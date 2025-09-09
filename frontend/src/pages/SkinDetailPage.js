@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+// frontend/src/pages/SkinDetailPage.js
+import React, { useState, useEffect, useCallback, useMemo } from 'react'; // <-- Adicione 'useCallback'
 import { useParams } from 'react-router-dom';
 import pLimit from 'p-limit';
 import { getSkinDetails, getSkinPage, inspectSkin } from '../api/api';
-import TiltSkinCard from '../components/TiltSkinCard';
-import FilterSidebar from '../components/FilterSidebar';
-import PaginationControls from '../components/PaginationControls';
+import TiltSkinCard from '../components/skin/TiltSkinCard/TiltSkinCard';
+import FilterSidebar from '../components/skin/FilterSidebar/FilterSidebar';
+import PaginationControls from '../components/ui/PaginationControls/PaginationControls';
 import './SkinDetailPage.css';
 
 const ITEMS_PER_PAGE = 24;

@@ -21,7 +21,7 @@ CREATE TABLE subscription_type (
     status VARCHAR(50) DEFAULT 'ACTIVE',
     max_searches_per_day INT,
     max_results_per_search INT,
-    image_url TEXT,
+    features JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );

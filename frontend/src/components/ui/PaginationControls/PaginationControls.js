@@ -1,4 +1,5 @@
 import React from 'react';
+import './PaginationControls.css';
 
 // Estilos para este componente serão adicionados em SkinDetailPage.css
 // para manter tudo junto por enquanto.

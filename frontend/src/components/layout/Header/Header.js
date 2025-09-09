@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import TrueFocus from './TrueFocus';
+import TrueFocus from '../../ui/TrueFocus/TrueFocus';
 import './Header.css';
-import { FiLogOut, FiSettings } from 'react-icons/fi'; 
+import { FiLogOut, FiSettings } from 'react-icons/fi';
 
 
 const Header = () => {
@@ -36,18 +36,18 @@ const Header = () => {
         <Link to="/" className="logo-container">
           <TrueFocus 
             sentence="CS:MARKET GLASSES"
-            manualMode={false}
+            manualMode={true}
             blurAmount={5}
             borderColor="rgba(102, 192, 244, 0.7)"
             glowColor="rgba(102, 192, 244, 0.5)"
-            animationDuration={6}
-            pauseBetweenAnimations={1.5}
+            animationDuration={0.3}
           />
         </Link>
 
         <nav className="nav-center">
-          <a href="#" className="nav-link">Home</a>
-          <a href="#" className="nav-link">Sobre</a>
+          <Link to="/" className="nav-link">Home</Link>
+          <Link to="/skins" className="nav-link">Skins</Link>
+          <Link to="/subscriptions" className="nav-link">Subscrições</Link>
         </nav>
 
         <div className="nav-right">
@@ -61,7 +61,6 @@ const Header = () => {
                 style={{ borderRadius: '50%', marginRight: '8px' }}
               />
               <span>{user.displayName}</span>
-
               {showPopup && (
                 <div className="user-popup">
                   <Link to="/settings" className="nav-link">

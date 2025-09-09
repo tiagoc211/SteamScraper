@@ -1,11 +1,12 @@
+// frontend/src/components/home/FeaturesSection/FeaturesSection.js
 import React from 'react';
-import ScrollFloat from './ScrollFloat';
+import ScrollFloat from '../../ui/ScrollFloat/ScrollFloat';
 import './FeaturesSection.css';
 
-// Importa as imagens locais, agora todas como .png
-import graficoImg from '../data/images/grafico.png'; // Corrigido para .png
-import funilImg from '../data/images/Funil.png';
-import banImg from '../data/images/Ban.png';       // Corrigido para .png
+// CAMINHOS CORRIGIDOS: De ../data/ para ../../../data/
+import graficoImg from '../../../data/images/grafico.png';
+import funilImg from '../../../data/images/Funil.png';
+import banImg from '../../../data/images/Ban.png';
 
 const featuresData = [
   {

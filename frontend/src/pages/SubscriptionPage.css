@@ -1,0 +1,51 @@
+/* src/pages/SubscriptionPage.css */
+.subscription-page {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+  color: var(--color-text-bright);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: calc(100vh - 70px);
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 2rem; /* Reduzido para aproximar do grid */
+}
+
+.page-header h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.page-header p {
+  font-size: 1.2rem;
+  color: var(--color-text);
+  max-width: 600px;
+}
+
+.plans-container {
+  flex-grow: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-loader, .page-error {
+  text-align: center;
+  font-size: 1.5rem;
+  padding: 5rem 0;
+  min-height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-error {
+  color: #ff6b6b;
+}

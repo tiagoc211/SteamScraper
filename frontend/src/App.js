@@ -3,9 +3,11 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import SkinDetailPage from './pages/SkinDetailPage';
 import SkinSelectorPage from './pages/SkinSelectorPage';
-import AdminPage from './pages/admin/AdminPage'; 
+import AdminPage from './pages/admin/AdminPage';
+import SubscriptionPage from './pages/SubscriptionPage';
+import Header from './components/layout/Header/Header';
 import UserSettingsPage from './pages/settings/UserSettingsPage';
-import Header from './components/Header';
+
 import './App.css';
 import PrivateRoute from './utils/PrivateRoute';
 
@@ -20,7 +22,7 @@ function App() {
             <Route path="/skins" element={<SkinSelectorPage />} />
             <Route path="/skin/:marketHashName" element={<SkinDetailPage />} />
             <Route path="/settings" element={<PrivateRoute> <UserSettingsPage/> </PrivateRoute>} />
-
+            <Route path="/subscriptions" element={<SubscriptionPage />} />
             <Route path="/admin" element={<PrivateRoute> <AdminPage /> </PrivateRoute>
               } 
             />
