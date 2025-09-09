@@ -6,7 +6,7 @@ const db = require('./index.js');
  */
 async function getActiveSubscriptionTypes() {
   const { rows } = await db.query(`
-    SELECT id, name, price_monthly::float, description, status
+    SELECT id, name, price_monthly::float, description, status, features
     FROM subscription_type 
     WHERE status = 'ACTIVE' 
     ORDER BY price_monthly ASC
