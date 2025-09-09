@@ -20,7 +20,6 @@ const SubscriptionPage = () => {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  // const navigate = useNavigate(); // <-- LINHA REMOVIDA
   const [isCardHovered, setIsCardHovered] = useState(false);
 
   useEffect(() => {
