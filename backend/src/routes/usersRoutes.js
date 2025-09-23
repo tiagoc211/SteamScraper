@@ -1,12 +1,13 @@
 const express = require('express');
 const usersDb = require('../db/users.js');
 const ensureAuthenticated = require('../middleware/authMiddleware');
+const ensureAdmin = require('../middleware/adminMiddleware');
 const { createLog } = require('../utils/logsHelper');
 
 const router = express.Router();
 
 // Listar todos os utilizadores
-router.get('/', ensureAuthenticated, async (req, res) => {
+router.get('/', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
     const users = await usersDb.getUsers();
     res.json(users);
@@ -43,7 +44,7 @@ router.post('/', ensureAuthenticated, async (req, res) => {
 });
 
 // Atualizar utilizador (protegido + log)
-router.put('/:id', ensureAuthenticated, async (req, res) => {
+router.put('/:id', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
     const oldUser = await usersDb.getUserById(req.params.id);
     const updatedUser = await usersDb.updateUser(req.params.id, req.body);

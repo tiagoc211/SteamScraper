@@ -4,7 +4,6 @@ import { getUsers, deactivateUser, activateUser, updateUser, getRoles } from '..
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import './UserPage.css';
-import { apiRequestWrapper } from '../../../utils/apiWrapper';
 
 const MySwal = withReactContent(Swal);
 
@@ -17,11 +16,12 @@ const UsersPage = () => {
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            const data = await apiRequestWrapper(() => getUsers());
+            const data = await getUsers();
+            console.log("debug: passed trough getUsers()");
             if (!data) return; 
             setUsers(data);
 
-            const rolesData = await apiRequestWrapper(() => getRoles());
+            const rolesData = await getRoles();
             if (!rolesData) return;
             setRoles(rolesData);
         } catch (err) {
@@ -49,7 +49,7 @@ const UsersPage = () => {
 
         if (result.isConfirmed) {
             try {
-            const updatedUser = await apiRequestWrapper(() => isAtivo ? deactivateUser(user.id) : activateUser(user.id));
+            const updatedUser = await (isAtivo ? deactivateUser(user.id) : activateUser(user.id))
             if (!updatedUser) return; 
             
             setUsers(prev => prev.map(u => u.id === user.id ? updatedUser : u));
@@ -85,7 +85,7 @@ const UsersPage = () => {
 
         if (formValues) {
             try {
-            const updatedUser = await apiRequestWrapper(() => updateUser(user.id, formValues));
+            const updatedUser = await updateUser(user.id, formValues);
             if (!updatedUser) return; // redirecionamento feito pelo wrapper
             setUsers(prev => prev.map(u => u.id === user.id ? updatedUser : u));
             MySwal.fire('Atualizado!', 'O utilizador foi atualizado com sucesso.', 'success');
