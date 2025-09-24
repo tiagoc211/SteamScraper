@@ -17,7 +17,7 @@ router.get('/', ensureAuthenticated, ensureAdmin, async (req, res) => {
 });
 
 // Obter utilizador por ID
-router.get('/:id', ensureAuthenticated, async (req, res) => {
+router.get('/:id', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
     const user = await usersDb.getUserById(req.params.id);
     res.json(user);
@@ -27,7 +27,7 @@ router.get('/:id', ensureAuthenticated, async (req, res) => {
 });
 
 // Criar novo utilizador (protegido + log)
-router.post('/', ensureAuthenticated, async (req, res) => {
+router.post('/', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
     const user = await usersDb.createUser(req.body);
 
@@ -65,7 +65,7 @@ router.put('/:id', ensureAuthenticated, ensureAdmin, async (req, res) => {
 });
 
 // Marcar utilizador como INATIVO (soft delete)
-router.put('/:id/deactivate', ensureAuthenticated, async (req, res) => {
+router.put('/:id/deactivate', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
     console.log('ID recebido para desativar:', req.params.id);
     const user = await usersDb.deactivateUser(req.params.id);
@@ -80,6 +80,7 @@ router.put('/:id/deactivate', ensureAuthenticated, async (req, res) => {
   }
 });
 
+// Marcar utilizador como ATIVO
 router.put('/:id/activate', ensureAuthenticated, async (req, res) => {
   try {
     console.log('ID recebido para ativar:', req.params.id);

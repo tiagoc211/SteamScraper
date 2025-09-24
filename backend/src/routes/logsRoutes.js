@@ -2,11 +2,12 @@
 const express = require('express');
 const logsDb = require('../db/logs.js');
 const ensureAuthenticated = require('../middleware/authMiddleware');
+const ensureAdmin = require('../middleware/adminMiddleware.js');
 
 const router = express.Router();
 
 // 📌 Listar todos os logs
-router.get('/', ensureAuthenticated, async (req, res) => {
+router.get('/', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
     const logs = await logsDb.getLogs();
     res.json(logs);
@@ -15,8 +16,8 @@ router.get('/', ensureAuthenticated, async (req, res) => {
   }
 });
 
-// 📌 Listar logs de um utilizador específico
-router.get('/user/:userId', ensureAuthenticated, async (req, res) => {
+// 📌 Listar logs de um utilizador específico, para Admin
+router.get('/user/:userId', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
     const logs = await logsDb.getLogsByUser(req.params.userId);
     res.json(logs);
@@ -25,8 +26,19 @@ router.get('/user/:userId', ensureAuthenticated, async (req, res) => {
   }
 });
 
+// Listar logs do utilizador logado
+router.get('/me', ensureAuthenticated, async (req, res) => {
+  try {
+    const logs = await logsDb.getLogsByUser(req.user.userId);
+    res.json(logs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 // 📌 Obter log por ID
-router.get('/:id', ensureAuthenticated, async (req, res) => {
+router.get('/:id', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
     const log = await logsDb.getLogById(req.params.id);
     if (!log) {

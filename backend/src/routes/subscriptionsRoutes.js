@@ -1,6 +1,8 @@
 // src/routes/subscriptionsRoutes.js
 const express = require('express');
 const subscriptionsDb = require('../db/subscriptions.js');
+const ensureAuthenticated = require('../middleware/authMiddleware.js');
+const ensureAdmin = require('../middleware/adminMiddleware.js');
 
 const router = express.Router();
 
@@ -16,7 +18,7 @@ router.get('/', async (req, res) => {
 });
 
 // Obter total de subscrições
-router.get('/total', async (req, res) => {
+router.get('/total', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
     const total = await subscriptionsDb.getTotalSubscriptions();
     res.json({ total });
@@ -27,7 +29,7 @@ router.get('/total', async (req, res) => {
 });
 
 // Obter total de subscrições ativas (tipos ativos)
-router.get('/total-active', async (req, res) => {
+router.get('/total-active', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
     const totalActive = await subscriptionsDb.getTotalActiveSubscriptions();
     res.json({ totalActive });
@@ -38,7 +40,7 @@ router.get('/total-active', async (req, res) => {
 });
 
 // Obter contagem de subscrições por tipo
-router.get('/counts-by-type', async (req, res) => {
+router.get('/counts-by-type', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
     const counts = await subscriptionsDb.getSubscriptionCountsByType();
     res.json(counts);
@@ -49,7 +51,7 @@ router.get('/counts-by-type', async (req, res) => {
 });
 
 // Total de receita
-router.get('/total-revenue', async (req, res) => {
+router.get('/total-revenue', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
     const totalRevenue = await subscriptionsDb.getTotalRevenue();
     res.json({ totalRevenue });

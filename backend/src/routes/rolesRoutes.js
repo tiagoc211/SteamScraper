@@ -2,11 +2,12 @@ const express = require('express');
 const rolesDb = require('../db/roles.js');
 const { createLog } = require('../utils/logsHelper');
 const ensureAuthenticated = require('../middleware/authMiddleware');
+const ensureAdmin = require('../middleware/adminMiddleware.js');
 
 const router = express.Router();
 
 // Listar todas as roles
-router.get('/', async (req, res) => {
+router.get('/', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
     const roles = await rolesDb.getRoles();
     res.json(roles);
@@ -16,7 +17,7 @@ router.get('/', async (req, res) => {
 });
 
 // Criar nova role (protegida + log)
-router.post('/', ensureAuthenticated, async (req, res) => {
+router.post('/', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
     const role = await rolesDb.createRole(req.body);
 
@@ -33,7 +34,7 @@ router.post('/', ensureAuthenticated, async (req, res) => {
 });
 
 // Atualizar role (protegida + log)
-router.put('/:id', ensureAuthenticated, async (req, res) => {
+router.put('/:id', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
     // Buscar estado antigo antes da atualização
     const oldRole = await rolesDb.getRoleById(req.params.id);
@@ -62,7 +63,7 @@ router.put('/:id', ensureAuthenticated, async (req, res) => {
 
 
 // Remover role (protegida + log)
-router.delete('/:id', ensureAuthenticated, async (req, res) => {
+router.delete('/:id', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
     const role = await rolesDb.deleteRole(req.params.id);
 
