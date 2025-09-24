@@ -9,7 +9,9 @@ import Header from './components/layout/Header/Header';
 import UserSettingsPage from './pages/settings/UserSettingsPage';
 
 import './App.css';
+
 import PrivateRoute from './utils/PrivateRoute';
+import AdminRoute from './utils/AdminRoute';
 
 function App() {
   return (
@@ -23,9 +25,7 @@ function App() {
             <Route path="/skin/:marketHashName" element={<SkinDetailPage />} />
             <Route path="/settings" element={<PrivateRoute> <UserSettingsPage/> </PrivateRoute>} />
             <Route path="/subscriptions" element={<SubscriptionPage />} />
-            <Route path="/admin" element={<PrivateRoute> <AdminPage /> </PrivateRoute>
-              } 
-            />
+            <Route path="/admin" element={<PrivateRoute> <AdminRoute> <AdminPage /> </AdminRoute> </PrivateRoute>} />
           </Routes>
         </main>
       </div>

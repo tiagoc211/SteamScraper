@@ -75,3 +75,7 @@
 .dashboard-table td {
   color: var(--color-text-bright);
 }
+
+.dashboard-card.revenue {
+  border-left: 4px solid #f59e0b; /* laranja para receita */
+}

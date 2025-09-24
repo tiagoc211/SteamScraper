@@ -44,7 +44,6 @@ async function startServer() {
   setupSteamAuth(app);
 
   // --- REGISTO DAS ROTAS ---
-  // V-- E AQUI ONDE ELA É USADA --V
   app.use('/api/subscriptions', subscriptionsRoutes); 
   app.use('/api/tokens/buy', buysRoutes);
   app.use('/api/users', usersRoutes);
@@ -53,7 +52,7 @@ async function startServer() {
   app.use('/api/inspect', inspectRoutes);
   app.use('/api/logs', logsRoutes);
 
-  app.listen(PORT, () => console.log(`🚀 Backend (Modular) a correr em http://localhost:${PORT}`));
+  app.listen(PORT, () => console.log(`🚀🚀🚀🚀🚀🚀🚀🚀 Backend a correr em http://localhost:${PORT}🚀🚀🚀🚀🚀🚀🚀🚀🚀`));
 }
 
 startServer();

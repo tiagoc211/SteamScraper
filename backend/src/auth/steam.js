@@ -55,14 +55,26 @@ function setupSteamAuth(app) {
     }
   );
 
-  app.get("/api/me", (req, res) => {
+  app.get("/api/me", async (req, res) => {
     if (req.isAuthenticated()) {
       const u = req.user;
+
+        // Buscar role do userId
+      const result = await pool.query(`
+        SELECT r.name
+        FROM users u
+        LEFT JOIN roles r ON u.role_id = r.id
+        WHERE u.id = $1
+      `, [u.userId]);
+
+      const role = result.rows[0]?.name || null;
+
       res.json({ 
         user: {
           id: u.userId, // já tens o userId disponível
           displayName: u.displayName,
-          photos: u.photos
+          photos: u.photos,
+          role
         }
       });
     } else {

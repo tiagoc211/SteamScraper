@@ -12,7 +12,7 @@ const PrivateRoute = ({ children }) => {
         const response = await axios.get('http://localhost:3001/api/me', {
           withCredentials: true
         });
-        setIsAuthenticated(!!response.data.user);
+        setIsAuthenticated(response.data.user);
       } catch (err) {
         setIsAuthenticated(false);
       } finally {
