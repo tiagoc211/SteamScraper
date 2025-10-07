@@ -21,7 +21,7 @@ const fetcher = require('./fetch');
 const setupSteamAuth = require('./auth/steam');
 
 // --- CONFIGURAÇÃO ---
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 // --- FUNÇÃO PRINCIPAL DO SERVIDOR ---
 async function startServer() {
@@ -29,13 +29,13 @@ async function startServer() {
 
   const app = express();
   app.use(cors({
-    origin: 'http://localhost:3000',
-    credentials: true
+      origin: process.env.CORS_ORIGIN,
+      credentials: true
   }));
   app.use(express.json());
 
   app.use(session({
-    secret: process.env.SESSION_SECRET || 'a-very-strong-secret-key-for-session',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: { secure: 'auto' }
