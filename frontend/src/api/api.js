@@ -1,9 +1,11 @@
 import axios from 'axios';
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
 // << CORREÇÃO >> Centraliza a configuração da API aqui.
 // Todos os pedidos usarão este 'apiClient' para falar com o backend na porta correta.
 const apiClient = axios.create({
-  baseURL: 'http://localhost:3001/api', // Aponta para o backend na porta 3001
+  baseURL: `${BACKEND_URL}/api`, // Aponta para o backend na porta 3001
 });
 
 /**

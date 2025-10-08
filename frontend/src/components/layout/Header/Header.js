@@ -9,9 +9,10 @@ const Header = () => {
   const [user, setUser] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const popupRef = useRef(null);
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/me', { credentials: 'include' })
+    fetch(`${BACKEND_URL}/api/me`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => setUser(data.user))
       .catch(err => console.error(err));
@@ -67,7 +68,7 @@ const Header = () => {
                     <FiSettings style={{ marginRight: '6px' }} />
                     Settings
                   </Link>
-                  <a href="http://localhost:3001/auth/logout" className="nav-link">
+                  <a href={`${BACKEND_URL}/auth/logout`} className="nav-link">
                     <FiLogOut style={{ marginRight: '6px' }} />
                     Logout
                   </a>
@@ -75,7 +76,7 @@ const Header = () => {
               )}
             </div>
           ) : (
-            <a href="http://localhost:3001/auth/steam" className="nav-link">Login com Steam</a>
+            <a href={`${BACKEND_URL}/auth/steam`} className="nav-link">Login com Steam</a>
           )}
         </div>
       </div>
