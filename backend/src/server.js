@@ -35,15 +35,11 @@ async function startServer() {
 
   // app.use(express.static(path.join(__dirname, '../public')));
 
-  app.set('trust proxy', 1);
   app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: {
-		secure: true,   // obrigatório em HTTPS
-    	sameSite: 'lax',
-		maxAge: 24*60*60*1000}
+    cookie: { secure: 'auto' }
   }));
 
   setupSteamAuth(app);
