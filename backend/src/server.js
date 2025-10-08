@@ -8,7 +8,6 @@ const listeningsRoutes = require('./routes/listeningsRoutes');
 const inspectRoutes = require('./routes/inspectRoutes');
 const buysRoutes = require('./routes/buysRoutes');
 const logsRoutes = require('./routes/logsRoutes');
-// V-- A LINHA QUE PROVAVELMENTE FALTOU --V
 const subscriptionsRoutes = require('./routes/subscriptionsRoutes'); 
 
 // MODELS E OUTROS
@@ -34,6 +33,8 @@ async function startServer() {
   }));
   app.use(express.json());
 
+  // app.use(express.static(path.join(__dirname, '../public')));
+
   app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
@@ -51,6 +52,13 @@ async function startServer() {
   app.use('/api/skin', listeningsRoutes);
   app.use('/api/inspect', inspectRoutes);
   app.use('/api/logs', logsRoutes);
+
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api')) {  // evita conflito com rotas API
+      res.sendFile(path.join(__dirname, '../public/index.html'));
+    }
+  });
+
 
   app.listen(PORT, () => console.log(`🚀🚀🚀🚀🚀🚀🚀🚀 Backend a correr em http://localhost:${PORT}🚀🚀🚀🚀🚀🚀🚀🚀🚀`));
 }
