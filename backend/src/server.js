@@ -52,16 +52,12 @@ async function startServer() {
   app.use('/api/skin', listeningsRoutes);
   app.use('/api/inspect', inspectRoutes);
   app.use('/api/logs', logsRoutes);
+  
 
-  /*
-  app.get('*', (req, res) => {
-    if (!req.path.startsWith('/api')) {  // evita conflito com rotas API
-      res.sendFile(path.join(__dirname, '../public/index.html'));
-    }
-  });
-  */
+  //app.get(/^(?!\/api).*/, (req, res) => {
+	//  res.sendFile(path.join(__dirname, '../public/index.html'));
+	//});
 
-  app.listen(PORT, () => console.log(`🚀🚀🚀🚀🚀🚀🚀🚀 Backend a correr em http://localhost:${PORT}🚀🚀🚀🚀🚀🚀🚀🚀🚀`));
-}
+  app.listen(PORT, () => console.log(`🚀 Backend a correr em ${process.env.DOMAIN}:${PORT}`));}
 
 startServer();
