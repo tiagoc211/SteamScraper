@@ -81,7 +81,7 @@ router.put('/:id/deactivate', ensureAuthenticated, ensureAdmin, async (req, res)
 });
 
 // Marcar utilizador como ATIVO
-router.put('/:id/activate', ensureAuthenticated, async (req, res) => {
+router.put('/:id/activate', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
     console.log('ID recebido para ativar:', req.params.id);
     const user = await usersDb.activateUser(req.params.id);

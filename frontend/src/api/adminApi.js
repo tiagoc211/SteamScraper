@@ -1,9 +1,11 @@
 import axios from 'axios';
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
 // Configuração central da API
 const apiClient = axios.create({
-  baseURL: 'http://localhost:3001/api', // Backend na porta 3001
-  withCredentials: true, // ← permite enviar cookies de sessão
+  baseURL: `${BACKEND_URL}/api`, 
+  withCredentials: true, 
 });
 
 // ---------------------- USERS ---------------------- //

@@ -1,5 +1,5 @@
 // src/server.js
-require('dotenv').config();
+require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 
 // ROTAS
 const usersRoutes = require('./routes/usersRoutes');
@@ -20,7 +20,7 @@ const fetcher = require('./fetch');
 const setupSteamAuth = require('./auth/steam');
 
 // --- CONFIGURAÇÃO ---
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 
 // --- FUNÇÃO PRINCIPAL DO SERVIDOR ---
 async function startServer() {
@@ -53,12 +53,13 @@ async function startServer() {
   app.use('/api/inspect', inspectRoutes);
   app.use('/api/logs', logsRoutes);
 
+  /*
   app.get('*', (req, res) => {
     if (!req.path.startsWith('/api')) {  // evita conflito com rotas API
       res.sendFile(path.join(__dirname, '../public/index.html'));
     }
   });
-
+  */
 
   app.listen(PORT, () => console.log(`🚀🚀🚀🚀🚀🚀🚀🚀 Backend a correr em http://localhost:${PORT}🚀🚀🚀🚀🚀🚀🚀🚀🚀`));
 }

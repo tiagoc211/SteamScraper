@@ -1,6 +1,8 @@
 import { Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
 function AdminRoute({ children, redirectPath = "/login" }) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -8,7 +10,7 @@ function AdminRoute({ children, redirectPath = "/login" }) {
   useEffect(() => {
     async function fetchUser() {
       try {
-        const res = await fetch("http://localhost:3001/api/me", {
+        const res = await fetch(`${BACKEND_URL}/api/me`, {
           credentials: "include",
         });
         const data = await res.json();

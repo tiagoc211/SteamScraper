@@ -11,8 +11,8 @@ function setupSteamAuth(app) {
   passport.deserializeUser((obj, done) => done(null, obj));
 
   passport.use(new SteamStrategy({
-    returnURL: process.env.STEAM_RETURN_URL,
-    realm: process.env.STEAM_REALM,
+    returnURL: `${process.env.DOMAIN}/auth/steam/return`,
+    realm: process.env.DOMAIN,
     apiKey: process.env.STEAM_API_KEY
   }, async (identifier, profile, done) => {
     try {
@@ -51,7 +51,7 @@ function setupSteamAuth(app) {
   app.get("/auth/steam/return",
     passport.authenticate("steam", { failureRedirect: "/" }),
     (req, res) => {
-      res.redirect(process.env.FRONTEND_URL);
+      res.redirect(process.env.CORS_ORIGIN);
     }
   );
 
@@ -95,7 +95,7 @@ function setupSteamAuth(app) {
         });
       }
 
-      res.redirect(process.env.FRONTEND_URL);
+      res.redirect(process.env.CORS_ORIGIN);
     });
   });
 }
