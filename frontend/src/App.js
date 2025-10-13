@@ -6,6 +6,7 @@ import SkinSelectorPage from './pages/skin/SkinSelectorPage';
 import SubscriptionPage from './pages/subscriptions/SubscriptionPage';
 import AdminPage from './pages/admin/AdminPage';
 import Header from './components/layout/Header/Header';
+import Footer from './components/layout/Footer/Footer';
 import UserSettingsPage from './pages/settings/UserSettingsPage';
 
 import './App.css';
@@ -28,6 +29,7 @@ function App() {
             <Route path="/admin" element={<PrivateRoute> <AdminRoute> <AdminPage /> </AdminRoute> </PrivateRoute>} />
           </Routes>
         </main>
+        <Footer />
       </div>
     </Router>
   );

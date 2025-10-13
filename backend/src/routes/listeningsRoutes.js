@@ -1,6 +1,9 @@
 const express = require('express');
 const fetcher = require('../fetch.js'); // Ajusta o path se necessário
 const cheerio = require('cheerio');
+const searchUsageDb = require('../db/searchUsage.js');
+console.log('searchUsageDb =', searchUsageDb);
+const ensureAuthenticated = require('../middleware/authMiddleware.js');
 
 const router = express.Router();
 
@@ -54,6 +57,61 @@ function parseListings(data) {
 }
 
 // --- ROTAS ---
+
+router.get('/limitado/:marketHashName', ensureAuthenticated, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const marketHashName = decodeURIComponent(req.params.marketHashName);
+
+    // 1️⃣ Obter limites do plano
+    console.log("🧩 userId recebido no router:", userId);
+
+    const limits = await searchUsageDb.getUserLimits(userId);
+    if (!limits)
+      return res.status(403).json({ success: false, message: 'Nenhum plano ativo encontrado.' });
+
+    const { max_searches_per_day, max_results_per_search } = limits;
+
+    // 2️⃣ Garantir registo diário e validar limite
+    await searchUsageDb.ensureUserUsage(userId);
+    const usedToday = await searchUsageDb.getUserUsage(userId);
+    if (usedToday >= max_searches_per_day)
+      return res.status(429).json({ success: false, message: 'Limite diário de pesquisas atingido.' });
+
+    // 3️⃣ Incrementar uso
+    await searchUsageDb.incrementSearchUsage(userId);
+
+    // 4️⃣ Fazer o scrape normal (sem alterar tua lógica)
+    const firstPageData = await fetcher.fetchFirstPage(marketHashName);
+    if (!firstPageData || !firstPageData.success) {
+      return res.status(503).json({ success: false, message: 'Erro ao obter dados da Steam.' });
+    }
+
+    // 5️⃣ Aplicar limite de resultados
+    const listings = parseListings(firstPageData).slice(0, max_results_per_search);
+    const totalListings = Math.min(firstPageData.total_count || 0, max_results_per_search);
+    const totalPages = Math.ceil(totalListings / 100);
+
+    // 6️⃣ Resposta
+    res.json({
+      success: true,
+      marketHashName,
+      listings,
+      pagination: { totalPages, totalListings },
+      usage: {
+        used_today: usedToday + 1,
+        remaining: Math.max(0, max_searches_per_day - (usedToday + 1)),
+        limit_per_day: max_searches_per_day,
+        limit_results: max_results_per_search
+      }
+    });
+
+  } catch (err) {
+    console.error('Erro no endpoint /limitado:', err);
+    res.status(500).json({ success: false, message: 'Erro interno ao processar a pesquisa limitada.' });
+  }
+});
+
 router.get('/:marketHashName', async (req, res) => {
     const marketHashName = decodeURIComponent(req.params.marketHashName);
     const firstPageData = await fetcher.fetchFirstPage(marketHashName);
@@ -79,5 +137,7 @@ router.get('/:marketHashName/page/:pageNumber', async (req, res) => {
     const listings = parseListings(pageData);
     res.json({ success: true, listings });
 });
+
+
 
 module.exports = router;

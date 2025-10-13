@@ -20,6 +20,7 @@ async function ensureAuthenticated(req, res, next) {
     }
 
     req.userId = result.rows[0].id; // Adiciona o id do utilizador à request
+    console.log(req.userId);
     next();
   } catch (err) {
     console.error('Erro no middleware de autenticação:', err);

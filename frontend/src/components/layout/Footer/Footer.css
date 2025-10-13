@@ -1,0 +1,68 @@
+.app-footer {
+  background-color: rgba(27, 40, 56, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 3px solid rgba(42, 71, 94, 0.8);
+  padding: 1.5rem 2rem;
+  color: var(--color-text);
+  font-size: 0.95rem;
+}
+
+.footer-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1400px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.footer-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.footer-logo {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--color-text-bright);
+}
+
+.footer-email {
+  color: var(--color-text-bright);
+  font-size: 0.9rem;
+  margin-top: 0.2rem;
+}
+
+.footer-tagline {
+  color: var(--color-text);
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.footer-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.social-icon {
+  color: var(--color-text);
+  font-size: 1.3rem;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.social-icon:hover {
+  color: rgba(102, 192, 244, 0.9);
+  transform: translateY(-2px);
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .footer-content {
+    flex-direction: column;
+    text-align: center;
+  }
+}

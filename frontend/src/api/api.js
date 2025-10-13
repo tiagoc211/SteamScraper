@@ -5,7 +5,8 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 // << CORREÇÃO >> Centraliza a configuração da API aqui.
 // Todos os pedidos usarão este 'apiClient' para falar com o backend na porta correta.
 const apiClient = axios.create({
-  baseURL: `${BACKEND_URL}/api`, // Aponta para o backend na porta 3001
+  baseURL: `${BACKEND_URL}/api`,
+  withCredentials: true, // Aponta para o backend na porta 3001
 });
 
 /**
@@ -16,7 +17,7 @@ const apiClient = axios.create({
  */
 export const getSkinDetails = async (marketHashName, signal) => {
   try {
-    const response = await apiClient.get(`/skin/${encodeURIComponent(marketHashName)}`, { signal });
+    const response = await apiClient.get(`/skin/limitado/${encodeURIComponent(marketHashName)}`, { signal });
     return response.data;
   } catch (error) {
     if (axios.isCancel(error)) {
