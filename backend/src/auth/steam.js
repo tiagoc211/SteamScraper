@@ -31,6 +31,52 @@ function setupSteamAuth(app) {
 
       const userId = result.rows[0].id; // este é o userId interno
 
+       // Atribuir automaticamente role e subscription, se não tiver
+      const userData = await pool.query(
+        'SELECT subscription_id, role_id FROM users WHERE id = $1',
+        [userId]
+      );
+
+      const hasSub = userData.rows[0]?.subscription_id;
+      const hasRole = userData.rows[0]?.role_id;
+
+      if (!hasSub) {
+        const freeSub = await pool.query(`
+          INSERT INTO subscriptions (type, start_date, end_date, status)
+          VALUES ($1, NOW(), NOW() + INTERVAL '30 days', 'ATIVO')
+          RETURNING id;
+        `, [5]); // ID fixo do plano Free
+
+        // Atualiza o user para apontar para a nova subscrição
+        await pool.query(`
+          UPDATE users
+          SET subscription_id = $1
+          WHERE id = $2
+        `, [freeSub.rows[0].id, userId]);
+      }
+
+
+      const subResult = await pool.query(`
+        SELECT s.id
+        FROM subscriptions s
+        JOIN users u ON u.subscription_id = s.id
+        WHERE u.id = $1
+      `, [userId]);
+
+      if (subResult.rows.length > 0) {
+        await pool.query(`
+          UPDATE users
+          SET subscription_id = $1
+          WHERE id = $2
+        `, [subResult.rows[0].id, userId]);
+      }
+
+      await pool.query(`
+        UPDATE users
+        SET role_id = COALESCE(role_id, (SELECT id FROM roles WHERE name = 'User' LIMIT 1))
+        WHERE id = $1
+      `, [userId]);
+
       await createLog({
         userId,
         action: 'LOGIN',

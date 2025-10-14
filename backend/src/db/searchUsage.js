@@ -2,7 +2,6 @@
 const db = require('./index.js');
 
 async function getUserLimits(userId) {
-  console.log("🧠 getUserLimits recebeu:", userId, typeof userId);
   const { rows } = await db.query(`
     SELECT st.max_searches_per_day, st.max_results_per_search
     FROM users u
