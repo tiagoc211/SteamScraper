@@ -1,0 +1,164 @@
+/* src/components/ui/SearchBar/SearchBar.css */
+
+/* --- Overlay da Pesquisa --- */
+.search-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(10, 10, 15, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 2000;
+  
+  display: flex;
+  justify-content: center;
+  /* CORREÇÃO: Posiciona o modal mais perto do topo */
+  padding-top: 10vh; 
+  
+  animation: fadeInOverlay 0.3s ease-out forwards;
+}
+
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* --- Modal com Efeito de Vidro Fosco --- */
+.search-modal {
+  width: 100%;
+  /* CORREÇÃO: Modal mais compacto */
+  max-width: 500px; 
+  
+  /* CORREÇÃO: Efeito de vidro fosco mais pronunciado */
+  background-color: rgba(32, 36, 45, 0.75);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  border-radius: 12px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+
+  /* CORREÇÃO: Limita a altura e permite o seu próprio scroll */
+  display: flex;
+  flex-direction: column;
+  max-height: 75vh;
+
+  transform: translateY(-20px);
+  animation: slideInModal 0.4s ease-out forwards;
+}
+
+@keyframes slideInModal {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+
+.search-input-wrapper-active {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0; /* Impede que o input encolha */
+}
+
+.search-icon-active {
+  font-size: 1.2rem;
+  color: var(--color-text);
+  padding: 0.75rem;
+  flex-shrink: 0;
+}
+
+/* CORREÇÃO: Estilos para a seta de voltar */
+.back-arrow {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.back-arrow:hover {
+  color: var(--color-accent);
+}
+
+.search-input-active {
+  width: 100%;
+  height: 50px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-text-bright);
+  font-size: 1.2rem;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* --- Container e Lista de Resultados --- */
+.results-container {
+  overflow-y: auto; /* Apenas esta área terá scroll */
+}
+
+/* Scrollbar Profissional */
+.results-container::-webkit-scrollbar {
+  width: 8px;
+}
+.results-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.results-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+.results-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.search-results-list {
+  list-style: none;
+  padding: 0.5rem;
+  margin: 0;
+}
+.result-item {
+  border-radius: 6px;
+  cursor: pointer;
+}
+.result-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 0.5rem;
+  position: relative;
+  transition: background-color 0.2s ease;
+  color: inherit;
+  text-decoration: none;
+}
+.result-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+.rarity-bar {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+}
+.result-image {
+  width: 96px; height: 72px; object-fit: contain; flex-shrink: 0; margin-left: 10px;
+}
+.result-info {
+  display: flex; flex-direction: column; gap: 0.2rem;
+}
+.result-name {
+  color: var(--color-text-bright); font-weight: 500; font-size: 1rem;
+}
+.result-details {
+  font-size: 0.85rem; color: var(--color-text);
+}
+.result-item-message {
+  padding: 2rem; color: var(--color-text); text-align: center; font-size: 1.1rem;
+}
+
+/* --- Estilos da Vista de Detalhes (Variações) --- */
+.result-item-header {
+  display: flex; align-items: center; gap: 1rem; padding: 1rem 0.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 0.5rem;
+}
+.result-item-variation .result-link {
+  padding: 0.8rem 1.5rem; font-size: 1rem; color: var(--color-text);
+}
+.result-item-variation .result-link:hover {
+  color: var(--color-text-bright);
+}

@@ -1,4 +1,5 @@
-import React from 'react';
+// src/App.js
+import React, { useState } from 'react'; // <-- CORREÇÃO: Adicionar { useState }
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from './pages/home/HomePage';
 import SkinDetailPage from './pages/skin/SkinDetailPage';
@@ -8,6 +9,7 @@ import AdminPage from './pages/admin/AdminPage';
 import Header from './components/layout/Header/Header';
 import Footer from './components/layout/Footer/Footer';
 import UserSettingsPage from './pages/settings/UserSettingsPage';
+import SearchBar from './components/ui/SearchBar/SearchBar';
 
 import './App.css';
 
@@ -15,10 +17,17 @@ import PrivateRoute from './utils/PrivateRoute';
 import AdminRoute from './utils/AdminRoute';
 
 function App() {
+  const [isSearchActive, setIsSearchActive] = useState(false);
+  
   return (
     <Router>
       <div className="app-container">
-        <Header />
+        {/* Passa a função para o Header poder ativar a pesquisa */}
+        <Header setIsSearchActive={setIsSearchActive} />
+
+        {/* O SearchBar recebe o estado e a função para se poder controlar */}
+        <SearchBar isSearchActive={isSearchActive} setIsSearchActive={setIsSearchActive} />
+
         <main className="main-content">
           <Routes>
             <Route path="/" element={<HomePage />} />
