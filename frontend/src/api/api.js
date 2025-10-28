@@ -1,29 +1,25 @@
-// src/api/api.js
+// frontend/src/api/api.js
 
 import axios from 'axios';
 
 // --- CONFIGURAÇÃO PARA A API DO SEU BACKEND ---
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-// Esta é a instância do axios que estava em falta
 const apiClient = axios.create({
   baseURL: BACKEND_URL,
   withCredentials: true,
 });
 
 
-// --- LÓGICA PARA A API EXTERNA DO CSGO (PARA A PESQUISA) ---
+// ===================================================================================
+// LÓGICA PARA A BARRA DE PESQUISA INTELIGENTE (USA API EXTERNA)
+// ===================================================================================
 const CSGO_API_BASE = 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en';
-
-let itemsCache = null;
+let searchCache = null;
 
 const normalizeString = (str) => {
   if (!str) return '';
-  return str
-    .toLowerCase()
-    .replace(/[★|™()]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return str.toLowerCase().replace(/[★|™()]/g, '').replace(/\s+/g, ' ').trim();
 };
 
 const formatItemName = (item) => {
@@ -31,58 +27,86 @@ const formatItemName = (item) => {
   return isSpecial ? `★ ${item.name}` : item.name;
 };
 
-const getAllItems = async () => {
-  if (itemsCache) {
-    return itemsCache;
-  }
+// Função para popular o cache da PESQUISA
+const populateSearchCache = async () => {
+  if (searchCache) return searchCache;
   try {
-    console.log("Fetching and caching the complete item list for the first time...");
-    
-    const [skinsRes, collectiblesRes, agentsRes] = await Promise.all([
+    const [skinsRes, keychainsRes, agentsRes] = await Promise.all([
       fetch(`${CSGO_API_BASE}/skins.json`),
-      fetch(`${CSGO_API_BASE}/collectibles.json`),
+      fetch(`${CSGO_API_BASE}/keychains.json`),
       fetch(`${CSGO_API_BASE}/agents.json`)
     ]);
-
     const skins = await skinsRes.json();
-    const collectibles = await collectiblesRes.json();
+    const keychains = await keychainsRes.json();
     const agents = await agentsRes.json();
 
     const allItems = [
-        ...skins.map(item => ({...item, name: formatItemName(item)})),
-        ...collectibles,
-        ...agents
-    ].map(item => ({
-      ...item,
-      searchableName: normalizeString(item.name) 
-    }));
+      ...skins.map(item => ({...item, name: formatItemName(item)})),
+      ...keychains,
+      ...agents
+    ].map(item => ({...item, searchableName: normalizeString(item.name)}));
 
-    itemsCache = allItems;
-    console.log(`Cache filled with ${allItems.length} items.`);
-    return itemsCache;
+    searchCache = allItems;
+    console.log(`Search cache filled with ${allItems.length} items.`);
+    return searchCache;
   } catch (error) {
-    console.error("Failed to fetch the item list:", error);
+    console.error("Failed to populate search cache:", error);
     return [];
   }
 };
+populateSearchCache(); // Pré-aquece o cache
 
-getAllItems();
-
-// Esta é a sua função de pesquisa inteligente
+// Função USADA PELA SEARCHBAR
 export const searchSkinsByQuery = async (query) => {
-  const allItems = await getAllItems();
+  const allItems = await populateSearchCache();
   if (!allItems || allItems.length === 0) return [];
   const searchTerms = normalizeString(query).split(' ');
-  const filtered = allItems.filter(item => {
-    return searchTerms.every(term => item.searchableName.includes(term));
-  });
-  return filtered.slice(0, 50);
+  return allItems.filter(item => searchTerms.every(term => item.searchableName.includes(term))).slice(0, 50);
 };
 
 
-// --- FUNÇÕES QUE USAM O SEU BACKEND (E QUE ESTAVAM A CAUSAR ERROS) ---
+// ===================================================================================
+// LÓGICA PARA A PÁGINA /SKINS (USA A SUA BASE DE DADOS)
+// ===================================================================================
 
-// Para a página de subscrições
+/**
+ * NOVA FUNÇÃO: Busca os itens para a página de navegação a partir do seu backend/BD.
+ */
+export const getBrowseItemsFromDB = async (params) => {
+  try {
+    // O 'params' será um objeto como { page: 1, sortBy: 'floatid', category: 'Rifles' }
+    const response = await apiClient.get('/api/items', { params });
+    
+    // O mapeamento dos dados continua a ser crucial
+    const mappedData = {
+      ...response.data, // Inclui os dados de paginação
+      items: response.data.items.map(dbItem => {
+        const rarityMap = { 1: { name: 'Common', color: '#b0c3d9' }, /* ...etc */ };
+        const rarityInfo = rarityMap[dbItem.rarity] || { name: 'Unknown', color: 'grey' };
+
+        return {
+            id: dbItem.a,
+            name: dbItem.market_hash_name || `Item Defindex: ${dbItem.defindex}`, 
+            image: dbItem.icon_url ? `https://community.akamai.steamstatic.com/economy/image/${dbItem.icon_url}` : '', 
+            category: { name: dbItem.category_name || 'Unknown' }, 
+            rarity: rarityInfo,
+            stattrak: dbItem.stattrak,
+            souvenir: dbItem.souvenir,
+        };
+      })
+    };
+    return mappedData;
+  } catch (error) {
+    console.error('Error fetching browse items from DB:', error);
+    return { items: [], pagination: {} }; // Retorna um objeto padrão em caso de erro
+  }
+};
+
+
+// ===================================================================================
+// FUNÇÕES RESTANTES (PARA PÁGINA DE DETALHES, ETC.)
+// ===================================================================================
+
 export const getSubscriptionPlans = async () => {
   try {
     const response = await apiClient.get('/api/subscriptions');
@@ -93,17 +117,12 @@ export const getSubscriptionPlans = async () => {
   }
 };
 
-// Para a página de detalhes da skin
 export const getSkinDetails = async (marketHashName, signal) => {
   try {
     const response = await apiClient.get(`/api/skin/${encodeURIComponent(marketHashName)}`, { signal });
     return response.data;
   } catch (err) {
-    if (axios.isCancel(err)) {
-      console.log('Request canceled:', err.message);
-    } else {
-      console.error('Error fetching skin details:', err);
-    }
+    if (!axios.isCancel(err)) console.error('Error fetching skin details:', err);
     return null;
   }
 };
@@ -113,9 +132,7 @@ export const getSkinPage = async (marketHashName, pageNumber, signal) => {
         const { data } = await apiClient.get(`/api/skin/${marketHashName}/page/${pageNumber}`, { signal });
         return data;
     } catch (err) {
-        if (!axios.isCancel(err)) {
-          console.error(`Error fetching skin page ${pageNumber}:`, err);
-        }
+        if (!axios.isCancel(err)) console.error(`Error fetching skin page ${pageNumber}:`, err);
         return null;
     }
 };

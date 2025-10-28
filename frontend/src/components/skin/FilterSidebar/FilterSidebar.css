@@ -1,156 +1,125 @@
+/* frontend/src/components/skin/FilterSidebar/FilterSidebar.css */
+
 .filter-sidebar {
   width: 100%;
-  max-width: 300px;
+  max-width: 280px; /* Um pouco mais estreito */
   background-color: var(--color-bg-light);
   border-radius: 8px;
   border: 1px solid var(--color-border);
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 2rem; /* Mais espaçamento entre secções */
   color: var(--color-text);
-  align-self: flex-start;
+  align-self: flex-start; /* Mantém a sidebar no topo */
+  position: sticky;
+  top: 90px; /* 70px (header) + 20px (espaço) */
 }
 
-.filter-section.disabled {
-    opacity: 0.5;
-}
-.filter-section.disabled .section-content {
-    pointer-events: none;
-}
-.filter-section.disabled .filter-toggle {
-    pointer-events: all;
+.filter-section {
+  width: 100%;
 }
 
 .section-header {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   padding-bottom: 1rem;
 }
+
 .section-title {
-    background: none;
-    border: none;
-    color: var(--color-text-bright);
-    font-size: 1.1rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0;
+  color: var(--color-text-bright);
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0;
 }
 
-.filter-toggle {
-    width: 40px;
-    height: 22px;
-    background-color: var(--color-bg-dark);
-    border: 1px solid var(--color-border);
-    border-radius: 11px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    padding: 2px;
-    transition: background-color 0.3s ease;
+.section-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
-.filter-toggle.active {
-    background-color: var(--color-accent);
+
+/* Estilo para inputs de texto e número */
+.filter-input, .range-inputs input {
+  width: 100%;
+  background-color: var(--color-bg-dark);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text-bright);
+  padding: 0.75rem;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  -moz-appearance: textfield;
 }
-.toggle-knob {
-    width: 16px;
-    height: 16px;
-    background-color: #fff;
-    border-radius: 50%;
-    transition: transform 0.3s ease;
+.filter-input::-webkit-outer-spin-button,
+.filter-input::-webkit-inner-spin-button,
+.range-inputs input::-webkit-outer-spin-button,
+.range-inputs input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
-.filter-toggle.active .toggle-knob {
-    transform: translateX(18px);
+.filter-input:focus, .range-inputs input:focus {
+    outline: none;
+    border-color: var(--color-accent);
 }
 
 .range-inputs {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  width: 100%;
 }
 
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  flex: 1;
+/* Estilos para o novo ToggleSwitch */
+.toggle-switch-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+.toggle-switch-container label {
+    font-weight: 500;
+    color: var(--color-text);
 }
 
-.input-group.vertical {
-  width: 100%;
+.filter-toggle {
+    width: 44px;
+    height: 24px;
+    background-color: var(--color-bg-dark);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 3px;
+    transition: background-color 0.3s ease;
+    flex-shrink: 0;
+}
+.filter-toggle.active {
+    background-color: var(--color-accent);
+}
+.toggle-knob {
+    width: 18px;
+    height: 18px;
+    background-color: #fff;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+}
+.filter-toggle.active .toggle-knob {
+    transform: translateX(20px);
 }
 
-.input-group label {
-  font-size: 0.9rem;
-  color: var(--color-text);
-}
-
-.input-group input[type="number"] {
+.filter-select {
   width: 100%;
   background-color: var(--color-bg-dark);
   border: 1px solid var(--color-border);
   border-radius: 4px;
   color: var(--color-text-bright);
-  padding: 0.6rem;
+  padding: 0.75rem;
   font-size: 1rem;
-  transition: border-color 0.2s;
-  -moz-appearance: textfield;
-}
-.input-group input[type="number"]::-webkit-outer-spin-button,
-.input-group input[type="number"]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-.input-group input[type="number"]:focus {
-    outline: none;
-    border-color: var(--color-accent);
-}
-
-.filter-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.apply-button {
-  background-color: var(--color-accent);
-  color: var(--color-bg-dark);
-  border: none;
-  border-radius: 8px;
-  padding: 0.8rem 1rem;
-  font-size: 1rem;
-  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
-}
-.apply-button:hover {
-    background-color: #8dd1f9;
 }
 
-.reset-button {
-  background-color: #ff4d4d;
-  color: var(--color-text-bright);
-  border: none;
-  border-radius: 8px;
-  padding: 0.8rem 1rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  transition: background-color 0.2s;
-}
-.reset-button:hover {
-    background-color: #e60000;
+.filter-select:focus {
+  outline: none;
+  border-color: var(--color-accent);
 }

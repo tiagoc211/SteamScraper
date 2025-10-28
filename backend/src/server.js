@@ -8,7 +8,8 @@ const listeningsRoutes = require('./routes/listeningsRoutes');
 const inspectRoutes = require('./routes/inspectRoutes');
 const buysRoutes = require('./routes/buysRoutes');
 const logsRoutes = require('./routes/logsRoutes');
-const subscriptionsRoutes = require('./routes/subscriptionsRoutes'); 
+const subscriptionsRoutes = require('./routes/subscriptionsRoutes');
+const itemsRoutes = require('./routes/itemsRoutes');
 
 // MODELS E OUTROS
 const express = require('express');
@@ -52,6 +53,7 @@ async function startServer() {
   app.use('/api/skin', listeningsRoutes);
   app.use('/api/inspect', inspectRoutes);
   app.use('/api/logs', logsRoutes);
+  app.use('/api/items', itemsRoutes);
   
 
   //app.get(/^(?!\/api).*/, (req, res) => {
