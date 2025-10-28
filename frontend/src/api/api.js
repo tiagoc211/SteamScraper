@@ -12,7 +12,7 @@ const apiClient = axios.create({
 
 
 // ===================================================================================
-// LÓGICA PARA A BARRA DE PESQUISA INTELIGENTE (USA API EXTERNA)
+// LÓGICA PARA A BARRA DE PESQUISA DO HEADER (USA API EXTERNA ByMykel)
 // ===================================================================================
 const CSGO_API_BASE = 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en';
 let searchCache = null;
@@ -27,7 +27,6 @@ const formatItemName = (item) => {
   return isSpecial ? `★ ${item.name}` : item.name;
 };
 
-// Função para popular o cache da PESQUISA
 const populateSearchCache = async () => {
   if (searchCache) return searchCache;
   try {
@@ -44,19 +43,18 @@ const populateSearchCache = async () => {
       ...skins.map(item => ({...item, name: formatItemName(item)})),
       ...keychains,
       ...agents
-    ].map(item => ({...item, searchableName: normalizeString(item.name)}));
+    ].map(item => ({...item, market_hash_name: item.market_hash_name || item.name, searchableName: normalizeString(item.name)}));
 
     searchCache = allItems;
-    console.log(`Search cache filled with ${allItems.length} items.`);
+    console.log(`API search cache filled with ${allItems.length} items.`);
     return searchCache;
   } catch (error) {
-    console.error("Failed to populate search cache:", error);
+    console.error("Failed to populate API search cache:", error);
     return [];
   }
 };
-populateSearchCache(); // Pré-aquece o cache
+populateSearchCache();
 
-// Função USADA PELA SEARCHBAR
 export const searchSkinsByQuery = async (query) => {
   const allItems = await populateSearchCache();
   if (!allItems || allItems.length === 0) return [];
@@ -66,39 +64,45 @@ export const searchSkinsByQuery = async (query) => {
 
 
 // ===================================================================================
-// LÓGICA PARA A PÁGINA /SKINS (USA A SUA BASE DE DADOS)
+// LÓGICA PARA A PÁGINA /SKINS (USA A SUA BASE DE DADOS com paginação)
 // ===================================================================================
 
-/**
- * NOVA FUNÇÃO: Busca os itens para a página de navegação a partir do seu backend/BD.
- */
 export const getBrowseItemsFromDB = async (params) => {
   try {
-    // O 'params' será um objeto como { page: 1, sortBy: 'floatid', category: 'Rifles' }
     const response = await apiClient.get('/api/items', { params });
-    
-    // O mapeamento dos dados continua a ser crucial
     const mappedData = {
-      ...response.data, // Inclui os dados de paginação
+      ...response.data,
       items: response.data.items.map(dbItem => {
-        const rarityMap = { 1: { name: 'Common', color: '#b0c3d9' }, /* ...etc */ };
+        const rarityMap = {
+            1: { name: 'Common', color: '#b0c3d9' }, 2: { name: 'Uncommon', color: '#5e98d9' },
+            3: { name: 'Rare', color: '#4b69ff' }, 4: { name: 'Mythical', color: '#8847ff' },
+            5: { name: 'Legendary', color: '#d32ce6' }, 6: { name: 'Ancient', color: '#eb4b4b' },
+            7: { name: 'Exceedingly Rare', color: '#ffd700' },
+        };
         const rarityInfo = rarityMap[dbItem.rarity] || { name: 'Unknown', color: 'grey' };
 
+        // CORREÇÃO: Mapeia todos os dados que vêm do JOIN
         return {
-            id: dbItem.a,
-            name: dbItem.market_hash_name || `Item Defindex: ${dbItem.defindex}`, 
+            id: dbItem.listing_id, // Usar o listing_id como chave única
+            name: dbItem.market_hash_name, 
             image: dbItem.icon_url ? `https://community.akamai.steamstatic.com/economy/image/${dbItem.icon_url}` : '', 
             category: { name: dbItem.category_name || 'Unknown' }, 
             rarity: rarityInfo,
             stattrak: dbItem.stattrak,
             souvenir: dbItem.souvenir,
+            // Passa os novos campos para o card
+            float: dbItem.float_value, // O nome da coluna na tabela listings
+            pattern: dbItem.paint_seed,
+            price: dbItem.price, // O preço já vem da tabela listings
+            stickers: dbItem.stickers,
+            keychains: dbItem.keychains,
         };
       })
     };
     return mappedData;
   } catch (error) {
     console.error('Error fetching browse items from DB:', error);
-    return { items: [], pagination: {} }; // Retorna um objeto padrão em caso de erro
+    return { items: [], pagination: { totalPages: 0 } };
   }
 };
 
