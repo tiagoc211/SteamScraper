@@ -10,21 +10,21 @@ async function upsertListings(listings) {
 
   const values = [];
   const placeholders = listings.map((l, index) => {
-    // Agora temos 10 colunas
-    const i = index * 10; 
+    // Agora temos 11 colunas
+    const i = index * 11; 
     values.push(
       l.listing_id, l.item_id, l.price, l.fee,
-      l.float_value, l.paint_seed, l.stickers, l.inspect_link,
-      l.market_hash_name, l.icon_url // Novas colunas
+      l.float_value, l.paint_seed, l.stickers, l.keychains, // Adicionado keychains
+      l.inspect_link, l.market_hash_name, l.icon_url
     );
-    return `($${i + 1}, $${i + 2}, $${i + 3}, $${i + 4}, $${i + 5}, $${i + 6}, $${i + 7}, $${i + 8}, $${i + 9}, $${i + 10})`;
+    return `($${i+1}, $${i+2}, $${i+3}, $${i+4}, $${i+5}, $${i+6}, $${i+7}, $${i+8}, $${i+9}, $${i+10}, $${i+11})`;
   }).join(', ');
 
   const query = `
     INSERT INTO listings (
       listing_id, item_id, price, fee, 
-      float_value, paint_seed, stickers, inspect_link,
-      market_hash_name, icon_url -- Novas colunas
+      float_value, paint_seed, stickers, keychains, -- Adicionado keychains
+      inspect_link, market_hash_name, icon_url
     )
     VALUES ${placeholders}
     ON CONFLICT (listing_id) DO UPDATE SET
@@ -32,7 +32,7 @@ async function upsertListings(listings) {
       fee = EXCLUDED.fee,
       float_value = EXCLUDED.float_value,
       stickers = EXCLUDED.stickers,
-      -- Também atualizamos o nome e a imagem se necessário
+      keychains = EXCLUDED.keychains, -- Adicionado keychains
       market_hash_name = EXCLUDED.market_hash_name,
       icon_url = EXCLUDED.icon_url,
       scraped_at = CURRENT_TIMESTAMP;
@@ -40,7 +40,7 @@ async function upsertListings(listings) {
 
   try {
     await pool.query(query, values);
-    console.log(`${listings.length} listings (com nome/imagem) foram inseridos/atualizados.`);
+    console.log(`${listings.length} listings (com charms) foram inseridos/atualizados.`);
   } catch (err) {
     console.error('Erro ao fazer upsert dos listings:', err);
   }

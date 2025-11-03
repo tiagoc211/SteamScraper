@@ -57,7 +57,7 @@ const Header = ({ setIsSearchActive }) => { // Recebe apenas a função para ati
         {/* Navegação principal no centro */}
         <nav className="nav-center">
           <Link to="/" className="nav-link">Home</Link>
-          <Link to="/skins" className="nav-link">Skins</Link>
+          <Link to="/skins" className="nav-link">DataBase</Link>
           <Link to="/subscriptions" className="nav-link">Subscrições</Link>
         </nav>
 

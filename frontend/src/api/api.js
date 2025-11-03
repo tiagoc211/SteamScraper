@@ -70,19 +70,19 @@ export const searchSkinsByQuery = async (query) => {
 export const getBrowseItemsFromDB = async (params) => {
   try {
     const response = await apiClient.get('/api/items', { params });
-    // O backend agora envia a maioria dos dados prontos, o mapeamento é mais simples
     const mappedData = {
       ...response.data,
       items: response.data.items.map(dbItem => ({
         id: dbItem.listing_id,
         name: dbItem.market_hash_name, 
         image: `https://community.akamai.steamstatic.com/economy/image/${dbItem.icon_url}`, 
+        rarity: { name: dbItem.rarity_name, color: dbItem.rarity_color },
         price: dbItem.price,
         float: dbItem.float_value,
         pattern: dbItem.paint_seed,
         stickers: dbItem.stickers,
-        // Você ainda precisará de um mapeamento para raridade se não a guardar na tabela listings
-        rarity: { name: '...', color: '...' }, 
+        keychains: dbItem.keychains,
+        scraped_at: dbItem.scraped_at,
       }))
     };
     return mappedData;

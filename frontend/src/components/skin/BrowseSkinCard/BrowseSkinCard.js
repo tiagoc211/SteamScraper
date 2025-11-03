@@ -1,49 +1,93 @@
-// src/components/skin/BrowseSkin-Card/BrowseSkinCard.js
-import React from 'react';
+// frontend/src/components/skin/BrowseSkinCard/BrowseSkinCard.js
+import React, { useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { formatDistanceToNow, parseISO } from 'date-fns';
+import { enGB, pt } from 'date-fns/locale';
 import FloatBar from '../FloatBar/FloatBar';
 import './BrowseSkinCard.css';
 
-const BrowseSkinCard = React.forwardRef(({ item }, ref) => {
+const BrowseSkinCard = React.forwardRef(({ item, variant = 'browse' }, ref) => {
+
   const formattedPrice = item.price 
     ? (item.price / 100).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })
     : 'N/A';
-  
-  const linkTarget = item.name;
 
-  return (
-    <Link ref={ref} to={`/skin/${encodeURIComponent(linkTarget)}`} className="browse-card-link">
-      <article className="browse-skin-card" style={{ '--rarity-color': item.rarity?.color || '#2a475e' }}>
+  const timeAgo = item.scraped_at 
+    ? formatDistanceToNow(parseISO(item.scraped_at), { addSuffix: false, locale: enGB })
+    : null;
+
+  const handleBuyClick = useCallback(async () => {
+    console.log("Comprar item:", item.id);
+  }, [item]);
+
+  const CardContent = () => (
+    <>
+      <div className="card-header">
+        <p className="item-name" title={item.name}>{item.name}</p>
+      </div>
+
+      <div className="card-image-container">
+        <img src={item.image} alt={item.name} className="item-image" loading="lazy" />
         
-        {/* O header já não é necessário aqui, vamos mostrar o nome por cima da imagem */}
-
-        <div className="card-image-container">
-          {/* NOME DO ITEM AGORA AQUI */}
-          <div className="item-name-overlay">{item.name}</div>
-          <img src={item.image} alt={item.name} className="item-image" loading="lazy" />
-          
-          {item.stickers && item.stickers.length > 0 && (
-            <div className="card-stickers-wrapper">
-              {item.stickers.map((sticker, index) => (
-                <img 
-                  key={index} 
-                  src={sticker.img} 
-                  alt={sticker.name} 
-                  className="card-sticker-image"
-                  title={sticker.name}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="card-info-footer">
-          <div className="price-line">
-            <span className="item-price">{formattedPrice}</span>
+        {/* CORREÇÃO: Os stickers agora estão dentro da área da imagem */}
+        {item.stickers && item.stickers.length > 0 && (
+          <div className="card-stickers-wrapper">
+            {item.stickers.slice(0, 5).map((sticker, index) => (
+              <img key={index} src={sticker.img} alt={sticker.name} className="card-sticker-image" title={sticker.name} />
+            ))}
           </div>
-          <FloatBar floatValue={item.float} paintSeed={item.pattern} />
-        </div>
+        )}
 
+        {item.keychains && item.keychains.length > 0 && (
+          <div className="card-charms-wrapper">
+            {item.keychains.map((charm, index) => (
+              <div key={index} className="card-charm-container" title={charm.name}>
+                <img src={charm.image_url} alt={charm.name} className="card-charm-image" />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="card-info-footer">
+        <div className="price-line">
+          <span className="item-price">{formattedPrice}</span>
+          <span className="item-rarity-text" style={{ color: item.rarity?.color }}>{item.rarity?.name}</span>
+        </div>
+        
+        <div className="float-line">
+            <FloatBar floatValue={item.float} paintSeed={item.pattern} />
+        </div>
+        
+        {/* CORREÇÃO: 'last checked' movido para o seu próprio container */}
+        {variant === 'browse' && timeAgo && (
+            <div className="last-checked-line">
+                <span>checked {timeAgo} ago</span>
+            </div>
+        )}
+      </div>
+    </>
+  );
+
+ if (variant === 'detail') {
+    return (
+      <div className="browse-card-wrapper" ref={ref}>
+        <article className="browse-skin-card">
+          <CardContent />
+        </article>
+        <div className="card-hover-actions">
+          <button className="action-btn inspect-btn" onClick={() => window.open(item.inspectLink, '_blank')}>Inspecionar</button>
+          <button className="action-btn buy-btn" onClick={handleBuyClick}>Comprar</button>
+        </div>
+      </div>
+    );
+  }
+
+  // A variante 'browse' (link)
+  return (
+    <Link ref={ref} to={`/skin/${encodeURIComponent(item.name)}`} className="browse-card-wrapper browse-card-link">
+      <article className="browse-skin-card">
+        <CardContent />
       </article>
     </Link>
   );

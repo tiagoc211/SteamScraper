@@ -20,10 +20,47 @@ const BrowseSkinsPage = () => {
     sortBy: 'floatid', sortOrder: 'ASC', rarity: ''
   });
   
-  const isInitialMount = useRef(true);
   const observer = useRef();
+  const isInitialLoadForFilters = useRef(true);
 
-  const lastItemElementRef = useCallback(node => {
+  // Função para buscar dados, agora isolada
+  const fetchItems = useCallback((currentPage, currentFilters) => {
+    setLoading(true);
+    const params = { ...currentFilters, page: currentPage, limit: 100 };
+    
+    getBrowseItemsFromDB(params).then(data => {
+      if (data && data.items) {
+        setItems(prevItems => (currentPage === 1) ? data.items : [...prevItems, ...data.items]);
+        setHasMore(currentPage < (data.pagination?.totalPages || 0));
+      } else {
+        setHasMore(false); // Para a busca em caso de erro na API
+      }
+      setLoading(false);
+    });
+  }, []);
+
+  // Efeito para a busca inicial e para quando os filtros mudam
+  useEffect(() => {
+    setItems([]); // Limpa os itens anteriores
+    setPage(1);   // Reseta a página para 1
+    setHasMore(true); // Permite que o scroll infinito recomece
+    fetchItems(1, filters); // Busca a primeira página com os novos filtros
+    
+    if (isInitialLoadForFilters.current) {
+        isInitialLoadForFilters.current = false;
+    }
+  }, [filters, fetchItems]);
+
+  // Efeito APENAS para o scroll infinito (carregar mais páginas)
+  useEffect(() => {
+    // Não busca a página 1 novamente, pois já foi feito pelo efeito dos filtros
+    if (page === 1) return; 
+    
+    fetchItems(page, filters);
+  }, [page, filters, fetchItems]);
+
+  // CORREÇÃO: O observador agora tem um alvo dedicado
+  const loadMoreTriggerRef = useCallback(node => {
     if (loading) return;
     if (observer.current) observer.current.disconnect();
     observer.current = new IntersectionObserver(entries => {
@@ -34,39 +71,6 @@ const BrowseSkinsPage = () => {
     if (node) observer.current.observe(node);
   }, [loading, hasMore]);
 
-  // Efeito para buscar dados quando a página muda
-  useEffect(() => {
-    if (isInitialMount.current && page === 1) return; // Não busca na primeira renderização da página
-    setLoading(true);
-    const params = { ...filters, page, limit: 100 };
-    getBrowseItemsFromDB(params).then(data => {
-      if (data && data.items) {
-        setItems(prev => [...prev, ...data.items]);
-        setHasMore(page < (data.pagination.totalPages || 0));
-      }
-      setLoading(false);
-    });
-  }, [page]);
-
-  // Efeito para buscar dados quando os filtros mudam
-  useEffect(() => {
-    setItems([]);
-    setPage(1);
-    setHasMore(true);
-    setLoading(true);
-    const params = { ...filters, page: 1, limit: 100 };
-    getBrowseItemsFromDB(params).then(data => {
-        if (data && data.items) {
-            setItems(data.items);
-            setHasMore(1 < (data.pagination.totalPages || 0));
-        }
-        setLoading(false);
-    });
-    
-    if (isInitialMount.current) {
-        isInitialMount.current = false;
-    }
-  }, [filters]);
 
   const categories = ['All', 'Rifles', 'Pistols', 'SMGs', 'Heavy', 'Knives', 'Gloves'];
 
@@ -82,12 +86,15 @@ const BrowseSkinsPage = () => {
         <div className="skins-grid">
           {items.map((item, index) => (
             <BrowseSkinCard
-              ref={items.length === index + 1 ? lastItemElementRef : null}
               key={`${item.id}-${index}`}
               item={item}
+              variant="browse"
             />
           ))}
         </div>
+
+        {/* CORREÇÃO: O "gatilho" para carregar mais e as mensagens de estado */}
+        <div ref={loadMoreTriggerRef} className="load-trigger" />
         {loading && <div className="loader">Loading more items...</div>}
         {!loading && !hasMore && items.length > 0 && <div className="end-of-results">You've reached the end!</div>}
         {!loading && items.length === 0 && <div className="no-results-message">No items found matching your criteria.</div>}

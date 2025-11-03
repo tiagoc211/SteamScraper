@@ -23,9 +23,6 @@ async function findItemIdByMarketHashName(marketHashName) {
     const apiData = await getApiData();
     const baseName = marketHashName.split(' (')[0].replace(/StatTrak™ |Souvenir |★ /g, '');
     const apiItem = apiData.find(item => item.name.replace('★ ', '') === baseName);
-
-    // *** A CORREÇÃO ESTÁ AQUI ***
-    // A variável era 'api_item' (com underscore) e foi corrigida para 'apiItem' (camelCase)
     if (!apiItem || !apiItem.paint_index) {
         console.warn(`Não foi possível encontrar o paint_index para '${marketHashName}' na API externa.`);
         return null;
@@ -73,22 +70,30 @@ async function parseAndProcessSteamData(steamData, marketHashName) {
             name: tag.match(/title="([^"]+)"/)?.[1] || 'Sticker',
             img: tag.match(/src="([^"]+)"/)?.[1] || ''
         })) || [];
+        
+        const keychains = assetInfo?.descriptions?.find(d => d.value.includes('keychain_info'))?.value.match(/<img.*?src="([^"]+)" title="([^"]+)">/g)?.map(tag => ({
+            name: tag.match(/title="([^"]+)"/)?.[1] || 'Charm',
+            image_url: tag.match(/src="([^"]+)"/)?.[1] || ''
+        })) || [];
 
+        // 1. Formato para o frontend (SkinDetailPage)
         listingsForFrontend.push({
             listingid,
+            name: marketHashName, // Nome completo
             priceNumber: (listingInfo.converted_price + listingInfo.converted_fee) / 100,
             image: $el.find('img.market_listing_item_img').attr('src'),
             inspectLink,
             stickers: stickers.map(s => s.img),
-            keychains: [],
-            raw: { ...assetInfo, ...floatData },
+            keychains: keychains,
+            raw: { ...assetInfo, ...floatData, name: marketHashName },
             buy: {
                 subtotalCents: listingInfo.converted_price,
                 feeCents: listingInfo.converted_fee,
                 totalCents: listingInfo.converted_price + listingInfo.converted_fee
             }
         });
-        
+
+        // 2. Formato para guardar na base de dados (só se tiver float)
         if (floatData.floatvalue != null && floatData.paintseed != null) {
             listingsForDatabase.push({
                 listing_id: listingid,
@@ -97,12 +102,11 @@ async function parseAndProcessSteamData(steamData, marketHashName) {
                 float_value: floatData.floatvalue,
                 paint_seed: floatData.paintseed,
                 stickers: stickers.length > 0 ? JSON.stringify(stickers) : null,
+                keychains: keychains.length > 0 ? JSON.stringify(keychains) : null,
                 inspect_link: inspectLink,
                 market_hash_name: marketHashName,
                 icon_url: assetInfo?.icon_url || null
             });
-        } else {
-            console.log(`Listing ${listingid} ignorado para gravação na BD por falta de dados de float/pattern.`);
         }
     }
 
@@ -148,5 +152,6 @@ router.get('/:marketHashName', async (req, res) => {
         res.status(500).json({ success: false, message: 'Erro interno do servidor.' });
     }
 });
+
 
 module.exports = router;

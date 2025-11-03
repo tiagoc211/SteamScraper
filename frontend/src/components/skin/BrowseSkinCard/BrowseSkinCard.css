@@ -1,101 +1,113 @@
 /* frontend/src/components/skin/BrowseSkinCard/BrowseSkinCard.css */
 
-.browse-card-link {
-  text-decoration: none;
-}
-
-.browse-skin-card {
-  background-color: var(--color-bg-light);
-  border: 1px solid var(--color-border);
-  border-left: 4px solid var(--rarity-color);
-  border-radius: 8px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+/* --- WRAPPER GERAL --- */
+.browse-card-wrapper {
+  position: relative;
   transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-  position: relative;
-  height: 280px; /* Altura ajustada */
+  text-decoration: none;
+  border-radius: 8px;
+  background-color: #2c3541;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  
+  /* A borda fica no wrapper para envolver tudo */
+  border: 1px solid #3a4655;
 }
 
-.browse-skin-card:hover {
+.browse-card-wrapper:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
 
-/* Container da imagem agora ocupa o espaço principal */
-.card-image-container {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column; /* Para empilhar o nome e a imagem */
-  align-items: center;
-  justify-content: space-around; /* Para espaçar o nome e a imagem */
-  padding: 1rem;
-  position: relative;
-  background: radial-gradient(circle, rgba(42, 71, 94, 0.2) 0%, rgba(27, 40, 56, 0.1) 70%);
+/* Na página /skins, a borda do wrapper muda de cor */
+.browse-card-link:hover {
+    border-color: var(--color-accent);
 }
 
-/* Estilo para o nome do item sobre a imagem */
-.item-name-overlay {
-  color: var(--color-text-bright);
-  font-weight: 600;
-  font-size: 1rem;
-  text-align: center;
-  width: 100%;
-  white-space: nowrap;
+/* --- O CARD PRINCIPAL VISÍVEL --- */
+.browse-skin-card {
+  border-radius: 8px; /* Mantém o arredondamento interno */
   overflow: hidden;
-  text-overflow: ellipsis;
-  padding: 0 0.5rem;
-  z-index: 2;
-}
-
-.item-image {
-  max-width: 90%;
-  max-height: 120px;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
-  z-index: 1;
-}
-
-/* Posição dos stickers ajustada */
-.card-stickers-wrapper {
-  position: absolute;
-  bottom: 10px; /* Perto da parte de baixo da área da imagem */
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 8px;
-  z-index: 3;
-}
-
-.card-sticker-image {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.6));
-}
-
-.card-info-footer {
-  padding: 0.75rem 1rem;
-  border-top: 1px solid var(--color-border);
-  background-color: var(--color-bg-dark);
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  flex-shrink: 0; /* Impede que o footer encolha */
+  height: 340px;
+  position: relative;
+  z-index: 2; /* Fica por cima da secção de ações */
+  background-color: transparent; /* O fundo já está no wrapper */
+  border: none; /* Já não precisa de borda própria */
 }
 
-.price-line {
+/* --- ESTILOS INTERNOS (maioritariamente inalterados) --- */
+.card-header { padding: 0.8rem 1rem; border-bottom: 1px solid #3a4655; text-align: center; flex-shrink: 0; min-height: 50px; display: flex; align-items: center; justify-content: center; background-color: #2c3541; }
+.item-name { color: var(--color-text-bright); font-weight: 600; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; }
+.card-image-container { flex-grow: 1; display: flex; align-items: center; justify-content: center; position: relative; padding: 0.5rem; }
+.item-image { max-width: 90%; max-height: 120px; object-fit: contain; filter: drop-shadow(0 5px 12px rgba(0,0,0,0.5)); transition: max-height 0.3s ease; }
+.card-charms-wrapper { position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; z-index: 3; }
+.card-charm-container { width: 32px; height: 32px; background-color: rgba(0,0,0,0.2); border-radius: 4px; padding: 2px; display: flex; align-items: center; justify-content: center; transition: width 0.3s ease, height 0.3s ease; }
+.card-charm-image { max-width: 120%; max-height: 120%; object-fit: contain; }
+.card-stickers-wrapper { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; align-items: center; gap: 12px; width: 100%; }
+.card-sticker-image { width: 32px; height: 32px; object-fit: contain; transition: width 0.3s ease, height 0.3s ease; }
+.card-info-footer { padding: 0.8rem 1rem 1rem 1rem; border-top: 1px solid #3a4655; background-color: #232a33; display: flex; flex-direction: column; gap: 0.75rem; flex-shrink: 0; }
+.price-line { display: flex; justify-content: space-between; align-items: baseline; }
+.item-price { color: #a5d470; font-weight: 700; font-size: 1.3rem; }
+.price-details { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.item-rarity-text { font-size: 0.85rem; font-weight: 500; }
+.last-checked { font-size: 0.75rem; color: var(--color-text); opacity: 0.6; font-style: italic; white-space: nowrap; }
+
+/* --- A LÓGICA DE HOVER DE EXPANSÃO (CORRIGIDA) --- */
+.card-hover-actions {
+  /* É um filho direto do .browse-card-wrapper */
+  padding: 0 1rem;
+  background-color: #2c3541; /* Mesma cor de fundo do wrapper */
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  justify-content: space-around;
+  gap: 1rem;
+  
+  /* Escondido por padrão, colapsando a altura */
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out, padding 0.3s ease-in-out;
+}
+/* NO HOVER DO WRAPPER (apenas na pág. de detalhes), AS AÇÕES EXPANDEM-SE PARA BAIXO */
+.skin-cards-grid .browse-card-wrapper:hover .card-hover-actions {
+  max-height: 100px;
+  opacity: 1;
+  padding: 1.5rem 1rem;
+}
+.action-btn { flex: 1; padding: 0.8rem 1rem; font-size: 1rem; font-weight: 600; border-radius: 6px; border: none; cursor: pointer; transition: filter 0.2s ease; }
+.action-btn:hover { filter: brightness(1.1); }
+.action-btn.inspect-btn { background-color: var(--color-accent); color: var(--color-bg-dark); }
+.action-btn.buy-btn { background: linear-gradient(to bottom, #78b766, #5c9e10); color: white; border: 1px solid #4a6809; }
+
+
+/* --- ESTILOS "OVERRIDE" PARA A PÁGINA DE DETALHES --- */
+.skin-cards-grid .browse-skin-card {
+  height: 380px;
+}
+.skin-cards-grid .item-image {
+  max-height: 160px;
+}
+.skin-cards-grid .card-sticker-image, .skin-cards-grid .card-charm-container {
+  width: 40px;
+  height: 40px;
+}
+/* A borda azul no hover agora é controlada pelo wrapper */
+.skin-cards-grid .browse-card-wrapper:hover {
+    border-color: var(--color-accent);
 }
 
-.item-price {
-  color: #a5d470;
-  font-weight: 700;
-  font-size: 1.2rem;
-}
 
-.card-info-footer .float-bar-container {
-  margin-top: 4px;
+/* CORREÇÃO: Estilo e posicionamento do 'last checked' */
+.last-checked-line {
+  display: flex;
+  justify-content: flex-end; /* Alinha à direita */
+  margin-top: 2px; /* Pequeno espaço acima */
+}
+.last-checked-line span {
+  font-size: 0.8rem; 
+  color: var(--color-text); 
+  opacity: 0.6;
 }
