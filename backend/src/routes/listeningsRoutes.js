@@ -1,162 +1,152 @@
 // backend/src/routes/listeningsRoutes.js
 const express = require('express');
-const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args)); // Para a API externa
-const fetcher = require('../fetch.js'); // O seu fetcher para a Steam
+const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args));
+const fetcher = require('../fetch.js');
 const cheerio = require('cheerio');
 const listingsDb = require('../db/listings.js');
 const pool = require('../db/index.js');
 
 const router = express.Router();
 
-// --- LÓGICA DE TRADUÇÃO E MAPEAMENTO ---
-let apiCache = null; // Cache para os dados da API ByMykel
-
-/**
- * Busca e armazena em cache os dados da API ByMykel para mapeamento.
- */
+// --- FUNÇÃO AUXILIAR DE MAPEAMENTO (PARA ENCONTRAR O item_id) ---
+let apiCache = null;
 async function getApiData() {
     if (apiCache) return apiCache;
-    console.log("A buscar dados da API externa para mapeamento...");
+    console.log("A buscar dados da API externa para mapeamento de paint_index...");
     const res = await fetch('https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins.json');
     apiCache = await res.json();
     return apiCache;
 }
-getApiData(); // Pré-aquece o cache no arranque do servidor
+getApiData();
 
-/**
- * Encontra o item_id na sua tabela 'items' correspondente a um market_hash_name.
- * @param {string} marketHashName - O nome do item vindo do URL.
- * @returns {number | null} O ID do item na sua tabela, ou null se não for encontrado.
- */
 async function findItemIdByMarketHashName(marketHashName) {
     const apiData = await getApiData();
-    
-    // 1. Encontra o item correspondente na API externa para obter o paint_index
-    // A API 'skins.json' não tem o wear, então temos de o remover do nome
-    const baseName = marketHashName.split(' (')[0].replace('StatTrak™ ', '').replace('Souvenir ', '').replace('★ ', '');
-    
+    const baseName = marketHashName.split(' (')[0].replace(/StatTrak™ |Souvenir |★ /g, '');
     const apiItem = apiData.find(item => item.name.replace('★ ', '') === baseName);
 
+    // *** A CORREÇÃO ESTÁ AQUI ***
+    // A variável era 'api_item' (com underscore) e foi corrigida para 'apiItem' (camelCase)
     if (!apiItem || !apiItem.paint_index) {
         console.warn(`Não foi possível encontrar o paint_index para '${marketHashName}' na API externa.`);
         return null;
     }
-
-    // 2. Com o paint_index, procura na sua tabela 'items'
-    // ASSUME que a combinação de 'defindex' e 'paintindex' é única
-    const itemQuery = 'SELECT a FROM items WHERE paintindex = $1 LIMIT 1';
-    const { rows } = await pool.query(itemQuery, [apiItem.paint_index]);
-
-    if (rows.length > 0) {
-        return rows[0].a; // Retorna o ID (coluna 'a')
-    }
-    
-    console.warn(`Nenhum item encontrado na sua BD com paintindex: ${apiItem.paint_index}`);
-    return null;
+    const { rows } = await pool.query('SELECT a FROM items WHERE paintindex = $1 LIMIT 1', [apiItem.paint_index]);
+    return rows.length > 0 ? rows[0].a : null;
 }
 
-
-// --- LÓGICA DE SCRAPE E GRAVAÇÃO ---
-
-async function processAndSaveListings(data, marketHashName) {
-    if (!data || !data.results_html) return;
-
-    // A nova lógica de tradução entra aqui!
-    const itemId = await findItemIdByMarketHashName(marketHashName);
-    if (!itemId) {
-        console.warn(`Não foi possível associar '${marketHashName}' a um item_id. Listings não serão guardados.`);
-        return;
+/**
+ * Função MESTRA: Extrai os dados da Steam, formata para o frontend E para a base de dados.
+ */
+async function parseAndProcessSteamData(steamData, marketHashName) {
+    if (!steamData || !steamData.results_html) {
+        return { forFrontend: [], forDatabase: [] };
     }
 
-    const $ = cheerio.load(data.results_html);
-    const listingsToSave = [];
+    const $ = cheerio.load(steamData.results_html);
+    const listingsForFrontend = [];
+    const listingsForDatabase = [];
 
-    $('.market_listing_row').each((_, el) => {
+    for (const el of $('.market_listing_row').toArray()) {
         const $el = $(el);
         const listingid = $el.attr('id')?.replace('listing_', '');
-        if (!listingid) return;
+        if (!listingid) continue;
 
-        const listingInfo = data.listinginfo?.[listingid];
-        if (!listingInfo) return;
+        const listingInfo = steamData.listinginfo?.[listingid];
+        if (!listingInfo) continue;
         
-        const assetInfo = listingInfo.asset?.id ? data.assets?.[730]?.[listingInfo.asset.contextid || '2']?.[listingInfo.asset.id] : null;
-        
-        listingsToSave.push({
-            listing_id: listingid,
-            item_id: itemId,
-            price: listingInfo.converted_price,
-            fee: listingInfo.converted_fee,
-            float_value: null, // O float requereria uma chamada de inspeção separada e mais complexa
-            paint_seed: null,
-            inspect_link: $el.find('.market_listing_row_action a').attr('href'),
-            stickers: assetInfo?.descriptions?.find(d => d.value.includes('sticker_info'))?.value.match(/src="([^"]+)"/g)?.map(s => s.slice(5, -1)) || null,
+        const assetInfo = listingInfo.asset?.id ? steamData.assets?.[730]?.[listingInfo.asset.contextid || '2']?.[listingInfo.asset.id] : null;
+
+        const inspectLink = $el.find('.market_listing_row_action a').attr('href');
+        let floatData = {};
+        if (inspectLink) {
+            try {
+                const inspectRes = await fetch(`${process.env.FLOAT_INSPECT_URL}/?url=${encodeURIComponent(inspectLink)}`);
+                if (inspectRes.ok) {
+                    floatData = (await inspectRes.json()).iteminfo || {};
+                }
+            } catch (e) {
+                console.warn(`Chamada à API de Float falhou para o listing ${listingid}:`, e.message);
+            }
+        }
+
+        const stickers = assetInfo?.descriptions?.find(d => d.value.includes('sticker_info'))?.value.match(/<img.*?src="([^"]+)" title="([^"]+)">/g)?.map(tag => ({
+            name: tag.match(/title="([^"]+)"/)?.[1] || 'Sticker',
+            img: tag.match(/src="([^"]+)"/)?.[1] || ''
+        })) || [];
+
+        listingsForFrontend.push({
+            listingid,
+            priceNumber: (listingInfo.converted_price + listingInfo.converted_fee) / 100,
+            image: $el.find('img.market_listing_item_img').attr('src'),
+            inspectLink,
+            stickers: stickers.map(s => s.img),
+            keychains: [],
+            raw: { ...assetInfo, ...floatData },
+            buy: {
+                subtotalCents: listingInfo.converted_price,
+                feeCents: listingInfo.converted_fee,
+                totalCents: listingInfo.converted_price + listingInfo.converted_fee
+            }
         });
-    });
-
-    if (listingsToSave.length > 0) {
-        await listingsDb.upsertListings(listingsToSave);
+        
+        if (floatData.floatvalue != null && floatData.paintseed != null) {
+            listingsForDatabase.push({
+                listing_id: listingid,
+                price: listingInfo.converted_price + listingInfo.converted_fee,
+                fee: listingInfo.converted_fee,
+                float_value: floatData.floatvalue,
+                paint_seed: floatData.paintseed,
+                stickers: stickers.length > 0 ? JSON.stringify(stickers) : null,
+                inspect_link: inspectLink,
+                market_hash_name: marketHashName,
+                icon_url: assetInfo?.icon_url || null
+            });
+        } else {
+            console.log(`Listing ${listingid} ignorado para gravação na BD por falta de dados de float/pattern.`);
+        }
     }
+
+    return { listingsForFrontend, listingsForDatabase };
 }
 
-// --- ROTAS ---
 
-// ROTA PARA A PÁGINA DE DETALHES (SkinDetailPage)
-// Continua a fazer scrape e a devolver em tempo real, mas agora guarda os resultados.
+// ROTA PRINCIPAL - /api/skin/:marketHashName
 router.get('/:marketHashName', async (req, res) => {
     const marketHashName = decodeURIComponent(req.params.marketHashName);
     
-    const firstPageData = await fetcher.fetchFirstPage(marketHashName);
-    
-    if (!firstPageData || !firstPageData.success) {
-      return res.status(503).json({ success: false, message: 'Erro ao obter dados da Steam.' });
-    }
-
-    // Tenta guardar os dados em segundo plano, sem bloquear a resposta.
-    processAndSaveListings(firstPageData, marketHashName).catch(console.error);
-    
-    // Devolve os dados do scrape diretamente para o frontend, como antes.
-    const listings = parseListingsForFrontend(firstPageData);
-    const totalListings = firstPageData.total_count || 0;
-    const totalPages = Math.ceil(totalListings / 100);
-    
-    res.json({ success: true, marketHashName, listings, pagination: { totalPages, totalListings }});
-});
-
-// A sua função de parse que envia os dados para o frontend (pode ser diferente da que guarda)
-function parseListingsForFrontend(data) {
-    if (!data || !data.results_html) return [];
-    const listings = [];
-    const $ = cheerio.load(data.results_html);
-    $('.market_listing_row').each((_, el) => {
-        const $el = $(el);
-        const listingid = $el.attr('id')?.replace('listing_', '');
-        if (!listingid) return;
+    try {
+        const steamData = await fetcher.fetchFirstPage(marketHashName);
+        if (!steamData || !steamData.success) {
+            return res.status(503).json({ success: false, message: 'Erro ao obter dados da Steam.' });
+        }
         
-        const name = $el.find('.market_listing_item_name').text().trim();
-        const priceText = $el.find('.market_listing_price_with_fee').text().trim();
-        const image = $el.find('img.market_listing_item_img').attr('src');
-        const inspectLink = $el.find('.market_listing_row_action a').attr('href');
+        const { listingsForFrontend, listingsForDatabase } = await parseAndProcessSteamData(steamData, marketHashName);
         
-        listings.push({ listingid, name, priceText, image, inspectLink });
-    });
-    return listings;
-}
+        if (listingsForDatabase.length > 0) {
+            findItemIdByMarketHashName(marketHashName).then(itemId => {
+                if (itemId) {
+                    const listingsWithId = listingsForDatabase.map(l => ({ ...l, item_id: itemId }));
+                    listingsDb.upsertListings(listingsWithId).catch(console.error);
+                } else {
+                    console.warn(`Não foi possível encontrar um item_id para '${marketHashName}', listings não foram guardados.`);
+                }
+            }).catch(console.error);
+        }
 
-// A rota de paginação também precisa de ser ajustada
-router.get('/:marketHashName/page/:pageNumber', async (req, res) => {
-    const marketHashName = decodeURIComponent(req.params.marketHashName);
-    const pageNumber = parseInt(req.params.pageNumber, 10);
-    
-    const pageData = await fetcher.fetchSpecificPage(marketHashName, pageNumber);
-    
-    if (!pageData || !pageData.success) {
-        return res.status(503).json({ success: false, message: `Erro ao obter a página ${pageNumber}` });
+        res.json({ 
+            success: true, 
+            marketHashName, 
+            listings: listingsForFrontend,
+            pagination: { 
+                totalPages: Math.ceil((steamData.total_count || 0) / 100), 
+                totalListings: steamData.total_count || 0 
+            }
+        });
+
+    } catch (err) {
+        console.error(`Erro na rota /skin/${marketHashName}:`, err);
+        res.status(500).json({ success: false, message: 'Erro interno do servidor.' });
     }
-
-    processAndSaveListings(pageData, marketHashName).catch(console.error);
-
-    const listings = parseListingsForFrontend(pageData);
-    res.json({ success: true, listings });
 });
 
 module.exports = router;

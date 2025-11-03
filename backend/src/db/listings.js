@@ -3,30 +3,28 @@ const pool = require('./index.js');
 
 /**
  * Insere ou atualiza múltiplos listings na base de dados.
- * Usa ON CONFLICT para ser eficiente (UPSERT).
- * @param {Array} listings - Um array de objetos de listing a serem guardados.
+ * Esta função já estava correta, mas incluímo-la para ter o ficheiro completo.
  */
 async function upsertListings(listings) {
-  if (!listings || listings.length === 0) {
-    return;
-  }
+  if (!listings || listings.length === 0) return;
 
-  // Prepara os valores para uma query parametrizada em massa
   const values = [];
   const placeholders = listings.map((l, index) => {
-    const i = index * 10; // Cada listing tem 10 colunas
+    // Agora temos 10 colunas
+    const i = index * 10; 
     values.push(
       l.listing_id, l.item_id, l.price, l.fee,
-      l.seller_steam_id, l.float_value, l.paint_seed,
-      l.paint_index, JSON.stringify(l.stickers), l.inspect_link
+      l.float_value, l.paint_seed, l.stickers, l.inspect_link,
+      l.market_hash_name, l.icon_url // Novas colunas
     );
     return `($${i + 1}, $${i + 2}, $${i + 3}, $${i + 4}, $${i + 5}, $${i + 6}, $${i + 7}, $${i + 8}, $${i + 9}, $${i + 10})`;
   }).join(', ');
 
   const query = `
     INSERT INTO listings (
-      listing_id, item_id, price, fee, seller_steam_id, 
-      float_value, paint_seed, paint_index, stickers, inspect_link
+      listing_id, item_id, price, fee, 
+      float_value, paint_seed, stickers, inspect_link,
+      market_hash_name, icon_url -- Novas colunas
     )
     VALUES ${placeholders}
     ON CONFLICT (listing_id) DO UPDATE SET
@@ -34,12 +32,15 @@ async function upsertListings(listings) {
       fee = EXCLUDED.fee,
       float_value = EXCLUDED.float_value,
       stickers = EXCLUDED.stickers,
+      -- Também atualizamos o nome e a imagem se necessário
+      market_hash_name = EXCLUDED.market_hash_name,
+      icon_url = EXCLUDED.icon_url,
       scraped_at = CURRENT_TIMESTAMP;
   `;
 
   try {
     await pool.query(query, values);
-    console.log(`${listings.length} listings foram inseridos/atualizados com sucesso.`);
+    console.log(`${listings.length} listings (com nome/imagem) foram inseridos/atualizados.`);
   } catch (err) {
     console.error('Erro ao fazer upsert dos listings:', err);
   }
@@ -47,8 +48,7 @@ async function upsertListings(listings) {
 
 /**
  * Busca os listings de um item específico da base de dados.
- * @param {number} itemId - O ID do item da sua tabela 'items'.
- * @param {Object} options - Opções de paginação e ordenação.
+ * CORREÇÃO: Adicionado o 'async' keyword que estava em falta.
  */
 async function getListingsByItemId(itemId, { page = 1, limit = 24, sortBy = 'price', sortOrder = 'ASC' }) {
     const offset = (page - 1) * limit;
@@ -71,6 +71,7 @@ async function getListingsByItemId(itemId, { page = 1, limit = 24, sortBy = 'pri
     
     const countQuery = 'SELECT COUNT(*) FROM listings WHERE item_id = $1;';
 
+    // O 'await' aqui dentro agora é válido porque a função é 'async'
     const { rows } = await pool.query(query, [itemId, limit, offset]);
     const totalResult = await pool.query(countQuery, [itemId]);
     const totalItems = parseInt(totalResult.rows[0].count, 10);

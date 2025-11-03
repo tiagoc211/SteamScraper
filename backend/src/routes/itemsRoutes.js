@@ -4,36 +4,49 @@ const pool = require('../db/index.js');
 
 const router = express.Router();
 
-// ROTA PARA A PÁGINA /skins (BrowseSkinsPage)
+// ROTA PARA A PÁGINA /skins (BrowseSkinsPage) - AGORA MUITO MAIS RÁPIDA
 router.get('/', async (req, res) => {
-  const { page = 1, limit = 100 } = req.query;
+  const { 
+    page = 1, limit = 100, sortBy = 'price', sortOrder = 'ASC',
+    // Filtros agora podem ser aplicados diretamente nesta tabela
+    category, rarity, search, stattrak, souvenir 
+  } = req.query;
+
   const offset = (page - 1) * limit;
+  const whereClauses = [];
+  const queryParams = [];
+  let paramIndex = 1;
+
+  // A lógica de construção de filtros continua a mesma
+  if (search) {
+    whereClauses.push(`market_hash_name ILIKE $${paramIndex++}`);
+    queryParams.push(`%${search}%`);
+  }
+  // NOTA: Para filtrar por categoria, raridade, etc., essas colunas
+  // também teriam que ser adicionadas à tabela 'listings'.
+  // Por agora, vamos focar-nos na busca por nome.
+  
+  const whereString = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+  const allowedSortColumns = { price: 'price', floatid: 'float_value', paintseed: 'paint_seed' };
+  const safeSortBy = allowedSortColumns[sortBy] || 'price';
+  const safeSortOrder = sortOrder.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+
+  // QUERY SIMPLIFICADA - SEM JOIN
+  const query = `
+    SELECT * FROM listings
+    ${whereString}
+    ORDER BY ${safeSortBy} ${safeSortOrder} NULLS LAST
+    LIMIT $${paramIndex++}
+    OFFSET $${paramIndex++}
+  `;
+  queryParams.push(limit, offset);
+
+  const countQuery = `SELECT COUNT(*) FROM listings ${whereString}`;
 
   try {
-    // Query refinada para trazer dados de ambas as tabelas
-    const query = `
-      SELECT DISTINCT ON (l.item_id)
-        l.listing_id,
-        l.item_id,
-        l.price,
-        i.a as item_pk,
-        i.defindex,
-        i.paintindex,
-        i.rarity,
-        i.stattrak,
-        i.souvenir
-        -- Adicione aqui as colunas que você tem na tabela 'items'
-        -- Por exemplo: i.market_hash_name, i.icon_url, i.category_name
-      FROM listings l
-      JOIN items i ON l.item_id = i.a
-      ORDER BY l.item_id, l.scraped_at DESC
-      LIMIT $1 OFFSET $2;
-    `;
-
-    const countQuery = `SELECT COUNT(DISTINCT item_id) FROM listings;`;
-
-    const itemsResult = await pool.query(query, [limit, offset]);
-    const totalResult = await pool.query(countQuery);
+    const itemsResult = await pool.query(query, queryParams);
+    const totalResult = await pool.query(countQuery, queryParams.slice(0, paramIndex - 3));
     
     const totalItems = parseInt(totalResult.rows[0].count, 10);
     const totalPages = Math.ceil(totalItems / limit);
@@ -44,7 +57,7 @@ router.get('/', async (req, res) => {
       pagination: { currentPage: parseInt(page, 10), totalPages, totalItems }
     });
   } catch (err) {
-    console.error('Erro ao buscar itens da tabela de listings:', err);
+    console.error('Erro ao buscar listings da base de dados:', err);
     res.status(500).json({ success: false, message: 'Erro interno do servidor.' });
   }
 });

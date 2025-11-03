@@ -70,34 +70,20 @@ export const searchSkinsByQuery = async (query) => {
 export const getBrowseItemsFromDB = async (params) => {
   try {
     const response = await apiClient.get('/api/items', { params });
+    // O backend agora envia a maioria dos dados prontos, o mapeamento é mais simples
     const mappedData = {
       ...response.data,
-      items: response.data.items.map(dbItem => {
-        const rarityMap = {
-            1: { name: 'Common', color: '#b0c3d9' }, 2: { name: 'Uncommon', color: '#5e98d9' },
-            3: { name: 'Rare', color: '#4b69ff' }, 4: { name: 'Mythical', color: '#8847ff' },
-            5: { name: 'Legendary', color: '#d32ce6' }, 6: { name: 'Ancient', color: '#eb4b4b' },
-            7: { name: 'Exceedingly Rare', color: '#ffd700' },
-        };
-        const rarityInfo = rarityMap[dbItem.rarity] || { name: 'Unknown', color: 'grey' };
-
-        // CORREÇÃO: Mapeia todos os dados que vêm do JOIN
-        return {
-            id: dbItem.listing_id, // Usar o listing_id como chave única
-            name: dbItem.market_hash_name, 
-            image: dbItem.icon_url ? `https://community.akamai.steamstatic.com/economy/image/${dbItem.icon_url}` : '', 
-            category: { name: dbItem.category_name || 'Unknown' }, 
-            rarity: rarityInfo,
-            stattrak: dbItem.stattrak,
-            souvenir: dbItem.souvenir,
-            // Passa os novos campos para o card
-            float: dbItem.float_value, // O nome da coluna na tabela listings
-            pattern: dbItem.paint_seed,
-            price: dbItem.price, // O preço já vem da tabela listings
-            stickers: dbItem.stickers,
-            keychains: dbItem.keychains,
-        };
-      })
+      items: response.data.items.map(dbItem => ({
+        id: dbItem.listing_id,
+        name: dbItem.market_hash_name, 
+        image: `https://community.akamai.steamstatic.com/economy/image/${dbItem.icon_url}`, 
+        price: dbItem.price,
+        float: dbItem.float_value,
+        pattern: dbItem.paint_seed,
+        stickers: dbItem.stickers,
+        // Você ainda precisará de um mapeamento para raridade se não a guardar na tabela listings
+        rarity: { name: '...', color: '...' }, 
+      }))
     };
     return mappedData;
   } catch (error) {

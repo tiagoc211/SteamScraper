@@ -7,78 +7,72 @@
 .browse-skin-card {
   background-color: var(--color-bg-light);
   border: 1px solid var(--color-border);
-  border-left: 4px solid var(--rarity-color); /* Borda de raridade à esquerda */
+  border-left: 4px solid var(--rarity-color);
   border-radius: 8px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
   position: relative;
-  height: 320px; /* Altura aumentada para mais info */
+  height: 280px; /* Altura ajustada */
 }
 
 .browse-skin-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-  border-color: var(--color-border); /* Mantém a cor da borda geral */
-  border-left-color: var(--rarity-color); /* Mantém a cor da borda de raridade */
 }
 
-.card-header {
-  padding: 0.75rem 1rem;
-  background: rgba(0,0,0,0.2);
-}
-
-.item-name {
-  color: var(--color-text-bright);
-  font-weight: 600;
-  font-size: 1rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin: 0;
-}
-
-.item-rarity-text {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--rarity-color);
-}
-
+/* Container da imagem agora ocupa o espaço principal */
 .card-image-container {
   flex-grow: 1;
   display: flex;
+  flex-direction: column; /* Para empilhar o nome e a imagem */
   align-items: center;
-  justify-content: center;
+  justify-content: space-around; /* Para espaçar o nome e a imagem */
   padding: 1rem;
-  position: relative; /* Para posicionar os stickers */
+  position: relative;
   background: radial-gradient(circle, rgba(42, 71, 94, 0.2) 0%, rgba(27, 40, 56, 0.1) 70%);
 }
 
-.item-image {
-  max-width: 100%;
-  max-height: 140px;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+/* Estilo para o nome do item sobre a imagem */
+.item-name-overlay {
+  color: var(--color-text-bright);
+  font-weight: 600;
+  font-size: 1rem;
+  text-align: center;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 0.5rem;
+  z-index: 2;
 }
 
-/* Container para os stickers sobre a imagem */
+.item-image {
+  max-width: 90%;
+  max-height: 120px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+  z-index: 1;
+}
+
+/* Posição dos stickers ajustada */
 .card-stickers-wrapper {
   position: absolute;
-  bottom: 15px;
+  bottom: 10px; /* Perto da parte de baixo da área da imagem */
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   gap: 8px;
+  z-index: 3;
 }
 
 .card-sticker-image {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
   filter: drop-shadow(0 2px 3px rgba(0,0,0,0.6));
 }
-
 
 .card-info-footer {
   padding: 0.75rem 1rem;
@@ -87,6 +81,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  flex-shrink: 0; /* Impede que o footer encolha */
 }
 
 .price-line {
@@ -96,12 +91,11 @@
 }
 
 .item-price {
-  color: #a5d470; /* Verde claro para o preço */
+  color: #a5d470;
   font-weight: 700;
   font-size: 1.2rem;
 }
 
-/* Ajustes no FloatBar para este contexto */
 .card-info-footer .float-bar-container {
   margin-top: 4px;
 }
