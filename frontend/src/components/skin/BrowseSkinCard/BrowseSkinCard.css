@@ -3,40 +3,62 @@
 /* --- WRAPPER GERAL --- */
 .browse-card-wrapper {
   position: relative;
-  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, border-radius 0.2s ease;
   text-decoration: none;
   border-radius: 8px;
   background-color: #2c3541;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   
-  /* A borda fica no wrapper para envolver tudo */
+  /* Borda padrão */
   border: 1px solid #3a4655;
+  
+  /* Necessário para o z-index funcionar */
+  z-index: 1; 
 }
 
+/* HOVER NO WRAPPER */
 .browse-card-wrapper:hover {
   transform: translateY(-5px);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  z-index: 100; /* Traz para a frente */
+  
+  /* CORREÇÃO VISUAL: Remove o arredondamento inferior para colar aos botões */
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  
+  /* A borda muda de cor para o azul (accent) */
+  border-color: var(--color-accent);
+  
+  /* Truque: Torna a borda de baixo transparente para não criar a linha divisória */
+  border-bottom-color: transparent; 
 }
 
-/* Na página /skins, a borda do wrapper muda de cor */
+/* Na página /skins, a borda do wrapper muda de cor (mantém compatibilidade) */
 .browse-card-link:hover {
     border-color: var(--color-accent);
 }
 
 /* --- O CARD PRINCIPAL VISÍVEL --- */
 .browse-skin-card {
-  border-radius: 8px; /* Mantém o arredondamento interno */
+  border-radius: 8px; /* Arredondamento inicial */
   overflow: hidden;
   display: flex;
   flex-direction: column;
   height: 340px;
   position: relative;
-  z-index: 2; /* Fica por cima da secção de ações */
-  background-color: transparent; /* O fundo já está no wrapper */
-  border: none; /* Já não precisa de borda própria */
+  z-index: 2;
+  background-color: transparent;
+  border: none;
+  transition: border-radius 0.2s ease;
 }
 
-/* --- ESTILOS INTERNOS (maioritariamente inalterados) --- */
+/* Quando damos hover no wrapper, o card interno também perde o arredondamento em baixo */
+.browse-card-wrapper:hover .browse-skin-card {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* --- ESTILOS INTERNOS (Mantidos iguais) --- */
 .card-header { padding: 0.8rem 1rem; border-bottom: 1px solid #3a4655; text-align: center; flex-shrink: 0; min-height: 50px; display: flex; align-items: center; justify-content: center; background-color: #2c3541; }
 .item-name { color: var(--color-text-bright); font-weight: 600; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; }
 .card-image-container { flex-grow: 1; display: flex; align-items: center; justify-content: center; position: relative; padding: 0.5rem; }
@@ -53,11 +75,17 @@
 .item-rarity-text { font-size: 0.85rem; font-weight: 500; }
 .last-checked { font-size: 0.75rem; color: var(--color-text); opacity: 0.6; font-style: italic; white-space: nowrap; }
 
-/* --- A LÓGICA DE HOVER DE EXPANSÃO (CORRIGIDA) --- */
+/* --- A LÓGICA DE HOVER DE EXPANSÃO (CORRIGIDA E MELHORADA) --- */
 .card-hover-actions {
-  /* É um filho direto do .browse-card-wrapper */
-  padding: 0 1rem;
-  background-color: #2c3541; /* Mesma cor de fundo do wrapper */
+  position: absolute;
+  top: 100%; 
+  left: -1px; /* Compensa a borda do pai */
+  width: calc(100% + 2px); /* Compensa as bordas laterais */
+  z-index: 50;
+  
+  background-color: #2c3541; /* Mesma cor de fundo do cartão */
+  
+  /* Borda arredondada só em baixo */
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
   
@@ -65,19 +93,50 @@
   justify-content: space-around;
   gap: 1rem;
   
-  /* Escondido por padrão, colapsando a altura */
+  /* Configuração inicial da animação */
   max-height: 0;
   opacity: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out, padding 0.3s ease-in-out;
+  padding: 0 1rem; /* Padding lateral inicial */
+  
+  /* Transições suaves */
+  transition: 
+    max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.2s ease-in,
+    padding 0.3s ease,
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Começa ligeiramente "subido" para deslizar para baixo */
+  transform: translateY(-10px);
+  
+  /* TRUQUE PARA ELIMINAR A LINHA: Margem negativa para subir e cobrir a junção */
+  margin-top: -1px;
+  
+  /* Borda lateral e inferior transparente inicialmente */
+  border-left: 1px solid transparent;
+  border-right: 1px solid transparent;
+  border-bottom: 1px solid transparent;
+  border-top: none; /* Nunca tem borda em cima */
+  
+  box-sizing: border-box;
 }
-/* NO HOVER DO WRAPPER (apenas na pág. de detalhes), AS AÇÕES EXPANDEM-SE PARA BAIXO */
+
+/* NO HOVER DO WRAPPER */
 .skin-cards-grid .browse-card-wrapper:hover .card-hover-actions {
-  max-height: 100px;
+  max-height: 100px; /* Altura suficiente para os botões */
   opacity: 1;
-  padding: 1.5rem 1rem;
+  padding: 1rem; /* Padding final */
+  transform: translateY(0); /* Desliza para a posição final */
+  
+  /* Borda azul aparece */
+  border-color: var(--color-accent);
+  
+  /* Sombra para dar profundidade em relação aos cartões de baixo */
+  box-shadow: 0 10px 15px rgba(0,0,0,0.3);
 }
-.action-btn { flex: 1; padding: 0.8rem 1rem; font-size: 1rem; font-weight: 600; border-radius: 6px; border: none; cursor: pointer; transition: filter 0.2s ease; }
+
+.action-btn { flex: 1; padding: 0.8rem 1rem; font-size: 1rem; font-weight: 600; border-radius: 6px; border: none; cursor: pointer; transition: filter 0.2s ease, transform 0.1s ease; }
+.action-btn:active { transform: scale(0.95); }
 .action-btn:hover { filter: brightness(1.1); }
 .action-btn.inspect-btn { background-color: var(--color-accent); color: var(--color-bg-dark); }
 .action-btn.buy-btn { background: linear-gradient(to bottom, #78b766, #5c9e10); color: white; border: 1px solid #4a6809; }
@@ -94,17 +153,12 @@
   width: 40px;
   height: 40px;
 }
-/* A borda azul no hover agora é controlada pelo wrapper */
-.skin-cards-grid .browse-card-wrapper:hover {
-    border-color: var(--color-accent);
-}
-
 
 /* CORREÇÃO: Estilo e posicionamento do 'last checked' */
 .last-checked-line {
   display: flex;
-  justify-content: flex-end; /* Alinha à direita */
-  margin-top: 2px; /* Pequeno espaço acima */
+  justify-content: flex-end;
+  margin-top: 2px;
 }
 .last-checked-line span {
   font-size: 0.8rem; 
