@@ -3,9 +3,7 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from './pages/home/HomePage';
 import SkinDetailPage from './pages/skin/SkinDetailPage';
-// Remova a importação do SkinSelectorPage
-// import SkinSelectorPage from './pages/skin/SkinSelectorPage'; 
-import BrowseSkinsPage from './pages/browse/BrowseSkinsPage'; // <-- IMPORTE A NOVA PÁGINA
+import BrowseSkinsPage from './pages/browse/BrowseSkinsPage';
 import SubscriptionPage from './pages/subscriptions/SubscriptionPage';
 import AdminPage from './pages/admin/AdminPage';
 import Header from './components/layout/Header/Header';
@@ -15,6 +13,7 @@ import SearchBar from './components/ui/SearchBar/SearchBar';
 import './App.css';
 import PrivateRoute from './utils/PrivateRoute';
 import AdminRoute from './utils/AdminRoute';
+import LastSearchesBar from './components/ui/LastSearchesBar/LastSearchesBar';
 
 function App() {
   const [isSearchActive, setIsSearchActive] = useState(false);
@@ -23,6 +22,7 @@ function App() {
     <Router>
       <div className="app-container">
         <Header setIsSearchActive={setIsSearchActive} />
+         <LastSearchesBar />
         <SearchBar isSearchActive={isSearchActive} setIsSearchActive={setIsSearchActive} />
         <main className="main-content">
           <Routes>

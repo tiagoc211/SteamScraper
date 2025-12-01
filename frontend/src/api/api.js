@@ -136,3 +136,13 @@ export const inspectSkin = async (inspectLink) => {
         return null;
     }
 };
+
+export const getLatestItems = async () => {
+  try {
+    const response = await apiClient.get('/api/items/latest');
+    return response.data.items || [];
+  } catch (error) {
+    console.error('Error fetching latest items:', error);
+    return [];
+  }
+};

@@ -1,0 +1,236 @@
+/* frontend/src/components/ui/LastSearchesBar/LastSearchesBar.css */
+
+.last-searches-container {
+  width: 100%;
+  height: 70px;
+  background-color: rgba(15, 19, 26, 0.95);
+  border-bottom: 1px solid rgba(42, 71, 94, 0.6);
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 900;
+  backdrop-filter: blur(8px);
+  user-select: none; /* Evita selecionar texto enquanto arrasta */
+}
+
+/* Etiqueta Fixa */
+.ls-label {
+  background-color: #1b2838;
+  color: var(--color-accent);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1.5rem;
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-right: 1px solid rgba(42, 71, 94, 0.6);
+  box-shadow: 5px 0 15px rgba(0,0,0,0.3);
+  z-index: 10;
+  flex-shrink: 0;
+  gap: 8px;
+  pointer-events: none; /* O rato passa através do label se necessário */
+}
+
+.pulsing-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: pulse-green 2s infinite;
+}
+
+/* Área de Arrastar */
+.ls-drag-area {
+  flex-grow: 1;
+  height: 100%;
+  overflow: hidden; /* Esconde o que sai da tela */
+  cursor: grab; /* Cursor de mãozinha */
+}
+
+.ls-drag-area:active {
+  cursor: grabbing; /* Mão fechada ao arrastar */
+}
+
+/* Wrapper da Lista (Motion Div) */
+.ls-list-wrapper {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding-left: 10px;
+  gap: 10px;
+  width: max-content; /* Permite que cresça para caber os itens */
+}
+
+.ls-item-wrapper {
+  flex-shrink: 0;
+}
+
+/* O Cartão Individual */
+.ls-card {
+  display: flex;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 5px 12px 5px 5px;
+  height: 50px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  width: 220px;
+}
+
+.ls-card:hover {
+  background-color: rgba(102, 192, 244, 0.1);
+  border-color: var(--color-accent);
+}
+
+.ls-img-container {
+  width: 45px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+}
+
+.ls-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+.ls-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.ls-name {
+  color: var(--color-text-bright);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 150px;
+}
+
+.ls-price {
+  color: #a5d470;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* --- ESTILOS DO POPUP (PORTAL) --- */
+/* Este estilo aplica-se ao div que é renderizado no body */
+.ls-portal-popup {
+  position: fixed; /* Usa fixed porque é relativo à janela (Portal) */
+  width: 240px;
+  background-color: #2c3541;
+  border: 1px solid var(--color-accent);
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+  z-index: 9999; /* Muito alto para ficar acima de tudo */
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  pointer-events: auto; /* IMPORTANTE: Permite clicar nos botões */
+}
+
+/* Seta do Popup */
+.ls-portal-popup::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 20px;
+  width: 12px;
+  height: 12px;
+  background-color: #2c3541;
+  border-left: 1px solid var(--color-accent);
+  border-top: 1px solid var(--color-accent);
+  transform: rotate(45deg);
+}
+
+.ls-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 0.5rem;
+}
+
+.ls-popup-price {
+  color: #a5d470;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.ls-popup-float {
+  font-size: 0.75rem;
+  color: #ccc;
+  background: rgba(0,0,0,0.3);
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+.ls-popup-img-wrapper {
+  width: 100%;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+}
+
+.ls-popup-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
+  transform: scale(1.1);
+}
+
+.ls-popup-name {
+  color: var(--color-text-bright);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.ls-popup-cta {
+  display: block;
+  background-color: var(--color-accent);
+  color: var(--color-bg-dark);
+  text-align: center;
+  padding: 0.6rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-decoration: none;
+  margin-top: 0.2rem;
+  transition: filter 0.2s;
+}
+
+.ls-popup-cta:hover {
+  filter: brightness(1.1);
+  color: var(--color-bg-dark);
+}
+
+@keyframes pulse-green {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+@media (max-width: 768px) {
+  .ls-portal-popup { display: none; } /* Esconde em mobile para não atrapalhar */
+}

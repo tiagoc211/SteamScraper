@@ -4,6 +4,24 @@ const pool = require('../db/index.js');
 
 const router = express.Router();
 
+router.get('/latest', async (req, res) => {
+  try {
+    // Busca as 20 skins mais recentes baseadas no scraped_at
+    const query = `
+      SELECT listing_id, market_hash_name, icon_url, price, float_value, scraped_at
+      FROM listings
+      ORDER BY scraped_at DESC
+      LIMIT 20
+    `;
+    const { rows } = await pool.query(query);
+    
+    res.json({ success: true, items: rows });
+  } catch (err) {
+    console.error('Erro ao buscar últimas skins:', err);
+    res.status(500).json({ success: false, items: [] });
+  }
+});
+
 // ROTA PARA A PÁGINA /skins (BrowseSkinsPage) - AGORA MUITO MAIS RÁPIDA
 router.get('/', async (req, res) => {
   const { 
