@@ -155,4 +155,18 @@ router.get('/', async (req, res) => {
   }
 });
 
+// ROTA PARA BUSCAR AS ARMAS MAIS CARAS
+router.get('/most-expensive', async (req, res) => {
+  const { getMostExpensiveItems } = require('../db/listings.js');
+  
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const items = await getMostExpensiveItems(limit);
+    res.json({ success: true, items });
+  } catch (err) {
+    console.error('Erro ao buscar armas mais caras:', err);
+    res.status(500).json({ success: false, message: 'Erro ao buscar armas mais caras.' });
+  }
+});
+
 module.exports = router;

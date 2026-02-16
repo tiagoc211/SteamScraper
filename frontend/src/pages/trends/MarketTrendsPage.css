@@ -2,10 +2,125 @@
 
 .market-analytics-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #0a1628 0%, #1a2942 50%, #0f1c30 100%);
   padding: 2rem;
   overflow-x: hidden;
   max-width: 100vw;
+}
+
+/* Expensive Items Banner */
+.expensive-items-banner {
+  background: linear-gradient(135deg, rgba(30, 30, 50, 0.95), rgba(20, 20, 40, 0.98));
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 2.5rem;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(255, 215, 0, 0.15);
+}
+
+.banner-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.banner-header h2 {
+  font-size: 2rem;
+  margin: 0 0 0.5rem 0;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
+}
+
+.banner-header p {
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  margin: 0;
+  opacity: 0.9;
+}
+
+.banner-items-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.banner-item-card {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 12px;
+  padding: 1rem;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.banner-item-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(255, 215, 0, 0.5);
+  box-shadow: 0 8px 24px rgba(255, 215, 0, 0.2);
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.banner-item-image {
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.banner-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(255, 215, 0, 0.3));
+}
+
+.banner-item-info {
+  text-align: center;
+  width: 100%;
+}
+
+.banner-item-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 0.75rem 0;
+  min-height: 2.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.banner-item-prices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.banner-avg-price {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #FFD700;
+}
+
+.banner-max-price {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.banner-listing-count {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  opacity: 0.8;
 }
 
 /* Header */

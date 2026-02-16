@@ -87,4 +87,34 @@ async function getListingsByItemId(itemId, { page = 1, limit = 24, sortBy = 'pri
 }
 
 
-module.exports = { upsertListings, getListingsByItemId };
+/**
+ * Busca as armas mais caras da base de dados (preço médio mais alto)
+ */
+async function getMostExpensiveItems(limit = 10) {
+  const query = `
+    SELECT 
+      market_hash_name,
+      MAX(icon_url) as icon_url,
+      ROUND(AVG(price)) as avg_price,
+      MAX(price) as max_price,
+      MIN(price) as min_price,
+      COUNT(*) as listing_count
+    FROM listings
+    WHERE price > 0 AND market_hash_name IS NOT NULL
+    GROUP BY market_hash_name
+    HAVING COUNT(*) >= 1
+    ORDER BY AVG(price) DESC
+    LIMIT $1;
+  `;
+
+  try {
+    const { rows } = await pool.query(query, [limit]);
+    console.log(`✅ Fetched ${rows.length} most expensive items`);
+    return rows;
+  } catch (err) {
+    console.error('Erro ao buscar armas mais caras:', err);
+    throw err;
+  }
+}
+
+module.exports = { upsertListings, getListingsByItemId, getMostExpensiveItems };

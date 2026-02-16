@@ -1,7 +1,7 @@
 // frontend/src/pages/trends/MarketTrendsPage.js
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getTopGainers, getTopLosers, getBestLiquidity, getLowestFloats } from '../../api/api';
+import { getTopGainers, getTopLosers, getBestLiquidity, getLowestFloats, getMostExpensiveItems } from '../../api/api';
 import './MarketTrendsPage.css';
 
 const TrendCard = ({ item, type }) => {
@@ -115,29 +115,33 @@ const FloatCard = ({ item, rank }) => {
   );
 };
 
-const MarketTrendsPage = () => {
+const MarketTrendsPage = ({ showHeader = true, fixedTimeframe = null }) => {
   const [topGainers, setTopGainers] = useState([]);
   const [topLosers, setTopLosers] = useState([]);
   const [bestLiquidity, setBestLiquidity] = useState([]);
   const [lowestFloats, setLowestFloats] = useState([]);
+  const [mostExpensive, setMostExpensive] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [timeframe, setTimeframe] = useState(7);
+  const [timeframe, setTimeframe] = useState(fixedTimeframe || 7);
 
   useEffect(() => {
     const fetchTrends = async () => {
       setLoading(true);
       try {
-        const [gainersData, losersData, liquidityData, floatsData] = await Promise.all([
-          getTopGainers(timeframe, 10),
-          getTopLosers(timeframe, 10),
+        const effectiveTimeframe = fixedTimeframe || timeframe;
+        const [gainersData, losersData, liquidityData, floatsData, expensiveData] = await Promise.all([
+          getTopGainers(effectiveTimeframe, 10),
+          getTopLosers(effectiveTimeframe, 10),
           getBestLiquidity(10),
-          getLowestFloats(10)
+          getLowestFloats(10),
+          getMostExpensiveItems(8)
         ]);
         
         setTopGainers(gainersData.items || []);
         setTopLosers(losersData.items || []);
         setBestLiquidity(liquidityData.items || []);
         setLowestFloats(floatsData.items || []);
+        setMostExpensive(expensiveData.items || []);
       } catch (error) {
         console.error('Error fetching trends:', error);
       } finally {
@@ -146,43 +150,90 @@ const MarketTrendsPage = () => {
     };
 
     fetchTrends();
-  }, [timeframe]);
+  }, [timeframe, fixedTimeframe]);
+
+  const formatPrice = (cents) => (cents / 100).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' });
 
   return (
     <div className="market-analytics-page">
-      <header className="analytics-header">
-        <div className="header-content">
-          <div className="header-title-section">
-            <h1>Market Analytics</h1>
-            <p className="analytics-subtitle">Análise avançada de mercado em tempo real</p>
+      {showHeader && (
+        <header className="analytics-header">
+          <div className="header-content">
+            <div className="header-title-section">
+              <h1>Market Analytics</h1>
+              <p className="analytics-subtitle">Análise avançada de mercado em tempo real</p>
+            </div>
+            {!fixedTimeframe && (
+              <div className="timeframe-selector">
+                <button 
+                  className={`timeframe-btn ${timeframe === 1 ? 'active' : ''}`}
+                  onClick={() => setTimeframe(1)}
+                >
+                  24h
+                </button>
+                <button 
+                  className={`timeframe-btn ${timeframe === 7 ? 'active' : ''}`}
+                  onClick={() => setTimeframe(7)}
+                >
+                  7 dias
+                </button>
+                <button 
+                  className={`timeframe-btn ${timeframe === 30 ? 'active' : ''}`}
+                  onClick={() => setTimeframe(30)}
+                >
+                  30 dias
+                </button>
+              </div>
+            )}
           </div>
-          <div className="timeframe-selector">
-            <button 
-              className={`timeframe-btn ${timeframe === 1 ? 'active' : ''}`}
-              onClick={() => setTimeframe(1)}
-            >
-              24h
-            </button>
-            <button 
-              className={`timeframe-btn ${timeframe === 7 ? 'active' : ''}`}
-              onClick={() => setTimeframe(7)}
-            >
-              7 dias
-            </button>
-            <button 
-              className={`timeframe-btn ${timeframe === 30 ? 'active' : ''}`}
-              onClick={() => setTimeframe(30)}
-            >
-              30 dias
-            </button>
-          </div>
-        </div>
-      </header>
-
+        </header>
+      )}
+      
       {loading ? (
         <div className="analytics-loader">A carregar dados...</div>
       ) : (
-        <div className="analytics-dashboard">
+        <>
+          {/* Faixa de armas mais caras */}
+          <div className="expensive-items-banner">
+            <div className="banner-header">
+              <h2>🔥 Armas Mais Caras</h2>
+              <p>As skins mais valiosas do mercado</p>
+            </div>
+            <div className="banner-items-container">
+              {mostExpensive.length > 0 ? (
+                mostExpensive.map((item, index) => {
+                  const imageUrl = item.icon_url 
+                    ? `https://community.akamai.steamstatic.com/economy/image/${item.icon_url}/200fx200f`
+                    : 'https://via.placeholder.com/200';
+                  
+                  return (
+                    <Link 
+                      key={index} 
+                      to={`/skin/${encodeURIComponent(item.market_hash_name)}`} 
+                      className="banner-item-card"
+                    >
+                      <div className="banner-item-image">
+                        <img src={imageUrl} alt={item.market_hash_name} />
+                      </div>
+                      <div className="banner-item-info">
+                        <h4 className="banner-item-name">{item.market_hash_name}</h4>
+                        <div className="banner-item-prices">
+                          <span className="banner-avg-price">{formatPrice(item.avg_price)}</span>
+                          <span className="banner-max-price">Max: {formatPrice(item.max_price)}</span>
+                        </div>
+                        <span className="banner-listing-count">{item.listing_count} disponíveis</span>
+                      </div>
+                    </Link>
+                  );
+                })
+              ) : (
+                <div className="no-data">Sem dados</div>
+              )}
+            </div>
+          </div>
+          
+          {/* Analytics Dashboard */}
+          <div className="analytics-dashboard">
           <div className="dashboard-row">
             <section className="analytics-section gainers-section">
               <div className="section-header">
@@ -251,6 +302,7 @@ const MarketTrendsPage = () => {
             </section>
           </div>
         </div>
+        </>
       )}
     </div>
   );

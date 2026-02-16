@@ -222,3 +222,13 @@ export const getLowestFloats = async (limit = 20) => {
     return { success: false, items: [] };
   }
 };
+
+export const getMostExpensiveItems = async (limit = 10) => {
+  try {
+    const response = await apiClient.get('/api/items/most-expensive', { params: { limit } });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching most expensive items:', error);
+    return { success: false, items: [] };
+  }
+};

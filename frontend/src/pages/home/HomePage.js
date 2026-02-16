@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import TrueFocus from '../../components/ui/TrueFocus/TrueFocus'; // <-- Caminho corrigido
 import StickerPeel from '../../components/ui/StickerPeel/StickerPeel'; // <-- Caminho corrigido
-import FeaturesSection from '../../components/home/FeaturesSection/FeaturesSection'; // <-- Caminho corrigido
+import MarketTrendsPage from '../trends/MarketTrendsPage';
 import StarBorder from '../../components/ui/StarBorder/StarBorder'; // <-- Caminho corrigido
 import './HomePage.css';
 
@@ -76,7 +76,7 @@ const HomePage = () => {
         </div>
       </div>
       
-      <FeaturesSection />
+      <MarketTrendsPage showHeader={false} fixedTimeframe={7} />
     </>
   );
 };
