@@ -5,6 +5,7 @@ import HomePage from './pages/home/HomePage';
 import SkinDetailPage from './pages/skin/SkinDetailPage';
 import BrowseSkinsPage from './pages/browse/BrowseSkinsPage';
 import SubscriptionPage from './pages/subscriptions/SubscriptionPage';
+import MarketTrendsPage from './pages/trends/MarketTrendsPage';
 import AdminPage from './pages/admin/AdminPage';
 import Header from './components/layout/Header/Header';
 import Footer from './components/layout/Footer/Footer';
@@ -30,6 +31,7 @@ function App() {
             {/* CORREÇÃO: A rota /skins agora renderiza a BrowseSkinsPage */}
             <Route path="/skins" element={<BrowseSkinsPage />} /> 
             <Route path="/skin/:marketHashName" element={<SkinDetailPage />} />
+            <Route path="/analytics" element={<MarketTrendsPage />} />
             <Route path="/settings" element={<PrivateRoute> <UserSettingsPage/> </PrivateRoute>} />
             <Route path="/subscriptions" element={<SubscriptionPage />} />
             <Route path="/admin" element={<PrivateRoute> <AdminRoute> <AdminPage /> </AdminRoute> </PrivateRoute>} />

@@ -3,6 +3,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args));
 const { HttpsProxyAgent } = require('https-proxy-agent');
 const { knives } = require('./data');
+const pool = require('./db');
 
 const fetcher = {
   fetchFirstPage: null,
@@ -10,6 +11,42 @@ const fetcher = {
   fetchSearchPage: null,
   ready: null
 };
+
+// Guarda o preço mais barato (primeira listing) no histórico
+async function savePriceSnapshot(marketHashName, listings) {
+  try {
+    if (!listings || listings.length === 0) return;
+    
+    // Pegar os preços das listings
+    const prices = listings
+      .map(l => l.converted_price)
+      .filter(p => p && p > 0);
+    
+    if (prices.length === 0) return;
+    
+    const today = new Date().toISOString().split('T')[0];
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const avgPrice = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
+    
+    await pool.query(`
+      INSERT INTO price_history 
+        (market_hash_name, date, avg_price, min_price, max_price, listing_count)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      ON CONFLICT (market_hash_name, date) 
+      DO UPDATE SET
+        avg_price = EXCLUDED.avg_price,
+        min_price = EXCLUDED.min_price,
+        max_price = EXCLUDED.max_price,
+        listing_count = EXCLUDED.listing_count,
+        updated_at = CURRENT_TIMESTAMP
+    `, [marketHashName, today, avgPrice, minPrice, maxPrice, prices.length]);
+    
+    console.log(`📊 Preço guardado: ${marketHashName} = ${minPrice}¢`);
+  } catch (error) {
+    // Ignora erros silenciosamente (tabela pode não existir ainda)
+  }
+}
 
 function AddStar(itemName) {
   // procura se começa com algum nome de faca da lista
@@ -70,7 +107,15 @@ async function initialize() {
   async function fetchFirstPage(itemName) {
     itemName = AddStar(itemName);
     const url = `${BASE_LISTING_URL}/${encodeURIComponent(itemName)}/render/?start=0&count=100&country=PT&language=portuguese&currency=3`;
-    return await fetchPage(url, itemName, 1);
+    const result = await fetchPage(url, itemName, 1);
+    
+    // Guardar snapshot do preço (não bloqueia a resposta)
+    if (result && result.success && result.listinginfo) {
+      const listings = Object.values(result.listinginfo);
+      savePriceSnapshot(itemName, listings).catch(() => {});
+    }
+    
+    return result;
   }
 
   async function fetchSpecificPage(itemName, pageNumber) {

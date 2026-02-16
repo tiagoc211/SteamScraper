@@ -1,0 +1,492 @@
+/* Market Analytics Page - Professional Dashboard Layout */
+
+.market-analytics-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a1628 0%, #1a2942 50%, #0f1c30 100%);
+  padding: 2rem;
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Header */
+.analytics-header {
+  background: linear-gradient(135deg, rgba(30, 30, 50, 0.9), rgba(20, 20, 40, 0.95));
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.header-title-section h1 {
+  font-size: 2.5rem;
+  margin: 0 0 0.5rem 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
+}
+
+.analytics-subtitle {
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  margin: 0;
+  opacity: 0.8;
+}
+
+.timeframe-selector {
+  display: flex;
+  gap: 0.75rem;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.5rem;
+  border-radius: 10px;
+}
+
+.timeframe-btn {
+  background: transparent;
+  border: 2px solid transparent;
+  color: var(--color-text-muted);
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.timeframe-btn:hover {
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.timeframe-btn.active {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.analytics-loader {
+  text-align: center;
+  padding: 4rem;
+  font-size: 1.2rem;
+  color: var(--color-text-muted);
+}
+
+/* Dashboard Layout */
+.analytics-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.dashboard-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+/* Section Cards */
+.analytics-section {
+  background: linear-gradient(135deg, rgba(30, 30, 50, 0.8), rgba(20, 20, 40, 0.9));
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.section-header {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.section-header h2 {
+  font-size: 1.4rem;
+  margin: 0 0 0.35rem 0;
+  font-weight: 700;
+}
+
+.section-header p {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  margin: 0;
+  opacity: 0.8;
+}
+
+.gainers-section .section-header h2 {
+  color: #10b981 !important;
+}
+
+.losers-section .section-header h2 {
+  color: #ef4444 !important;
+}
+
+.liquidity-section .section-header h2 {
+  color: #3b82f6 !important;
+}
+
+.floats-section .section-header h2 {
+  color: #06b6d4 !important;
+}
+
+/* Horizontal Scroll Container */
+.horizontal-scroll {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  flex: 1;
+  align-content: start;
+}
+
+/* Trend Cards - Compact Horizontal */
+.trend-card {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  color: inherit;
+  backdrop-filter: blur(10px);
+}
+
+.trend-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(102, 126, 234, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.trend-card-top {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.trend-card-image {
+  flex-shrink: 0;
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 0.75rem;
+}
+
+.trend-card-image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+}
+
+.trend-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.trend-card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  min-height: 2.5em;
+}
+
+.trend-card-prices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.85rem;
+  gap: 0.75rem;
+}
+
+.price-label {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.price-value {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.price-value.current {
+  color: var(--color-text-bright);
+}
+
+.price-value.past {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* Change Badge */
+.trend-card-change {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 0.25rem;
+}
+
+.trend-card-change.positive {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border-top-color: rgba(16, 185, 129, 0.3);
+}
+
+.trend-card-change.negative {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-top-color: rgba(239, 68, 68, 0.3);
+}
+
+.change-arrow {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.change-percent {
+  font-size: 1.2rem;
+}
+
+.change-amount {
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
+/* Liquidity Card */
+.liquidity-stats {
+  display: flex;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 0.25rem;
+}
+
+.liquidity-badge,
+.liquidity-score-badge {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+}
+
+.liquidity-badge {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.liquidity-score-badge {
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.liquidity-count,
+.score-value {
+  font-weight: 800;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.liquidity-count {
+  color: #3b82f6;
+}
+
+.score-value {
+  color: #8b5cf6;
+}
+
+.liquidity-label,
+.score-label {
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  line-height: 1;
+  font-weight: 600;
+}
+
+/* Float Card */
+.float-card {
+  position: relative;
+}
+
+.float-rank {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: white;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.5);
+}
+
+.floats-section .float-rank {
+  background: linear-gradient(135deg, #06b6d4, #0891b2) !important;
+}
+
+.gainers-section .float-rank {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+}
+
+.losers-section .float-rank {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+}
+
+.float-value-display {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  text-shadow: 0 0 12px currentColor;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.5rem;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.float-card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.float-card-price {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #a5d470;
+}
+
+.float-card-seed {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.35rem 0.6rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.no-data {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  opacity: 0.6;
+  width: 100%;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .dashboard-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .horizontal-scroll {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .market-analytics-page {
+    padding: 1rem;
+  }
+
+  .header-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-title-section h1 {
+    font-size: 2rem;
+  }
+
+  .timeframe-selector {
+    justify-content: center;
+  }
+
+  .analytics-section {
+    padding: 1rem;
+  }
+
+  .horizontal-scroll {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .trend-card-image {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .trend-card {
+    padding: 1rem;
+  }
+
+  .header-title-section h1 {
+    font-size: 1.75rem;
+  }
+  
+  .trend-card-title {
+    font-size: 0.85rem;
+    min-height: 2.2em;
+  }
+}

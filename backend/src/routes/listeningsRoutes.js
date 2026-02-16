@@ -57,12 +57,25 @@ async function parseAndProcessSteamData(steamData, marketHashName) {
         let floatData = {};
         if (inspectLink) {
             try {
-                const inspectRes = await fetch(`${process.env.FLOAT_INSPECT_URL}/?url=${encodeURIComponent(inspectLink)}`);
+                const inspectRes = await fetch(`${process.env.FLOAT_INSPECT_URL}/?url=${encodeURIComponent(inspectLink)}`, {
+                    timeout: 5000 // 5 segundos de timeout
+                });
                 if (inspectRes.ok) {
-                    floatData = (await inspectRes.json()).iteminfo || {};
+                    const jsonData = await inspectRes.json();
+                    floatData = jsonData.iteminfo || {};
+                    if (floatData.floatvalue) {
+                        console.log(`✓ Float obtido para ${listingid}: ${floatData.floatvalue}`);
+                    }
+                } else {
+                    console.warn(`⚠️ Serviço de inspect retornou status ${inspectRes.status} para listing ${listingid}`);
                 }
             } catch (e) {
-                console.warn(`Chamada à API de Float falhou para o listing ${listingid}:`, e.message);
+                if (listingid === Object.keys(steamData.listinginfo)[0]) {
+                    // Só mostra o erro completo uma vez por página
+                    console.error(`❌ FLOAT_INSPECT_URL (${process.env.FLOAT_INSPECT_URL}) não está acessível!`);
+                    console.error(`   Configure um serviço de inspect local ou use uma API pública.`);
+                    console.error(`   Erro: ${e.message}`);
+                }
             }
         }
 
@@ -85,7 +98,7 @@ async function parseAndProcessSteamData(steamData, marketHashName) {
             inspectLink,
             stickers: stickers.map(s => s.img),
             keychains: keychains,
-            raw: { ...assetInfo, ...floatData, name: marketHashName },
+            raw: { ...assetInfo, ...floatData, name: marketHashName, stickers: stickers },
             buy: {
                 subtotalCents: listingInfo.converted_price,
                 feeCents: listingInfo.converted_fee,
@@ -127,14 +140,17 @@ router.get('/:marketHashName', async (req, res) => {
         const { listingsForFrontend, listingsForDatabase } = await parseAndProcessSteamData(steamData, marketHashName);
         
         if (listingsForDatabase.length > 0) {
+            console.log(`💾 Guardando ${listingsForDatabase.length} listings com float na BD...`);
             findItemIdByMarketHashName(marketHashName).then(itemId => {
                 if (itemId) {
                     const listingsWithId = listingsForDatabase.map(l => ({ ...l, item_id: itemId }));
                     listingsDb.upsertListings(listingsWithId).catch(console.error);
                 } else {
-                    console.warn(`Não foi possível encontrar um item_id para '${marketHashName}', listings não foram guardados.`);
+                    console.warn(`⚠️ Item ID não encontrado para '${marketHashName}', listings não foram guardados.`);
                 }
             }).catch(console.error);
+        } else {
+            console.warn(`⚠️ Nenhum listing com float foi obtido. Verifique se o FLOAT_INSPECT_URL está configurado corretamente.`);
         }
 
         res.json({ 

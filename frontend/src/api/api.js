@@ -140,9 +140,85 @@ export const inspectSkin = async (inspectLink) => {
 export const getLatestItems = async () => {
   try {
     const response = await apiClient.get('/api/items/latest');
-    return response.data.items || [];
+    // Mapear os dados para o formato esperado pelo LastSearchesBar
+    const items = response.data.items || [];
+    return items.map(dbItem => ({
+      listing_id: dbItem.listing_id,
+      market_hash_name: dbItem.market_hash_name,
+      icon_url: dbItem.icon_url,
+      price: dbItem.price,
+      float_value: dbItem.float_value,
+      paint_seed: dbItem.paint_seed,
+      stickers: dbItem.stickers,
+      keychains: dbItem.keychains,
+      scraped_at: dbItem.scraped_at
+    }));
   } catch (error) {
     console.error('Error fetching latest items:', error);
     return [];
+  }
+};
+
+// ===================================================================================
+// TRENDS / MARKET ANALYSIS
+// ===================================================================================
+
+export const getTopGainers = async (days = 7, limit = 20) => {
+  try {
+    const response = await apiClient.get('/api/trends/top-gainers', { params: { days, limit } });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching top gainers:', error);
+    return { success: false, items: [] };
+  }
+};
+
+export const getTopLosers = async (days = 7, limit = 20) => {
+  try {
+    const response = await apiClient.get('/api/trends/top-losers', { params: { days, limit } });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching top losers:', error);
+    return { success: false, items: [] };
+  }
+};
+
+export const getBiggestChanges = async (days = 7, limit = 40) => {
+  try {
+    const response = await apiClient.get('/api/trends/biggest-changes', { params: { days, limit } });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching biggest changes:', error);
+    return { success: false, items: [] };
+  }
+};
+
+export const getItemPriceHistory = async (marketHashName, days = 30) => {
+  try {
+    const response = await apiClient.get(`/api/trends/item/${encodeURIComponent(marketHashName)}`, { params: { days } });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching item price history:', error);
+    return { success: false, history: [] };
+  }
+};
+
+export const getBestLiquidity = async (limit = 20) => {
+  try {
+    const response = await apiClient.get('/api/trends/best-liquidity', { params: { limit } });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching best liquidity:', error);
+    return { success: false, items: [] };
+  }
+};
+
+export const getLowestFloats = async (limit = 20) => {
+  try {
+    const response = await apiClient.get('/api/trends/lowest-floats', { params: { limit } });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching lowest floats:', error);
+    return { success: false, items: [] };
   }
 };

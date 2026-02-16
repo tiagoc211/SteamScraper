@@ -3,8 +3,12 @@ import HoverTooltip from '../../ui/HoverTooltip/HoverTooltip';
 import './FloatBar.css';
 
 const FloatBar = ({ floatValue, paintSeed }) => {
-  const floatPercent = (floatValue || 0) * 100;
-  const formattedFloat = (floatValue || 0).toFixed(12);
+  // Se não tiver float ou paint seed, retorna uma versão simplificada
+  const hasFloatData = floatValue != null && floatValue > 0;
+  
+  const floatPercent = hasFloatData ? floatValue * 100 : 0;
+  const formattedFloat = hasFloatData ? floatValue.toFixed(12) : 'N/A';
+  const displayPaintSeed = paintSeed != null ? paintSeed : 'N/A';
 
   const floatTooltipLines = [
     "Controls how much wear the skin has and ranges from 0-1",
@@ -18,7 +22,7 @@ const FloatBar = ({ floatValue, paintSeed }) => {
     <div className="float-bar-container">
       <div className="bar-wrapper">
         <div className="bar-background" />
-        <div className="indicator" style={{ left: `${floatPercent}%` }} />
+        {hasFloatData && <div className="indicator" style={{ left: `${floatPercent}%` }} />}
       </div>
       <div className="values-wrapper">
         <HoverTooltip 
@@ -33,7 +37,7 @@ const FloatBar = ({ floatValue, paintSeed }) => {
           lines={seedTooltipLines}
           position="bottom"
         >
-          <span className="paint-seed">{paintSeed}</span>
+          <span className="paint-seed">{displayPaintSeed}</span>
         </HoverTooltip>
       </div>
     </div>

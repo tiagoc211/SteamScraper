@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { enGB, pt } from 'date-fns/locale';
 import FloatBar from '../FloatBar/FloatBar';
+import HoverTooltip from '../../ui/HoverTooltip/HoverTooltip';
 import './BrowseSkinCard.css';
 
 const BrowseSkinCard = React.forwardRef(({ item, variant = 'browse' }, ref) => {
@@ -29,11 +30,12 @@ const BrowseSkinCard = React.forwardRef(({ item, variant = 'browse' }, ref) => {
       <div className="card-image-container">
         <img src={item.image} alt={item.name} className="item-image" loading="lazy" />
         
-        {/* CORREÇÃO: Os stickers agora estão dentro da área da imagem */}
         {item.stickers && item.stickers.length > 0 && (
           <div className="card-stickers-wrapper">
             {item.stickers.slice(0, 5).map((sticker, index) => (
-              <img key={index} src={sticker.img} alt={sticker.name} className="card-sticker-image" title={sticker.name} />
+              <HoverTooltip key={index} title={sticker.name} imageUrl={sticker.img} position="top">
+                <img src={sticker.img} alt={sticker.name} className="card-sticker-image" />
+              </HoverTooltip>
             ))}
           </div>
         )}
@@ -41,9 +43,11 @@ const BrowseSkinCard = React.forwardRef(({ item, variant = 'browse' }, ref) => {
         {item.keychains && item.keychains.length > 0 && (
           <div className="card-charms-wrapper">
             {item.keychains.map((charm, index) => (
-              <div key={index} className="card-charm-container" title={charm.name}>
-                <img src={charm.image_url} alt={charm.name} className="card-charm-image" />
-              </div>
+              <HoverTooltip key={index} title={charm.name} imageUrl={charm.image_url} position="top">
+                <div className="card-charm-container">
+                  <img src={charm.image_url} alt={charm.name} className="card-charm-image" />
+                </div>
+              </HoverTooltip>
             ))}
           </div>
         )}

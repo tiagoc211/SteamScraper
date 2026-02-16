@@ -17,7 +17,10 @@ const LastSearchesBar = () => {
   const fetchLatest = async () => {
     try {
       const data = await getLatestItems();
-      if (!data || data.length === 0) return;
+      if (!data || data.length === 0) {
+        console.log("Nenhum item encontrado para Last Searches. Visite algumas skins para popular a lista.");
+        return;
+      }
 
       const newestItem = data[0];
       if (newestItem.listing_id !== previousFirstId.current) {

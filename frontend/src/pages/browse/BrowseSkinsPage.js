@@ -16,7 +16,7 @@ const BrowseSkinsPage = () => {
   const [hasMore, setHasMore] = useState(true);
   
   const [filters, setFilters] = useState({
-    search: '', category: 'Rifles', stattrak: false, souvenir: false,
+    search: '', category: 'All', stattrak: false, souvenir: false,
     sortBy: 'floatid', sortOrder: 'ASC', rarity: ''
   });
   
@@ -26,6 +26,7 @@ const BrowseSkinsPage = () => {
   // Função para buscar dados, agora isolada
   const fetchItems = useCallback((currentPage, currentFilters) => {
     setLoading(true);
+    console.log('🔍 Fetching items:', { page: currentPage, category: currentFilters.category, sortBy: currentFilters.sortBy });
     const params = { ...currentFilters, page: currentPage, limit: 100 };
     
     getBrowseItemsFromDB(params).then(data => {
