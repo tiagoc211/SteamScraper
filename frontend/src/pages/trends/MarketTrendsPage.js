@@ -1,7 +1,7 @@
 // frontend/src/pages/trends/MarketTrendsPage.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { getTopGainers, getTopLosers, getBestLiquidity, getLowestFloats, getMostExpensiveItems } from '../../api/api';
+import { getTopGainers, getTopLosers, getBestLiquidity, getLowestFloats, getRandomItems } from '../../api/api';
 import './MarketTrendsPage.css';
 
 const TrendCard = ({ item, type }) => {
@@ -15,7 +15,7 @@ const TrendCard = ({ item, type }) => {
   const changeClass = isPositive ? 'positive' : 'negative';
 
   return (
-    <Link to={`/skin/${encodeURIComponent(item.market_hash_name)}`} className="trend-card">
+    <Link to={`/skin/${encodeURIComponent(item.market_hash_name)}`} className="trend-card glass-panel">
       <div className="trend-card-top">
         <div className="trend-card-image">
           <img src={imageUrl} alt={item.market_hash_name} />
@@ -50,7 +50,7 @@ const LiquidityCard = ({ item }) => {
     : 'https://via.placeholder.com/200';
 
   return (
-    <Link to={`/skin/${encodeURIComponent(item.market_hash_name)}`} className="trend-card liquidity-card">
+    <Link to={`/skin/${encodeURIComponent(item.market_hash_name)}`} className="trend-card liquidity-card glass-panel">
       <div className="trend-card-top">
         <div className="trend-card-image">
           <img src={imageUrl} alt={item.market_hash_name} />
@@ -94,7 +94,7 @@ const FloatCard = ({ item, rank }) => {
   const floatColor = floatPercent < 1 ? '#00ff88' : floatPercent < 5 ? '#10b981' : floatPercent < 10 ? '#fbbf24' : '#ef4444';
 
   return (
-    <Link to={`/skin/${encodeURIComponent(item.market_hash_name)}`} className="trend-card float-card">
+    <Link to={`/skin/${encodeURIComponent(item.market_hash_name)}`} className="trend-card float-card glass-panel">
       <div className="float-rank">#{rank}</div>
       <div className="trend-card-top">
         <div className="trend-card-image">
@@ -120,28 +120,46 @@ const MarketTrendsPage = ({ showHeader = true, fixedTimeframe = null }) => {
   const [topLosers, setTopLosers] = useState([]);
   const [bestLiquidity, setBestLiquidity] = useState([]);
   const [lowestFloats, setLowestFloats] = useState([]);
-  const [mostExpensive, setMostExpensive] = useState([]);
+  const [randomItems, setRandomItems] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [timeframe, setTimeframe] = useState(fixedTimeframe || 7);
+  
+  // Estados para drag
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
+  const dragStartX = useRef(0);
+  const dragStartIndex = useRef(0);
+  const hasDragged = useRef(false);
+  const carouselRef = useRef(null);
 
   useEffect(() => {
     const fetchTrends = async () => {
       setLoading(true);
       try {
         const effectiveTimeframe = fixedTimeframe || timeframe;
-        const [gainersData, losersData, liquidityData, floatsData, expensiveData] = await Promise.all([
+        const promises = [
           getTopGainers(effectiveTimeframe, 10),
           getTopLosers(effectiveTimeframe, 10),
           getBestLiquidity(10),
-          getLowestFloats(10),
-          getMostExpensiveItems(8)
-        ]);
+          getLowestFloats(10)
+        ];
         
-        setTopGainers(gainersData.items || []);
-        setTopLosers(losersData.items || []);
-        setBestLiquidity(liquidityData.items || []);
-        setLowestFloats(floatsData.items || []);
-        setMostExpensive(expensiveData.items || []);
+        // Só busca items aleatórios se não mostrar header (HomePage)
+        if (!showHeader) {
+          promises.push(getRandomItems(20));
+        }
+        
+        const results = await Promise.all(promises);
+        
+        setTopGainers(results[0].items || []);
+        setTopLosers(results[1].items || []);
+        setBestLiquidity(results[2].items || []);
+        setLowestFloats(results[3].items || []);
+        
+        if (!showHeader && results[4]) {
+          setRandomItems(results[4].items || []);
+        }
       } catch (error) {
         console.error('Error fetching trends:', error);
       } finally {
@@ -150,7 +168,131 @@ const MarketTrendsPage = ({ showHeader = true, fixedTimeframe = null }) => {
     };
 
     fetchTrends();
-  }, [timeframe, fixedTimeframe]);
+  }, [timeframe, fixedTimeframe, showHeader]);
+
+  // Carrosel automático - só na HomePage
+  useEffect(() => {
+    if (!showHeader && randomItems.length > 8 && !isDragging) {
+      const interval = setInterval(() => {
+        setCurrentIndex((prev) => {
+          const maxIndex = Math.max(0, randomItems.length - 8);
+          return (prev + 1) % (maxIndex + 1);
+        });
+      }, 3000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [randomItems, showHeader, isDragging]);
+
+  // Handlers para drag
+  const handleMouseDown = (e) => {
+    if (!carouselRef.current) return;
+    setIsDragging(true);
+    dragStartX.current = e.clientX;
+    dragStartIndex.current = currentIndex;
+    hasDragged.current = false;
+    setDragOffset(0);
+    e.preventDefault();
+  };
+
+  const handleMouseLeave = () => {
+    if (isDragging) {
+      // Snap to nearest index
+      const cardWidth = 220;
+      const totalOffset = currentIndex * cardWidth + dragOffset;
+      const newIndex = Math.round(totalOffset / cardWidth);
+      const maxIndex = Math.max(0, randomItems.length - 8);
+      setCurrentIndex(Math.max(0, Math.min(newIndex, maxIndex)));
+      setIsDragging(false);
+      setDragOffset(0);
+      
+      // Reset hasDragged after a short delay
+      setTimeout(() => {
+        hasDragged.current = false;
+      }, 100);
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (isDragging) {
+      // Snap to nearest index
+      const cardWidth = 220;
+      const totalOffset = currentIndex * cardWidth + dragOffset;
+      const newIndex = Math.round(totalOffset / cardWidth);
+      const maxIndex = Math.max(0, randomItems.length - 8);
+      setCurrentIndex(Math.max(0, Math.min(newIndex, maxIndex)));
+      setIsDragging(false);
+      setDragOffset(0);
+      
+      // Reset hasDragged after a short delay
+      setTimeout(() => {
+        hasDragged.current = false;
+      }, 100);
+    }
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging || !carouselRef.current) return;
+    e.preventDefault();
+    
+    const deltaX = dragStartX.current - e.clientX;
+    
+    // Marca como dragged se moveu mais de 5px
+    if (Math.abs(deltaX) > 5) {
+      hasDragged.current = true;
+    }
+    
+    setDragOffset(deltaX);
+  };
+
+  // Touch handlers para mobile
+  const handleTouchStart = (e) => {
+    if (!carouselRef.current) return;
+    setIsDragging(true);
+    dragStartX.current = e.touches[0].clientX;
+    dragStartIndex.current = currentIndex;
+    hasDragged.current = false;
+    setDragOffset(0);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging || !carouselRef.current) return;
+    
+    const deltaX = dragStartX.current - e.touches[0].clientX;
+    
+    // Marca como dragged se moveu mais de 5px
+    if (Math.abs(deltaX) > 5) {
+      hasDragged.current = true;
+    }
+    
+    setDragOffset(deltaX);
+  };
+
+  const handleTouchEnd = () => {
+    if (isDragging) {
+      // Snap to nearest index
+      const cardWidth = 220;
+      const totalOffset = currentIndex * cardWidth + dragOffset;
+      const newIndex = Math.round(totalOffset / cardWidth);
+      const maxIndex = Math.max(0, randomItems.length - 8);
+      setCurrentIndex(Math.max(0, Math.min(newIndex, maxIndex)));
+      setIsDragging(false);
+      setDragOffset(0);
+      
+      // Reset hasDragged after a short delay
+      setTimeout(() => {
+        hasDragged.current = false;
+      }, 100);
+    }
+  };
+
+  // Prevenir navegação se estava arrastando
+  const handleItemClick = (e) => {
+    if (hasDragged.current) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
 
   const formatPrice = (cents) => (cents / 100).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' });
 
@@ -193,44 +335,63 @@ const MarketTrendsPage = ({ showHeader = true, fixedTimeframe = null }) => {
         <div className="analytics-loader">A carregar dados...</div>
       ) : (
         <>
-          {/* Faixa de armas mais caras */}
-          <div className="expensive-items-banner">
-            <div className="banner-header">
-              <h2>🔥 Armas Mais Caras</h2>
-              <p>As skins mais valiosas do mercado</p>
-            </div>
-            <div className="banner-items-container">
-              {mostExpensive.length > 0 ? (
-                mostExpensive.map((item, index) => {
-                  const imageUrl = item.icon_url 
-                    ? `https://community.akamai.steamstatic.com/economy/image/${item.icon_url}/200fx200f`
-                    : 'https://via.placeholder.com/200';
-                  
-                  return (
-                    <Link 
-                      key={index} 
-                      to={`/skin/${encodeURIComponent(item.market_hash_name)}`} 
-                      className="banner-item-card"
-                    >
-                      <div className="banner-item-image">
-                        <img src={imageUrl} alt={item.market_hash_name} />
-                      </div>
-                      <div className="banner-item-info">
-                        <h4 className="banner-item-name">{item.market_hash_name}</h4>
-                        <div className="banner-item-prices">
-                          <span className="banner-avg-price">{formatPrice(item.avg_price)}</span>
-                          <span className="banner-max-price">Max: {formatPrice(item.max_price)}</span>
+          {/* Faixa de armas aleatórias - SÓ na HomePage */}
+          {!showHeader && randomItems.length > 0 && (
+            <div className="expensive-items-banner">
+              <div className="banner-header">
+                <h2>Armas em Destaque</h2>
+                <p>Descubra as melhores skins do mercado</p>
+              </div>
+              <div 
+                className="banner-items-carousel"
+                ref={carouselRef}
+                onMouseDown={handleMouseDown}
+                onMouseLeave={handleMouseLeave}
+                onMouseUp={handleMouseUp}
+                onMouseMove={handleMouseMove}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+              >
+                <div 
+                  className="banner-items-container"
+                  style={{ 
+                    transform: `translateX(-${currentIndex * 220 + dragOffset}px)`,
+                    transition: isDragging ? 'none' : 'transform 0.3s ease-out'
+                  }}
+                >
+                  {randomItems.map((item, index) => {
+                    const imageUrl = item.icon_url 
+                      ? `https://community.akamai.steamstatic.com/economy/image/${item.icon_url}/200fx200f`
+                      : 'https://via.placeholder.com/200';
+                    
+                    return (
+                      <Link 
+                        key={index} 
+                        to={`/skin/${encodeURIComponent(item.market_hash_name)}`} 
+                        className="banner-item-card"
+                        onClick={handleItemClick}
+                      >
+                        <div className="banner-item-image">
+                          <img src={imageUrl} alt={item.market_hash_name} />
                         </div>
-                        <span className="banner-listing-count">{item.listing_count} disponíveis</span>
-                      </div>
-                    </Link>
-                  );
-                })
-              ) : (
-                <div className="no-data">Sem dados</div>
-              )}
+                        <div className="banner-item-info">
+                          <h4 className="banner-item-name">{item.market_hash_name}</h4>
+                          <div className="banner-item-prices">
+                            <span className="banner-avg-price">{formatPrice(item.price)}</span>
+                            {item.float_value && (
+                              <span className="banner-float">Float: {parseFloat(item.float_value).toFixed(4)}</span>
+                            )}
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-          </div>
+          )}
           
           {/* Analytics Dashboard */}
           <div className="analytics-dashboard">

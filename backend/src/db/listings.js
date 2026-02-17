@@ -117,4 +117,30 @@ async function getMostExpensiveItems(limit = 10) {
   }
 }
 
-module.exports = { upsertListings, getListingsByItemId, getMostExpensiveItems };
+/**
+ * Busca armas aleatórias da base de dados
+ */
+async function getRandomItems(limit = 10) {
+  const query = `
+    SELECT DISTINCT ON (market_hash_name)
+      market_hash_name,
+      icon_url,
+      price,
+      float_value
+    FROM listings
+    WHERE price > 0 AND market_hash_name IS NOT NULL AND icon_url IS NOT NULL
+    ORDER BY market_hash_name, RANDOM()
+    LIMIT $1;
+  `;
+
+  try {
+    const { rows } = await pool.query(query, [limit]);
+    console.log(`✅ Fetched ${rows.length} random items`);
+    return rows;
+  } catch (err) {
+    console.error('Erro ao buscar armas aleatórias:', err);
+    throw err;
+  }
+}
+
+module.exports = { upsertListings, getListingsByItemId, getMostExpensiveItems, getRandomItems };

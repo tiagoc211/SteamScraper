@@ -169,4 +169,18 @@ router.get('/most-expensive', async (req, res) => {
   }
 });
 
+// ROTA PARA BUSCAR ARMAS ALEATÓRIAS
+router.get('/random', async (req, res) => {
+  const { getRandomItems } = require('../db/listings.js');
+  
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const items = await getRandomItems(limit);
+    res.json({ success: true, items });
+  } catch (err) {
+    console.error('Erro ao buscar armas aleatórias:', err);
+    res.status(500).json({ success: false, message: 'Erro ao buscar armas aleatórias.' });
+  }
+});
+
 module.exports = router;

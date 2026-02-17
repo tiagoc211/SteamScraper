@@ -1,5 +1,7 @@
 {
   "dependencies": {
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
     "axios": "^1.11.0",
     "cheerio": "^1.1.2",
     "cors": "^2.8.5",
@@ -17,6 +19,7 @@
     "passport": "^0.7.0",
     "passport-steam": "^1.0.10",
     "pg": "^8.16.3",
-    "socks-proxy-agent": "^8.0.5"
+    "socks-proxy-agent": "^8.0.5",
+    "three": "^0.182.0"
   }
 }

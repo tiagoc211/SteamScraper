@@ -12,7 +12,7 @@ const AdminSideBar = ({ selectedTab, onSelectTab }) => {
   ];
 
   return (
-    <div className="admin-sidebar">
+    <div className="admin-sidebar glass-panel">
       <h2>Admin</h2>
       <ul className="sidebar-tabs">
         {tabs.map(tab => (

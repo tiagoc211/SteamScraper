@@ -73,7 +73,7 @@ const SearchBar = ({ isSearchActive, setIsSearchActive }) => {
 
   return (
     <div className="search-overlay" onClick={handleCloseSearch}>
-      <div className="search-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="search-modal glass-panel" onClick={(e) => e.stopPropagation()}>
         <div className="search-input-wrapper-active">
           {/* CORREÇÃO: Renderização condicional do ícone de busca ou da seta para trás */}
           {selectedSkin ? (

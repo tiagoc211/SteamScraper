@@ -75,7 +75,7 @@ const BrowseSkinCard = React.forwardRef(({ item, variant = 'browse' }, ref) => {
 
  if (variant === 'detail') {
     return (
-      <div className="browse-card-wrapper" ref={ref}>
+      <div className="browse-card-wrapper glass-panel" ref={ref}>
         <article className="browse-skin-card">
           <CardContent />
         </article>
@@ -89,7 +89,7 @@ const BrowseSkinCard = React.forwardRef(({ item, variant = 'browse' }, ref) => {
 
   // A variante 'browse' (link)
   return (
-    <Link ref={ref} to={`/skin/${encodeURIComponent(item.name)}`} className="browse-card-wrapper browse-card-link">
+    <Link ref={ref} to={`/skin/${encodeURIComponent(item.name)}`} className="browse-card-wrapper browse-card-link glass-panel">
       <article className="browse-skin-card">
         <CardContent />
       </article>

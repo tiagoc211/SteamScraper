@@ -15,12 +15,14 @@ import './App.css';
 import PrivateRoute from './utils/PrivateRoute';
 import AdminRoute from './utils/AdminRoute';
 import LastSearchesBar from './components/ui/LastSearchesBar/LastSearchesBar';
+import LiquidBackground from './components/background/LiquidBackground/LiquidBackground';
 
 function App() {
   const [isSearchActive, setIsSearchActive] = useState(false);
   
   return (
     <Router>
+      <LiquidBackground />
       <div className="app-container">
         <Header setIsSearchActive={setIsSearchActive} />
          <LastSearchesBar />

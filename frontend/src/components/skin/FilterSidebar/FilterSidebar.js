@@ -46,7 +46,7 @@ const FilterSidebar = ({ filters, setFilters, context = 'detail' }) => { // 'det
   };
 
   return (
-    <aside className="filter-sidebar">
+    <aside className="filter-sidebar glass-panel">
       {context === 'browse' && (
         <>
           <FilterSection title="Sort By">

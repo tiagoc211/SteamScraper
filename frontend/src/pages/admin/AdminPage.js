@@ -13,7 +13,7 @@ const AdminPage = () => {
   return (
     <div className="admin-page">
       <AdminSideBar selectedTab={selectedTab} onSelectTab={setSelectedTab} />
-      <div className="admin-content">
+      <div className="admin-content glass-panel">
         {selectedTab === 'users' && <UsersPage />}
         {selectedTab === 'roles' && <RolesPage />}
         {selectedTab === 'logs' && <LogsPage />}

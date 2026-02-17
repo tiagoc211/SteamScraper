@@ -51,8 +51,8 @@ const HomePage = () => {
               sentence="CS:MARKET GLASSES"
               manualMode={true}
               blurAmount={4}
-              borderColor="rgba(102, 192, 244, 0.9)"
-              glowColor="rgba(102, 192, 244, 0.6)"
+              borderColor="rgba(255, 255, 255, 0.8)"
+              glowColor="rgba(255, 255, 255, 0.6)"
               animationDuration={0.3}
             />
           </div>

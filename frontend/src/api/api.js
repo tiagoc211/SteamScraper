@@ -232,3 +232,13 @@ export const getMostExpensiveItems = async (limit = 10) => {
     return { success: false, items: [] };
   }
 };
+
+export const getRandomItems = async (limit = 10) => {
+  try {
+    const response = await apiClient.get('/api/items/random', { params: { limit } });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching random items:', error);
+    return { success: false, items: [] };
+  }
+};
