@@ -48,12 +48,17 @@
 }
 
 .banner-items-carousel {
-  overflow-x: hidden;
-  overflow-y: visible;
+  overflow-x: auto; /* Permite scroll se necessário, mas oculta scrollbar se estilizado */
+  overflow-y: visible; /* Tenta manter visível se possível, mas padding é a chave */
   position: relative;
   user-select: none;
-  padding: 1rem 0;
-  margin: -1rem 0;
+  padding: 3.5rem 0.5rem; /* Aumentado para caber o shadow (40px + 7px move) */
+  margin: -3.5rem -0.5rem;
+  scrollbar-width: none; /* Firefox */
+}
+
+.banner-items-carousel::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
 .banner-items-container {
