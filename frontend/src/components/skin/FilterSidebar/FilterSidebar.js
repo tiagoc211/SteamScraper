@@ -161,6 +161,13 @@ const FilterSidebar = ({ filters, setFilters, context = 'detail' }) => { // 'det
                 className="filter-input"
             />
           </FilterSection>
+
+          <button 
+            className="apply-filters-btn"
+            onClick={filters.onApply}
+          >
+            Apply Filters
+          </button>
         </>
       )}
     </aside>

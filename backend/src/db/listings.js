@@ -50,7 +50,7 @@ async function upsertListings(listings) {
  * Busca os listings de um item específico da base de dados.
  * CORREÇÃO: Adicionado o 'async' keyword que estava em falta.
  */
-async function getListingsByItemId(itemId, { page = 1, limit = 24, sortBy = 'price', sortOrder = 'ASC' }) {
+async function getListingsByItemId(itemId, { page = 1, limit = 24, sortBy = 'price', sortOrder = 'ASC', minPrice, maxPrice, minFloat, maxFloat, paintSeed }) {
     const offset = (page - 1) * limit;
 
     const allowedSort = {
@@ -61,19 +61,52 @@ async function getListingsByItemId(itemId, { page = 1, limit = 24, sortBy = 'pri
     const safeSortBy = allowedSort[sortBy] || 'price';
     const safeSortOrder = sortOrder.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
 
+    const whereClauses = ['item_id = $1'];
+    const params = [itemId];
+    let paramIndex = 2; // $1 is itemId
+
+    if (minPrice !== undefined && minPrice !== '') {
+        whereClauses.push(`price >= $${paramIndex++}`);
+        params.push(Math.round(parseFloat(minPrice) * 100)); // Convert to cents
+    }
+    if (maxPrice !== undefined && maxPrice !== '') {
+        whereClauses.push(`price <= $${paramIndex++}`);
+        params.push(Math.round(parseFloat(maxPrice) * 100)); // Convert to cents
+    }
+    if (minFloat !== undefined && minFloat !== '') {
+        whereClauses.push(`float_value >= $${paramIndex++}`);
+        params.push(parseFloat(minFloat));
+    }
+    if (maxFloat !== undefined && maxFloat !== '') {
+        whereClauses.push(`float_value <= $${paramIndex++}`);
+        params.push(parseFloat(maxFloat));
+    }
+    if (paintSeed !== undefined && paintSeed !== '') {
+        whereClauses.push(`paint_seed = $${paramIndex++}`);
+        params.push(parseInt(paintSeed, 10));
+    }
+
+    const whereString = whereClauses.join(' AND ');
+
     const query = `
         SELECT * FROM listings
-        WHERE item_id = $1
+        WHERE ${whereString}
         ORDER BY ${safeSortBy} ${safeSortOrder} NULLS LAST
-        LIMIT $2
-        OFFSET $3;
+        LIMIT $${paramIndex++}
+        OFFSET $${paramIndex++};
     `;
     
-    const countQuery = 'SELECT COUNT(*) FROM listings WHERE item_id = $1;';
+    const countQuery = `SELECT COUNT(*) FROM listings WHERE ${whereString};`;
+
+    params.push(limit, offset);
 
     // O 'await' aqui dentro agora é válido porque a função é 'async'
-    const { rows } = await pool.query(query, [itemId, limit, offset]);
-    const totalResult = await pool.query(countQuery, [itemId]);
+    const { rows } = await pool.query(query, params);
+    
+    // params for count query excluding limit and offset
+    const countParams = params.slice(0, -2);
+    const totalResult = await pool.query(countQuery, countParams);
+    
     const totalItems = parseInt(totalResult.rows[0].count, 10);
     
     return {

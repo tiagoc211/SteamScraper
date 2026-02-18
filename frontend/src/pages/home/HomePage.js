@@ -1,10 +1,11 @@
 // frontend/src/pages/HomePage.js
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import TrueFocus from '../../components/ui/TrueFocus/TrueFocus'; // <-- Caminho corrigido
-import StickerPeel from '../../components/ui/StickerPeel/StickerPeel'; // <-- Caminho corrigido
+import TrueFocus from '../../components/ui/TrueFocus/TrueFocus';
+import StickerPeel from '../../components/ui/StickerPeel/StickerPeel';
 import MarketTrendsPage from '../trends/MarketTrendsPage';
-import StarBorder from '../../components/ui/StarBorder/StarBorder'; // <-- Caminho corrigido
+import StarBorder from '../../components/ui/StarBorder/StarBorder';
+import AdBanner from '../../components/ui/AdBanner/AdBanner';
 import './HomePage.css';
 
 const stickerIBP = 'https://cdn.tradeit.gg/csgo%2FSticker%20-%20iBUYPOWER%20(Holo)%20-%20Katowice%202014_240x152.webp';
@@ -21,6 +22,17 @@ const HomePage = () => {
   return (
     <>
       <div className="homepage">
+
+        {/* === PUBLICIDADE ESQUERDA === */}
+        <aside className="side-ad side-ad--left">
+          <AdBanner variant="skyscraper" adSlot="YOUR_SLOT_ID_LEFT" />
+        </aside>
+
+        {/* === PUBLICIDADE DIREITA === */}
+        <aside className="side-ad side-ad--right">
+          <AdBanner variant="skyscraper" adSlot="YOUR_SLOT_ID_RIGHT" />
+        </aside>
+
         <div className="sticker-background-container">
           <StickerPeel
             imageSrc={stickerIBP}

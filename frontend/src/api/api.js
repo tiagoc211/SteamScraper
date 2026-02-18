@@ -107,9 +107,12 @@ export const getSubscriptionPlans = async () => {
   }
 };
 
-export const getSkinDetails = async (marketHashName, signal) => {
+export const getSkinDetails = async (marketHashName, signal, filters = {}) => {
   try {
-    const response = await apiClient.get(`/api/skin/${encodeURIComponent(marketHashName)}`, { signal });
+    const response = await apiClient.get(`/api/skin/${encodeURIComponent(marketHashName)}`, {
+      signal,
+      params: filters,
+    });
     return response.data;
   } catch (err) {
     if (!axios.isCancel(err)) console.error('Error fetching skin details:', err);
@@ -117,9 +120,17 @@ export const getSkinDetails = async (marketHashName, signal) => {
   }
 };
 
-export const getSkinPage = async (marketHashName, pageNumber, signal) => {
+export const getSkinPage = async (marketHashName, pageNumber, signal, filters = {}) => {
     try {
-        const { data } = await apiClient.get(`/api/skin/${marketHashName}/page/${pageNumber}`, { signal });
+        const queryParams = new URLSearchParams();
+        if (filters.minPrice) queryParams.append('minPrice', filters.minPrice);
+        if (filters.maxPrice) queryParams.append('maxPrice', filters.maxPrice);
+        if (filters.minFloat) queryParams.append('minFloat', filters.minFloat);
+        if (filters.maxFloat) queryParams.append('maxFloat', filters.maxFloat);
+        if (filters.paintSeed) queryParams.append('paintSeed', filters.paintSeed);
+        if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
+
+        const { data } = await apiClient.get(`/api/skin/${encodeURIComponent(marketHashName)}/page/${pageNumber}?${queryParams.toString()}`, { signal });
         return data;
     } catch (err) {
         if (!axios.isCancel(err)) console.error(`Error fetching skin page ${pageNumber}:`, err);

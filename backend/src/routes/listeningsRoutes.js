@@ -145,25 +145,57 @@ router.get('/:marketHashName', async (req, res) => {
             findItemIdByMarketHashName(marketHashName).then(itemId => {
                 if (itemId) {
                     const listingsWithId = listingsForDatabase.map(l => ({ ...l, item_id: itemId }));
-                    
-                    // Processar mudanças de listings (detectar delisted, atualizar preços, etc)
-                    const minPrice = Math.min(...listingsWithId.map(l => l.price));
-                    const listingIds = listingsWithId.map(l => l.listing_id);
-                    
-                    listingCleanup.processListingChanges(
-                        marketHashName, 
-                        listingsWithId, 
-                        minPrice
-                    ).catch(err => console.error('Erro no processamento de cleanup:', err));
-                    
-                    // Guardar listings na BD usando upsert normal
+                    const minPriceDb = Math.min(...listingsWithId.map(l => l.price));
+                    listingCleanup.processListingChanges(marketHashName, listingsWithId, minPriceDb)
+                        .catch(err => console.error('Erro no cleanup:', err));
                     listingsDb.upsertListings(listingsWithId).catch(console.error);
                 } else {
-                    console.warn(`⚠️ Item ID não encontrado para '${marketHashName}', listings não foram guardados.`);
+                    console.warn(`⚠️ Item ID não encontrado para '${marketHashName}'.`);
                 }
             }).catch(console.error);
         } else {
-            console.warn(`⚠️ Nenhum listing com float foi obtido. Verifique se o FLOAT_INSPECT_URL está configurado corretamente.`);
+            console.warn(`⚠️ Nenhum listing com float foi obtido.`);
+        }
+
+        // SE TIVERMOS FILTROS NA QUERY, IGNORAMOS O RESULTADO DA STEAM E VAMOS À BD
+        const { minPrice, maxPrice, minFloat, maxFloat, paintSeed, page, sortBy: sortByParam } = req.query;
+        const hasFilters = minPrice || maxPrice || minFloat || maxFloat || paintSeed || (page && parseInt(page) > 1);
+
+        if (hasFilters) {
+             const itemId = await findItemIdByMarketHashName(marketHashName);
+             if (itemId) {
+                 const dbData = await listingsDb.getListingsByItemId(itemId, {
+                     page: parseInt(page) || 1,
+                     limit: 100,
+                     sortBy: sortByParam || 'price',
+                     minPrice, maxPrice, minFloat, maxFloat, paintSeed
+                 });
+
+                 // Mapeia de volta para o formato de frontend
+                 const mappedListings = dbData.listings.map(dbItem => ({
+                    listingid: dbItem.listing_id,
+                    name: dbItem.market_hash_name,
+                    priceNumber: dbItem.price / 100.0, // Preço na BD está em centavos
+                    image: `https://community.akamai.steamstatic.com/economy/image/${dbItem.icon_url}`,
+                    inspectLink: dbItem.inspect_link,
+                    stickers: dbItem.stickers ? (typeof dbItem.stickers === 'string' ? JSON.parse(dbItem.stickers) : dbItem.stickers).map(s => s.img) : [],
+                    keychains: dbItem.keychains ? (typeof dbItem.keychains === 'string' ? JSON.parse(dbItem.keychains) : dbItem.keychains) : [],
+                    raw: {
+                        rarity_name: null, // Se necessário buscar da tabela items
+                        floatvalue: dbItem.float_value,
+                        paintseed: dbItem.paint_seed,
+                        icon_url: dbItem.icon_url
+                    }
+                 }));
+
+                 return res.json({
+                     success: true,
+                     marketHashName,
+                     listings: mappedListings,
+                     pagination: dbData.pagination,
+                     source: 'database_filtered'
+                 });
+             }
         }
 
         res.json({ 

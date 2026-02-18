@@ -10,6 +10,62 @@
   isolation: isolate;
 }
 
+/* ===== SIDE ADS ===== */
+.side-ad {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 160px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px 0;
+  pointer-events: none;
+}
+
+.side-ad--left  { left: 0; }
+.side-ad--right { right: 0; }
+
+.side-ad__slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.side-ad__label {
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.25);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.side-ad__banner {
+  width: 160px;
+  height: 300px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.15);
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+/* Esconde em ecrãs pequenos onde não há espaço */
+@media (max-width: 1400px) {
+  .side-ad { display: none; }
+}
+
 .sticker-background-container {
   position: absolute;
   top: 0;
