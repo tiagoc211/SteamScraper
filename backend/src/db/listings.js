@@ -121,21 +121,25 @@ async function getMostExpensiveItems(limit = 10) {
  * Busca armas aleatórias da base de dados
  */
 async function getRandomItems(limit = 10) {
+  // Extrai o nome base da skin removendo o desgaste (Factory New, etc.) e seleciona apenas um por nome base de forma aleatória
   const query = `
-    SELECT DISTINCT ON (market_hash_name)
-      market_hash_name,
-      icon_url,
-      price,
-      float_value
-    FROM listings
-    WHERE price > 0 AND market_hash_name IS NOT NULL AND icon_url IS NOT NULL
-    ORDER BY market_hash_name, RANDOM()
+    SELECT * FROM (
+      SELECT DISTINCT ON (regexp_replace(market_hash_name, ' \\((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\\)$', ''))
+        market_hash_name,
+        icon_url,
+        price,
+        float_value
+      FROM listings
+      WHERE price > 0 AND market_hash_name IS NOT NULL AND icon_url IS NOT NULL
+      ORDER BY regexp_replace(market_hash_name, ' \\((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\\)$', ''), RANDOM()
+    ) AS unique_skins
+    ORDER BY RANDOM()
     LIMIT $1;
   `;
 
   try {
     const { rows } = await pool.query(query, [limit]);
-    console.log(`✅ Fetched ${rows.length} random items`);
+    console.log(`✅ Fetched ${rows.length} random items (unique per skin)`);
     return rows;
   } catch (err) {
     console.error('Erro ao buscar armas aleatórias:', err);

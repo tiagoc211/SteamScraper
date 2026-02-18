@@ -9,6 +9,10 @@
   overflow: visible;
   display: flex;
   flex-direction: column;
+  --rarity-glow: rgba(59, 130, 246, 0.20);
+  --rarity-glow-soft: rgba(59, 130, 246, 0.10);
+  --rarity-surface: rgba(59, 130, 246, 0.18);
+  --rarity-surface-soft: rgba(59, 130, 246, 0.05);
 
   /* Spring-physics hover */
   transition:
@@ -39,8 +43,8 @@
 .browse-card-wrapper:hover {
   transform: translateY(-7px) scale(1.015);
   box-shadow:
-    0 24px 60px rgba(59, 130, 246, 0.2),
-    0 4px 20px rgba(59, 130, 246, 0.08),
+    0 24px 60px var(--rarity-glow),
+    0 4px 20px var(--rarity-glow-soft),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
   z-index: 100;
   border-color: rgba(255, 255, 255, 0.2);
@@ -91,6 +95,13 @@
   justify-content: center;
   position: relative;
   padding: 0.5rem;
+  background: transparent;
+  transition: background 0.35s ease;
+}
+
+.browse-card-wrapper:hover .card-image-container {
+  background:
+    radial-gradient(circle at 50% 42%, var(--rarity-surface) 0%, var(--rarity-surface-soft) 62%, rgba(0, 0, 0, 0.03) 100%);
 }
 
 .item-image {
@@ -105,7 +116,7 @@
 
 .browse-card-wrapper:hover .item-image {
   transform: scale(1.04);
-  filter: drop-shadow(0 8px 20px rgba(59, 130, 246, 0.25));
+  filter: drop-shadow(0 8px 20px var(--rarity-glow));
 }
 
 /* Stickers & Charms */
@@ -206,6 +217,7 @@
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.02em;
+  display: none;
 }
 
 .last-checked {

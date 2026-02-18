@@ -7,6 +7,58 @@
   align-items: flex-start;
   max-width: 1800px;
   margin: 0 auto;
+  position: relative;
+}
+
+.database-notice {
+  position: fixed;
+  top: 145px;
+  right: 20px;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  border-radius: 6px;
+  padding: 0.5rem 0.8rem 0.5rem 1rem;
+  font-size: 0.8rem;
+  color: rgba(200, 210, 225, 0.9);
+  z-index: 899;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  animation: slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  visibility: visible;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+.notice-close-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+  transition: color 0.2s;
+  pointer-events: auto;
+}
+
+.notice-close-btn:hover {
+  color: #fff;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .browse-main-content {

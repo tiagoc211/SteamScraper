@@ -42,58 +42,61 @@ async function aggregateDailyPrices() {
 
 /**
  * Obtém os itens com maior variação de preço (positiva ou negativa)
- * Compara o preço mais recente com o mais antigo no período disponível
+ * IMPORTANTE: Usa sempre o PREÇO MÍNIMO (min_price) para refletir o preço mais barato disponível no mercado
+ * 
+ * Para TODOS os períodos (24h, 7 dias, 30 dias):
+ * - Compara o min_price ATUAL dos listings com o min_price histórico de X dias atrás
+ * - Garante dados sempre em tempo real
  */
 async function getTopPriceChanges({ days = 7, limit = 20, direction = 'both' }) {
   const query = `
-    WITH latest_prices AS (
-      SELECT DISTINCT ON (market_hash_name)
+    WITH current_min_prices AS (
+      -- Preços ATUAIS (mínimo) de todos os items disponíveis
+      SELECT 
         market_hash_name,
-        avg_price as current_price,
-        date as latest_date
-      FROM price_history
-      WHERE date >= CURRENT_DATE - $1::integer
-      ORDER BY market_hash_name, date DESC
+        MIN(price) as current_price,
+        MIN(icon_url) as icon_url,
+        MIN(float_value) as float_value,
+        CURRENT_DATE::date as current_date
+      FROM listings
+      WHERE price > 0 AND market_hash_name IS NOT NULL
+      GROUP BY market_hash_name
     ),
-    earliest_prices AS (
+    past_prices AS (
+      -- Preço de há X dias atrás (buscar o registro mais recente anterior a essa data)
       SELECT DISTINCT ON (market_hash_name)
         market_hash_name,
-        avg_price as past_price,
-        date as earliest_date
+        min_price as past_price,
+        date as past_date
       FROM price_history
-      WHERE date >= CURRENT_DATE - $1::integer
-      ORDER BY market_hash_name, date ASC
+      WHERE date <= CURRENT_DATE - $1::integer
+      ORDER BY market_hash_name, date DESC
     )
     SELECT 
-      lp.market_hash_name,
-      lp.current_price,
-      ep.past_price,
-      lp.current_price - ep.past_price as price_change,
+      c.market_hash_name,
+      c.current_price,
+      COALESCE(p.past_price, c.current_price) as past_price,
+      c.current_price - COALESCE(p.past_price, c.current_price) as price_change,
       CASE 
-        WHEN ep.past_price > 0 THEN
-          ROUND(((lp.current_price::float - ep.past_price::float) / ep.past_price::float * 100)::numeric, 2)
+        WHEN COALESCE(p.past_price, c.current_price) > 0 THEN
+          ROUND(((c.current_price::float - COALESCE(p.past_price, c.current_price)::float) / COALESCE(p.past_price, c.current_price)::float * 100)::numeric, 2)
         ELSE 0
       END as percent_change,
-      l.icon_url,
-      l.float_value,
-      lp.latest_date as last_updated
-    FROM latest_prices lp
-    INNER JOIN earliest_prices ep ON lp.market_hash_name = ep.market_hash_name
-    LEFT JOIN LATERAL (
-      SELECT icon_url, float_value 
-      FROM listings 
-      WHERE market_hash_name = lp.market_hash_name 
-      LIMIT 1
-    ) l ON true
-    WHERE ep.past_price > 0
-    ${direction === 'up' ? 'AND lp.current_price > ep.past_price' : ''}
-    ${direction === 'down' ? 'AND lp.current_price < ep.past_price' : ''}
-    ORDER BY ${direction === 'down' ? '5 ASC' : 'ABS(lp.current_price - ep.past_price) DESC'}
+      c.icon_url,
+      c.float_value,
+      CURRENT_DATE::timestamp as last_updated
+    FROM current_min_prices c
+    LEFT JOIN past_prices p ON c.market_hash_name = p.market_hash_name
+    WHERE COALESCE(p.past_price, c.current_price) > 0
+    ${direction === 'up' ? 'AND c.current_price > COALESCE(p.past_price, c.current_price)' : ''}
+    ${direction === 'down' ? 'AND c.current_price < COALESCE(p.past_price, c.current_price)' : ''}
+    ORDER BY ${direction === 'down' ? '5 ASC' : 'ABS(c.current_price - COALESCE(p.past_price, c.current_price)) DESC'}
     LIMIT $2;
   `;
 
   try {
     const result = await pool.query(query, [days, limit]);
+    console.log(`📊 Price analysis for ${days} days: ${result.rows.length} items with changes (using current prices)`);
     return result.rows;
   } catch (err) {
     console.error('Error getting top price changes:', err);

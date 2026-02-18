@@ -1,8 +1,94 @@
 // backend/src/routes/itemsRoutes.js
 const express = require('express');
 const pool = require('../db/index.js');
+const riflesData = require('../../../frontend/src/data/Rifles.js');
+const pistolsData = require('../../../frontend/src/data/Pistols.js');
+const smgsData = require('../../../frontend/src/data/Smgs.js');
+const heavyData = require('../../../frontend/src/data/Heavy.js');
+const knivesData = require('../../../frontend/src/data/Knives.js');
 
 const router = express.Router();
+
+const rarityIdToKey = {
+  '1': 'Consumer',
+  '2': 'Industrial',
+  '3': 'MilSpec',
+  '4': 'Restricted',
+  '5': 'Classified',
+  '6': 'Covert',
+  '7': 'Contraband'
+};
+
+const rarityKeyAliases = {
+  Consumer: ['Consumer'],
+  Industrial: ['Industrial'],
+  MilSpec: ['MilSpec', 'Mil-Spec', 'Milspec'],
+  Restricted: ['Restricted'],
+  Classified: ['Classified'],
+  Covert: ['Covert'],
+  Contraband: ['Contraband']
+};
+
+const normalizeSkinName = (name = '') =>
+  name
+    .replace(/^StatTrak™\s+/i, '')
+    .replace(/^Souvenir\s+/i, '')
+    .replace(/ \((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\)$/i, '')
+    .trim();
+
+const collectSkinNamesByRarity = (node, rarityNameSet) => {
+  if (!node || typeof node !== 'object') return;
+
+  for (const [key, value] of Object.entries(node)) {
+    const isTargetRarity = rarityNameSet.has(key) && Array.isArray(value);
+
+    if (isTargetRarity) {
+      for (const item of value) {
+        if (item && typeof item.name === 'string') {
+          const normalized = normalizeSkinName(item.name);
+          if (normalized) rarityNameSet.__results.add(normalized);
+        }
+      }
+      continue;
+    }
+
+    if (value && typeof value === 'object') {
+      collectSkinNamesByRarity(value, rarityNameSet);
+    }
+  }
+};
+
+const buildRaritySkinIndex = () => {
+  const dataModules = [riflesData, pistolsData, smgsData, heavyData, knivesData];
+  const index = {};
+
+  Object.keys(rarityKeyAliases).forEach((rarityKey) => {
+    const rarityNames = new Set(rarityKeyAliases[rarityKey]);
+    rarityNames.__results = new Set();
+
+    for (const dataModule of dataModules) {
+      collectSkinNamesByRarity(dataModule, rarityNames);
+    }
+
+    index[rarityKey] = rarityNames.__results;
+  });
+
+  return index;
+};
+
+const raritySkinIndex = buildRaritySkinIndex();
+
+const normalizedMarketNameSql = `
+  regexp_replace(
+    regexp_replace(
+      regexp_replace(market_hash_name, '^StatTrak™\\s+', ''),
+      '^Souvenir\\s+',
+      ''
+    ),
+    ' \\((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\\)$',
+    ''
+  )
+`;
 
 router.get('/latest', async (req, res) => {
   try {
@@ -103,12 +189,58 @@ router.get('/', async (req, res) => {
   if (souvenir === 'true' || souvenir === true) {
     whereClauses.push(`market_hash_name ILIKE '%Souvenir%'`);
   }
+
+  // Filtro de Rarity (baseado nas raridades oficiais de CS)
+  if (rarity) {
+    const rarityKey = rarityIdToKey[String(rarity)];
+
+    if (rarityKey) {
+      const namesForRarity = Array.from(raritySkinIndex[rarityKey] || []);
+      const isCovert = rarityKey === 'Covert';
+      const knifeAndGlovePatterns = [
+        '%Knife%', '%Karambit%', '%Bayonet%', '%Butterfly%', '%Flip Knife%', '%Gut Knife%',
+        '%Falchion Knife%', '%Shadow Daggers%', '%Bowie Knife%', '%Huntsman Knife%',
+        '%M9 Bayonet%', '%Ursus Knife%', '%Navaja Knife%', '%Stiletto Knife%', '%Talon Knife%',
+        '%Classic Knife%', '%Paracord Knife%', '%Survival Knife%', '%Nomad Knife%',
+        '%Skeleton Knife%', '%Kukri Knife%',
+        '%Gloves%', '%Hand Wraps%', '%Driver Gloves%', '%Sport Gloves%', '%Specialist Gloves%',
+        '%Moto Gloves%', '%Bloodhound Gloves%', '%Hydra Gloves%', '%Broken Fang Gloves%'
+      ];
+
+      if (namesForRarity.length === 0 && !isCovert) {
+        whereClauses.push('1 = 0');
+      } else {
+        const rarityNameParamIndex = paramIndex++;
+        queryParams.push(namesForRarity);
+
+        if (isCovert) {
+          const knifeGloveConditions = knifeAndGlovePatterns.map(() => `market_hash_name ILIKE $${paramIndex++}`);
+          queryParams.push(...knifeAndGlovePatterns);
+
+          whereClauses.push(
+            `(${normalizedMarketNameSql} = ANY($${rarityNameParamIndex}) OR ${knifeGloveConditions.join(' OR ')})`
+          );
+        } else {
+          whereClauses.push(`${normalizedMarketNameSql} = ANY($${rarityNameParamIndex})`);
+        }
+      }
+    }
+  }
   
   const whereString = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
-  const allowedSortColumns = { price: 'price', floatid: 'float_value', paintseed: 'paint_seed' };
+  const allowedSortColumns = { 
+    price: 'price', 
+    floatid: 'float_value', 
+    paintseed: 'paint_seed',
+    checkedtime: 'scraped_at'
+  };
   const safeSortBy = allowedSortColumns[sortBy] || 'price';
-  const safeSortOrder = sortOrder.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+  const safeSortOrder = sortOrder?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+  const effectiveSortOrder =
+    safeSortBy === 'scraped_at'
+      ? (safeSortOrder === 'ASC' ? 'DESC' : 'ASC')
+      : safeSortOrder;
 
   // QUERY SIMPLIFICADA - SEM JOIN (mas adicionamos colunas NULL para rarity por agora)
   const query = `
@@ -127,7 +259,7 @@ router.get('/', async (req, res) => {
       NULL as rarity_color
     FROM listings
     ${whereString}
-    ORDER BY ${safeSortBy} ${safeSortOrder} NULLS LAST
+    ORDER BY ${safeSortBy} ${effectiveSortOrder} NULLS LAST, listing_id DESC
     LIMIT $${paramIndex++}
     OFFSET $${paramIndex++}
   `;

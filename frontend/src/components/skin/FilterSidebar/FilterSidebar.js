@@ -50,15 +50,35 @@ const FilterSidebar = ({ filters, setFilters, context = 'detail' }) => { // 'det
       {context === 'browse' && (
         <>
           <FilterSection title="Sort By">
-            <select
-                className="filter-select"
-                value={filters.sortBy}
-                onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value, sortOrder: 'ASC' }))}
-            >
-                <option value="floatid">Best Float</option>
-                <option value="price">Lowest Price</option>
-                <option value="paintseed">Paint Seed</option>
-            </select>
+            <div className="sort-by-container">
+              <select
+                  className="filter-select"
+                  value={filters.sortBy}
+                  onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value }))}
+              >
+                  <option value="floatid">Float</option>
+                  <option value="price">Price</option>
+                  <option value="paintseed">Paint Seed</option>
+                  <option value="checkedtime">Checked Time</option>
+              </select>
+              
+              <div className="sort-order-arrows">
+                <button
+                  className={`arrow-btn ${filters.sortOrder === 'ASC' ? 'active' : ''}`}
+                  onClick={() => setFilters(prev => ({ ...prev, sortOrder: 'ASC' }))}
+                  title="Ascending order"
+                >
+                  ↑
+                </button>
+                <button
+                  className={`arrow-btn ${filters.sortOrder === 'DESC' ? 'active' : ''}`}
+                  onClick={() => setFilters(prev => ({ ...prev, sortOrder: 'DESC' }))}
+                  title="Descending order"
+                >
+                  ↓
+                </button>
+              </div>
+            </div>
           </FilterSection>
 
           <FilterSection title="Search">
@@ -72,13 +92,13 @@ const FilterSidebar = ({ filters, setFilters, context = 'detail' }) => { // 'det
                 onChange={(e) => setFilters(prev => ({ ...prev, rarity: e.target.value }))}
             >
                 <option value="">All</option>
-                <option value="1">Common</option>
-                <option value="2">Uncommon</option>
-                <option value="3">Rare</option>
-                <option value="4">Mythical</option>
-                <option value="5">Legendary</option>
-                <option value="6">Ancient</option>
-                <option value="7">Exceedingly Rare</option>
+                <option value="1">Consumer Grade (grey/white)</option>
+                <option value="2">Industrial Grade (light blue)</option>
+                <option value="3">Mil-Spec (blue)</option>
+                <option value="4">Restricted (purple)</option>
+                <option value="5">Classified (pink)</option>
+                <option value="6">Covert / knives and gloves (red)</option>
+                <option value="7">Contraband (yellow)</option>
             </select>
           </FilterSection>
 

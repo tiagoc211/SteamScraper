@@ -5,9 +5,101 @@ import { formatDistanceToNow, parseISO } from 'date-fns';
 import { enGB, pt } from 'date-fns/locale';
 import FloatBar from '../FloatBar/FloatBar';
 import HoverTooltip from '../../ui/HoverTooltip/HoverTooltip';
+import riflesData from '../../../data/Rifles';
+import pistolsData from '../../../data/Pistols';
+import smgsData from '../../../data/Smgs';
+import heavyData from '../../../data/Heavy';
+import knivesData from '../../../data/Knives';
 import './BrowseSkinCard.css';
 
+const RARITY_META = {
+  Consumer: { color: '#b0c3d9', glow: 'rgba(176, 195, 217, 0.30)', surface: 'rgba(176, 195, 217, 0.14)', surfaceSoft: 'rgba(176, 195, 217, 0.04)' },
+  Industrial: { color: '#5e98d9', glow: 'rgba(94, 152, 217, 0.30)', surface: 'rgba(94, 152, 217, 0.14)', surfaceSoft: 'rgba(94, 152, 217, 0.04)' },
+  MilSpec: { color: '#4b69ff', glow: 'rgba(75, 105, 255, 0.30)', surface: 'rgba(75, 105, 255, 0.14)', surfaceSoft: 'rgba(75, 105, 255, 0.04)' },
+  Restricted: { color: '#8847ff', glow: 'rgba(136, 71, 255, 0.32)', surface: 'rgba(136, 71, 255, 0.14)', surfaceSoft: 'rgba(136, 71, 255, 0.04)' },
+  Classified: { color: '#d32ce6', glow: 'rgba(211, 44, 230, 0.32)', surface: 'rgba(211, 44, 230, 0.15)', surfaceSoft: 'rgba(211, 44, 230, 0.05)' },
+  Covert: { color: '#ff2d2d', glow: 'rgba(255, 45, 45, 0.42)', surface: 'rgba(255, 45, 45, 0.20)', surfaceSoft: 'rgba(255, 45, 45, 0.07)' },
+  Contraband: { color: '#e4ae39', glow: 'rgba(228, 174, 57, 0.35)', surface: 'rgba(228, 174, 57, 0.16)', surfaceSoft: 'rgba(228, 174, 57, 0.05)' },
+};
+
+const RARITY_ALIASES = {
+  Consumer: 'Consumer',
+  Industrial: 'Industrial',
+  MilSpec: 'MilSpec',
+  'Mil-Spec': 'MilSpec',
+  Milspec: 'MilSpec',
+  Restricted: 'Restricted',
+  Classified: 'Classified',
+  Covert: 'Covert',
+  Contraband: 'Contraband',
+};
+
+const KNIFE_GLOVE_PATTERNS = [
+  'knife', 'karambit', 'bayonet', 'butterfly', 'shadow daggers', 'daggers',
+  'gloves', 'hand wraps', 'driver gloves', 'sport gloves', 'specialist gloves',
+  'moto gloves', 'bloodhound gloves', 'hydra gloves', 'broken fang gloves'
+];
+
+const normalizeSkinName = (name = '') =>
+  name
+    .replace(/^StatTrak™\s+/i, '')
+    .replace(/^Souvenir\s+/i, '')
+    .replace(/ \((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\)$/i, '')
+    .trim();
+
+const rarityNameBySkin = (() => {
+  const map = new Map();
+  const dataModules = [riflesData, pistolsData, smgsData, heavyData, knivesData];
+
+  const walk = (node) => {
+    if (!node || typeof node !== 'object') return;
+
+    Object.entries(node).forEach(([key, value]) => {
+      const normalizedRarity = RARITY_ALIASES[key];
+
+      if (normalizedRarity && Array.isArray(value)) {
+        value.forEach((entry) => {
+          if (entry && typeof entry.name === 'string') {
+            map.set(normalizeSkinName(entry.name), normalizedRarity);
+          }
+        });
+        return;
+      }
+
+      if (value && typeof value === 'object') {
+        walk(value);
+      }
+    });
+  };
+
+  dataModules.forEach(walk);
+  return map;
+})();
+
+const resolveRarityKey = (skinName = '') => {
+  const normalizedName = normalizeSkinName(skinName);
+  const lowered = normalizedName.toLowerCase();
+
+  if (KNIFE_GLOVE_PATTERNS.some((pattern) => lowered.includes(pattern))) {
+    return 'Covert';
+  }
+
+  return rarityNameBySkin.get(normalizedName) || null;
+};
+
 const BrowseSkinCard = React.forwardRef(({ item, variant = 'browse' }, ref) => {
+
+  const rarityKey = resolveRarityKey(item.name);
+  const rarityMeta = rarityKey ? RARITY_META[rarityKey] : null;
+  const cardStyle = rarityMeta
+    ? {
+        '--rarity-glow': rarityMeta.glow,
+        '--rarity-glow-soft': rarityMeta.surfaceSoft,
+        '--rarity-text': rarityMeta.color,
+        '--rarity-surface': rarityMeta.surface,
+        '--rarity-surface-soft': rarityMeta.surfaceSoft,
+      }
+    : undefined;
 
   const formattedPrice = item.price 
     ? (item.price / 100).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })
@@ -56,7 +148,6 @@ const BrowseSkinCard = React.forwardRef(({ item, variant = 'browse' }, ref) => {
       <div className="card-info-footer">
         <div className="price-line">
           <span className="item-price">{formattedPrice}</span>
-          <span className="item-rarity-text" style={{ color: item.rarity?.color }}>{item.rarity?.name}</span>
         </div>
         
         <div className="float-line">
@@ -75,7 +166,7 @@ const BrowseSkinCard = React.forwardRef(({ item, variant = 'browse' }, ref) => {
 
  if (variant === 'detail') {
     return (
-      <div className="browse-card-wrapper glass-panel" ref={ref}>
+      <div className="browse-card-wrapper glass-panel" ref={ref} style={cardStyle}>
         <article className="browse-skin-card">
           <CardContent />
         </article>
@@ -89,7 +180,7 @@ const BrowseSkinCard = React.forwardRef(({ item, variant = 'browse' }, ref) => {
 
   // A variante 'browse' (link)
   return (
-    <Link ref={ref} to={`/skin/${encodeURIComponent(item.name)}`} className="browse-card-wrapper browse-card-link glass-panel">
+    <Link ref={ref} to={`/skin/${encodeURIComponent(item.name)}`} className="browse-card-wrapper browse-card-link glass-panel" style={cardStyle}>
       <article className="browse-skin-card">
         <CardContent />
       </article>

@@ -4,6 +4,7 @@ const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...ar
 const fetcher = require('../fetch.js');
 const cheerio = require('cheerio');
 const listingsDb = require('../db/listings.js');
+const listingCleanup = require('../db/listingCleanup.js');
 const pool = require('../db/index.js');
 
 const router = express.Router();
@@ -144,6 +145,18 @@ router.get('/:marketHashName', async (req, res) => {
             findItemIdByMarketHashName(marketHashName).then(itemId => {
                 if (itemId) {
                     const listingsWithId = listingsForDatabase.map(l => ({ ...l, item_id: itemId }));
+                    
+                    // Processar mudanças de listings (detectar delisted, atualizar preços, etc)
+                    const minPrice = Math.min(...listingsWithId.map(l => l.price));
+                    const listingIds = listingsWithId.map(l => l.listing_id);
+                    
+                    listingCleanup.processListingChanges(
+                        marketHashName, 
+                        listingsWithId, 
+                        minPrice
+                    ).catch(err => console.error('Erro no processamento de cleanup:', err));
+                    
+                    // Guardar listings na BD usando upsert normal
                     listingsDb.upsertListings(listingsWithId).catch(console.error);
                 } else {
                     console.warn(`⚠️ Item ID não encontrado para '${marketHashName}', listings não foram guardados.`);

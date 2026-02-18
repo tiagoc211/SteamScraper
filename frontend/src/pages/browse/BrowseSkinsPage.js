@@ -14,6 +14,7 @@ const BrowseSkinsPage = () => {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [showDatabaseNotice, setShowDatabaseNotice] = useState(true);
   
   const [filters, setFilters] = useState({
     search: '', category: 'All', stattrak: false, souvenir: false,
@@ -76,8 +77,15 @@ const BrowseSkinsPage = () => {
   const categories = ['All', 'Rifles', 'Pistols', 'SMGs', 'Heavy', 'Knives', 'Gloves'];
 
   return (
-    <div className="browse-page-container">
-      <FilterSidebar filters={filters} setFilters={setFilters} context="browse" />
+    <>
+      {showDatabaseNotice && (
+        <div className="database-notice">
+          <span>ⓘ Database reflects user-fetched data, not live Steam market</span>
+          <button className="notice-close-btn" onClick={() => setShowDatabaseNotice(false)}>×</button>
+        </div>
+      )}
+      <div className="browse-page-container">
+        <FilterSidebar filters={filters} setFilters={setFilters} context="browse" />
       <main className="browse-main-content">
         <CategoryNav 
             categories={categories} 
@@ -100,7 +108,8 @@ const BrowseSkinsPage = () => {
         {!loading && !hasMore && items.length > 0 && <div className="end-of-results">You've reached the end!</div>}
         {!loading && items.length === 0 && <div className="no-results-message">No items found matching your criteria.</div>}
       </main>
-    </div>
+      </div>
+    </>
   );
 };
 
