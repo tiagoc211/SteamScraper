@@ -5,6 +5,7 @@ import { getSkinDetails } from '../../api/api';
 import BrowseSkinCard from '../../components/skin/BrowseSkinCard/BrowseSkinCard';
 import FilterSidebar from '../../components/skin/FilterSidebar/FilterSidebar';
 import PaginationControls from '../../components/ui/PaginationControls/PaginationControls';
+import AdBanner from '../../components/ui/AdBanner/AdBanner';
 import './SkinDetailPage.css';
 
 const FullPageLoader = () => <div className="loader">Loading best deals for you...</div>;
@@ -106,6 +107,10 @@ const SkinDetailPage = () => {
             <FilterSidebar context="detail" filters={filtersWithApply} setFilters={setFilterInputs} />
             <div className="main-content-column">
                 <h1>{decodeURIComponent(marketHashName)}</h1>
+
+                {/* Leaderboard ad abaixo do título */}
+                <AdBanner variant="leaderboard" adSlot="YOUR_SLOT_ID_DETAIL_TOP" />
+
                 <div className="skin-listings-section">
                     <div className="listings-header">
                         <h2>{`Showing ${processedListings.length} of ${allListings.length} listings`}</h2>
@@ -164,6 +169,9 @@ const SkinDetailPage = () => {
                         totalPages={pagination.totalPages} 
                         onPageChange={(newPage) => fetchPageData(newPage)} 
                     />
+
+                    {/* Rectangle ad no fim dos resultados */}
+                    <AdBanner variant="rectangle" adSlot="YOUR_SLOT_ID_DETAIL_BTM" />
                 </div>
             </div>
         </div>

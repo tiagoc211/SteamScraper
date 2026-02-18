@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getTopGainers, getTopLosers, getBestLiquidity, getLowestFloats, getRandomItems } from '../../api/api';
+import AdBanner from '../../components/ui/AdBanner/AdBanner';
 import './MarketTrendsPage.css';
 
 const TrendCard = ({ item, type }) => {
@@ -394,6 +395,7 @@ const MarketTrendsPage = ({ showHeader = true, fixedTimeframe = null }) => {
           )}
           
           {/* Analytics Dashboard */}
+          <AdBanner variant="leaderboard" adSlot="YOUR_SLOT_ID_TRENDS_TOP" />
           <div className="analytics-dashboard">
           <div className="dashboard-row">
             <section className="analytics-section gainers-section">
@@ -463,6 +465,7 @@ const MarketTrendsPage = ({ showHeader = true, fixedTimeframe = null }) => {
             </section>
           </div>
         </div>
+        <AdBanner variant="leaderboard" adSlot="YOUR_SLOT_ID_TRENDS_BTM" />
         </>
       )}
     </div>

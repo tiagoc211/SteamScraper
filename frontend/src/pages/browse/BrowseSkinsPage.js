@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { getBrowseItemsFromDB } from '../../api/api';
 import FilterSidebar from '../../components/skin/FilterSidebar/FilterSidebar';
 import BrowseSkinCard from '../../components/skin/BrowseSkinCard/BrowseSkinCard';
+import AdBanner from '../../components/ui/AdBanner/AdBanner';
 import './BrowseSkinsPage.css';
 
 const CategoryNav = ({ categories, selected, onSelect }) => (
@@ -92,6 +93,10 @@ const BrowseSkinsPage = () => {
             selected={filters.category} 
             onSelect={(cat) => setFilters(prev => ({...prev, category: cat}))} 
         />
+
+        {/* Leaderboard ad abaixo da navegação de categorias */}
+        <AdBanner variant="leaderboard" adSlot="YOUR_SLOT_ID_BROWSE_TOP" className="browse-ad-top" />
+
         <div className="skins-grid">
           {items.map((item, index) => (
             <BrowseSkinCard
@@ -102,7 +107,11 @@ const BrowseSkinsPage = () => {
           ))}
         </div>
 
-        {/* CORREÇÃO: O "gatilho" para carregar mais e as mensagens de estado */}
+        {/* Rectangular ad ao fim da grelha */}
+        {!hasMore && items.length > 0 && (
+          <AdBanner variant="rectangle" adSlot="YOUR_SLOT_ID_BROWSE_BTM" />
+        )}
+
         <div ref={loadMoreTriggerRef} className="load-trigger" />
         {loading && <div className="loader">Loading more items...</div>}
         {!loading && !hasMore && items.length > 0 && <div className="end-of-results">You've reached the end!</div>}

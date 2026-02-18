@@ -10,6 +10,9 @@
   position: relative;
 }
 
+.browse-ad-top {
+  margin-bottom: 1rem;
+}
 .database-notice {
   position: fixed;
   top: 145px;
