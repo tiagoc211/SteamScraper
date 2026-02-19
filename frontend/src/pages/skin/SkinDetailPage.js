@@ -6,6 +6,7 @@ import BrowseSkinCard from '../../components/skin/BrowseSkinCard/BrowseSkinCard'
 import FilterSidebar from '../../components/skin/FilterSidebar/FilterSidebar';
 import PaginationControls from '../../components/ui/PaginationControls/PaginationControls';
 import AdBanner from '../../components/ui/AdBanner/AdBanner';
+import { FiArrowUp, FiArrowDown } from 'react-icons/fi';
 import './SkinDetailPage.css';
 
 const FullPageLoader = () => <div className="loader">Loading best deals for you...</div>;
@@ -17,6 +18,7 @@ const SkinDetailPage = () => {
     const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1 });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [sortOrder, setSortOrder] = useState('asc'); // 'asc' ou 'desc'
 
     // Inputs do sidebar (draft)
     const [filterInputs, setFilterInputs] = useState({
@@ -84,16 +86,18 @@ const SkinDetailPage = () => {
         });
 
         result.sort((a, b) => {
+            let comparison = 0;
             switch (activeFilters.sortBy) {
-                case 'float':   return (a.raw?.floatvalue  ?? 1) - (b.raw?.floatvalue  ?? 1);
-                case 'pattern': return (a.raw?.paintseed   ?? 0) - (b.raw?.paintseed   ?? 0);
+                case 'float':   comparison = (a.raw?.floatvalue  ?? 1) - (b.raw?.floatvalue  ?? 1); break;
+                case 'pattern': comparison = (a.raw?.paintseed   ?? 0) - (b.raw?.paintseed   ?? 0); break;
                 case 'price':
-                default:        return (a.priceNumber || 0) - (b.priceNumber || 0);
+                default:        comparison = (a.priceNumber || 0) - (b.priceNumber || 0);
             }
+            return sortOrder === 'desc' ? -comparison : comparison;
         });
 
         return result;
-    }, [allListings, activeFilters]);
+    }, [allListings, activeFilters, sortOrder]);
 
     if (error) return <div className="error-message">{error}</div>;
 
@@ -119,6 +123,9 @@ const SkinDetailPage = () => {
                             <button className={`sort-button ${activeFilters.sortBy === 'price' ? 'active' : ''}`} onClick={() => { setFilterInputs(f => ({...f, sortBy: 'price'})); setActiveFilters(f => ({...f, sortBy: 'price'})); }}>Price</button>
                             <button className={`sort-button ${activeFilters.sortBy === 'float' ? 'active' : ''}`} onClick={() => { setFilterInputs(f => ({...f, sortBy: 'float'})); setActiveFilters(f => ({...f, sortBy: 'float'})); }}>Float</button>
                             <button className={`sort-button ${activeFilters.sortBy === 'pattern' ? 'active' : ''}`} onClick={() => { setFilterInputs(f => ({...f, sortBy: 'pattern'})); setActiveFilters(f => ({...f, sortBy: 'pattern'})); }}>Pattern</button>
+                            <button className="sort-order-button" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} title={`Sort ${sortOrder === 'asc' ? 'descending' : 'ascending'}`}>
+                                {sortOrder === 'asc' ? <FiArrowUp size={18} /> : <FiArrowDown size={18} />}
+                            </button>
                         </div>
                     </div>
                     
