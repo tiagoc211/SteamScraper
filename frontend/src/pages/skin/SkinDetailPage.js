@@ -109,16 +109,16 @@ const SkinDetailPage = () => {
                 <h1>{decodeURIComponent(marketHashName)}</h1>
 
                 {/* Leaderboard ad abaixo do título */}
-                <AdBanner variant="leaderboard" adSlot="YOUR_SLOT_ID_DETAIL_TOP" />
+                <AdBanner variant="leaderboard" adSlot="8971192051" />
 
                 <div className="skin-listings-section">
                     <div className="listings-header">
                         <h2>{`Showing ${processedListings.length} of ${allListings.length} listings`}</h2>
                         <div className="sort-bar">
                             <span>Sort by:</span>
-                            <button className={`sort-button ${filterInputs.sortBy === 'price' ? 'active' : ''}`} onClick={() => setFilterInputs(f => ({...f, sortBy: 'price'}))}>Price</button>
-                            <button className={`sort-button ${filterInputs.sortBy === 'float' ? 'active' : ''}`} onClick={() => setFilterInputs(f => ({...f, sortBy: 'float'}))}>Float</button>
-                            <button className={`sort-button ${filterInputs.sortBy === 'pattern' ? 'active' : ''}`} onClick={() => setFilterInputs(f => ({...f, sortBy: 'pattern'}))}>Pattern</button>
+                            <button className={`sort-button ${activeFilters.sortBy === 'price' ? 'active' : ''}`} onClick={() => { setFilterInputs(f => ({...f, sortBy: 'price'})); setActiveFilters(f => ({...f, sortBy: 'price'})); }}>Price</button>
+                            <button className={`sort-button ${activeFilters.sortBy === 'float' ? 'active' : ''}`} onClick={() => { setFilterInputs(f => ({...f, sortBy: 'float'})); setActiveFilters(f => ({...f, sortBy: 'float'})); }}>Float</button>
+                            <button className={`sort-button ${activeFilters.sortBy === 'pattern' ? 'active' : ''}`} onClick={() => { setFilterInputs(f => ({...f, sortBy: 'pattern'})); setActiveFilters(f => ({...f, sortBy: 'pattern'})); }}>Pattern</button>
                         </div>
                     </div>
                     
@@ -171,7 +171,7 @@ const SkinDetailPage = () => {
                     />
 
                     {/* Rectangle ad no fim dos resultados */}
-                    <AdBanner variant="rectangle" adSlot="YOUR_SLOT_ID_DETAIL_BTM" />
+                    <AdBanner variant="rectangle" adSlot="6952357789" />
                 </div>
             </div>
         </div>

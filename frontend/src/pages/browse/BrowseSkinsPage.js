@@ -95,7 +95,7 @@ const BrowseSkinsPage = () => {
         />
 
         {/* Leaderboard ad abaixo da navegação de categorias */}
-        <AdBanner variant="leaderboard" adSlot="YOUR_SLOT_ID_BROWSE_TOP" className="browse-ad-top" />
+        <AdBanner variant="leaderboard" adSlot="8971192051" className="browse-ad-top" />
 
         <div className="skins-grid">
           {items.map((item, index) => (
@@ -109,7 +109,7 @@ const BrowseSkinsPage = () => {
 
         {/* Rectangular ad ao fim da grelha */}
         {!hasMore && items.length > 0 && (
-          <AdBanner variant="rectangle" adSlot="YOUR_SLOT_ID_BROWSE_BTM" />
+          <AdBanner variant="rectangle" adSlot="6952357789" />
         )}
 
         <div ref={loadMoreTriggerRef} className="load-trigger" />

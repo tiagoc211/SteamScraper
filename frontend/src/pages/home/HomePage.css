@@ -28,18 +28,28 @@
 .side-ad--right { right: 12px; }
 
 /* Esconde em ecrãs pequenos onde não há espaço */
-@media (max-width: 1400px) {
+@media (max-width: 1024px) {
   .side-ad { display: none; }
 }
 
 .sticker-background-container {
   position: absolute;
   top: 0;
-  left: 0;
-  width: 100%;
+  /* fica dentro do espaço central — ads ficam em left:12px w:160px e right:12px w:160px */
+  left: 185px;
+  right: 185px;
   height: 100%;
   z-index: 2;
+  overflow: hidden; /* garante que nenhum sticker sai para cima dos ads */
   pointer-events: auto;
+}
+
+/* Em ecrãs pequenos (sem ads) o container volta a full-width */
+@media (max-width: 1024px) {
+  .sticker-background-container {
+    left: 0;
+    right: 0;
+  }
 }
 
 .home-landing {

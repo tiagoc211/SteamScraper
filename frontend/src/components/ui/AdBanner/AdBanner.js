@@ -2,53 +2,70 @@
 import React, { useEffect, useRef } from 'react';
 import './AdBanner.css';
 
+const IS_DEV =
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1';
+
 /**
- * AdBanner — componente reutilizável para Google AdSense
- * 
- * variants:
- *  - "leaderboard"  : 728×90  — horizontal, topo/fim de página
- *  - "rectangle"    : 336×280 — bloco médio, inline entre conteúdo
- *  - "skyscraper"   : 160×600 — vertical, colunas laterais
- *  - "mobile-banner": 320×100 — banner mobile
- *
- * Passa `adSlot` com o ID do teu slot AdSense (encontra em AdSense → Anúncios → Por unidade de anúncio)
+ * AdBanner — Google AdSense
+ * variants: leaderboard | rectangle | skyscraper | mobile-banner
+ * Em localhost mostra sempre um placeholder visível.
+ * Em produção renderiza o bloco AdSense real.
  */
 const AdBanner = ({ variant = 'leaderboard', adSlot = '', className = '' }) => {
   const adRef = useRef(null);
   const initialized = useRef(false);
 
+  const normalizedSlot = String(adSlot || '').trim();
+  const isPlaceholderSlot = !normalizedSlot || normalizedSlot.startsWith('YOUR_SLOT_ID');
+
+  // Em dev OU sem slot válido → mostra placeholder visual
+  const showPlaceholder = IS_DEV || isPlaceholderSlot;
+
+  // Tamanhos mínimos para o placeholder (CSS cuida dos reais em prod)
+  const placeholderSizeMap = {
+    leaderboard:     { width: '728px', height: '90px'  },
+    rectangle:       { width: '336px', height: '280px' },
+    skyscraper:      { width: '160px', height: '600px' },
+    'mobile-banner': { width: '320px', height: '100px' },
+  };
+  const pSize = placeholderSizeMap[variant] || placeholderSizeMap['leaderboard'];
+
   useEffect(() => {
-    if (initialized.current) return;
+    if (showPlaceholder || initialized.current) return;
     initialized.current = true;
     try {
-      if (window.adsbygoogle) {
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-      }
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
     } catch (e) {
       console.warn('AdSense push error:', e);
     }
-  }, []);
-
-  const sizeMap = {
-    leaderboard:   { width: '728px',  height: '90px',  format: 'horizontal' },
-    rectangle:     { width: '336px',  height: '280px', format: 'rectangle' },
-    skyscraper:    { width: '160px',  height: '600px', format: 'vertical' },
-    'mobile-banner': { width: '320px', height: '100px', format: 'horizontal' },
-  };
-  const size = sizeMap[variant] || sizeMap['leaderboard'];
+  }, [showPlaceholder]);
 
   return (
     <div className={`ad-banner-wrapper ad-banner--${variant} ${className}`} aria-label="Publicidade">
       <span className="ad-banner__label">Publicidade</span>
-      <ins
-        ref={adRef}
-        className="adsbygoogle"
-        style={{ display: 'block', width: size.width, height: size.height }}
-        data-ad-client="ca-pub-1034789266408347"
-        data-ad-slot={adSlot}
-        data-ad-format={size.format}
-        data-full-width-responsive="false"
-      />
+
+      {showPlaceholder ? (
+        /* ── Placeholder visível em localhost / dev ── */
+        <div
+          className={`ad-banner__test-placeholder ad-banner__test-placeholder--${variant}`}
+          style={{ width: pSize.width, height: pSize.height }}
+        >
+          <span>Publicidade</span>
+          <small>{variant} · {normalizedSlot || 'sem slot'}</small>
+        </div>
+      ) : (
+        /* ── AdSense real (produção) ── */
+        <ins
+          ref={adRef}
+          className="adsbygoogle"
+          style={{ display: 'block' }}
+          data-ad-client="ca-pub-1034789266408347"
+          data-ad-slot={normalizedSlot}
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+        />
+      )}
     </div>
   );
 };

@@ -395,7 +395,7 @@ const MarketTrendsPage = ({ showHeader = true, fixedTimeframe = null }) => {
           )}
           
           {/* Analytics Dashboard */}
-          <AdBanner variant="leaderboard" adSlot="YOUR_SLOT_ID_TRENDS_TOP" />
+          <AdBanner variant="leaderboard" adSlot="8971192051" />
           <div className="analytics-dashboard">
           <div className="dashboard-row">
             <section className="analytics-section gainers-section">
@@ -465,7 +465,7 @@ const MarketTrendsPage = ({ showHeader = true, fixedTimeframe = null }) => {
             </section>
           </div>
         </div>
-        <AdBanner variant="leaderboard" adSlot="YOUR_SLOT_ID_TRENDS_BTM" />
+        <AdBanner variant="leaderboard" adSlot="6952357789" />
         </>
       )}
     </div>
