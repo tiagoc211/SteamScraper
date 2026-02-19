@@ -1,6 +1,6 @@
 // frontend/src/pages/skin/SkinDetailPage.js
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { getSkinDetails } from '../../api/api';
 import BrowseSkinCard from '../../components/skin/BrowseSkinCard/BrowseSkinCard';
 import FilterSidebar from '../../components/skin/FilterSidebar/FilterSidebar';
@@ -13,25 +13,43 @@ const FullPageLoader = () => <div className="loader">Loading best deals for you.
 
 const SkinDetailPage = () => {
     const { marketHashName } = useParams();
+    const location = useLocation();
+
+    const getInitialFilters = () => {
+        const p = new URLSearchParams(location.search);
+        return {
+            priceNumber: [p.get('priceMin') || '', p.get('priceMax') || ''],
+            wear:        [p.get('floatMin') || '', p.get('floatMax') || ''],
+            paintSeed:   p.get('pattern') || '',
+            sortBy:      'price',
+        };
+    };
 
     const [allListings, setAllListings] = useState([]);
     const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1 });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [sortOrder, setSortOrder] = useState('asc'); // 'asc' ou 'desc'
+    const [sortOrder, setSortOrder] = useState('asc');
 
-    // Inputs do sidebar (draft)
-    const [filterInputs, setFilterInputs] = useState({
-        priceNumber: ['', ''], wear: ['', ''], paintSeed: '', sortBy: 'price',
-    });
+    const [filterInputs, setFilterInputs] = useState(getInitialFilters);
+    const [activeFilters, setActiveFilters] = useState(getInitialFilters);
 
-    // Filtros aplicados (só mudam ao clicar Apply)
-    const [activeFilters, setActiveFilters] = useState({
-        priceNumber: ['', ''], wear: ['', ''], paintSeed: '', sortBy: 'price',
-    });
+    // Reset filters when navigating to a different skin (new search)
+    useEffect(() => {
+        const fresh = getInitialFilters();
+        setFilterInputs(fresh);
+        setActiveFilters(fresh);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [marketHashName]);
 
     const handleApplyFilters = () => {
         setActiveFilters({ ...filterInputs });
+    };
+
+    const EMPTY_FILTERS = { priceNumber: ['', ''], wear: ['', ''], paintSeed: '', sortBy: 'price' };
+    const handleClearFilters = () => {
+        setFilterInputs(EMPTY_FILTERS);
+        setActiveFilters(EMPTY_FILTERS);
     };
 
     // Carrega listings da Steam uma única vez (sem filtros)
@@ -103,7 +121,8 @@ const SkinDetailPage = () => {
 
     const filtersWithApply = {
         ...filterInputs,
-        onApply: handleApplyFilters
+        onApply: handleApplyFilters,
+        onClear: handleClearFilters,
     };
 
     return (

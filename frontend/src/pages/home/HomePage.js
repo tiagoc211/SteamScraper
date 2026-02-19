@@ -1,6 +1,7 @@
 // frontend/src/pages/HomePage.js
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import TrueFocus from '../../components/ui/TrueFocus/TrueFocus';
 import StickerPeel from '../../components/ui/StickerPeel/StickerPeel';
 import MarketTrendsPage from '../trends/MarketTrendsPage';
@@ -16,6 +17,7 @@ const stickerReason    = 'https://cdn.tradeit.gg/csgo%2FSticker%20-%20Reason%20G
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleStartClick = () => {
     navigate('/skins');
@@ -90,7 +92,7 @@ const HomePage = () => {
               animationDuration={0.3}
             />
           </div>
-          <p>Explora o mercado da Steam com detalhe e precisão.</p>
+          <p>{t('home.subtitle')}</p>
           
           {/* Botão antigo substituído pelo StarBorder */}
           <StarBorder
@@ -100,7 +102,7 @@ const HomePage = () => {
             speed="4s"
             onClick={handleStartClick}
           >
-            Começar
+            {t('home.exploreNow')}
           </StarBorder>
         </div>
 

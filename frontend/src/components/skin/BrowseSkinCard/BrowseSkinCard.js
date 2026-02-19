@@ -178,9 +178,28 @@ const BrowseSkinCard = React.forwardRef(({ item, variant = 'browse' }, ref) => {
     );
   }
 
-  // A variante 'browse' (link)
+  // A variante 'browse' (link) — com pré-filtros codificados no URL
+  const buildPreFilterUrl = () => {
+    const params = new URLSearchParams();
+    if (item.price) {
+      const priceEur = item.price / 100;
+      params.set('priceMin', (priceEur * 0.9).toFixed(2));
+      params.set('priceMax', (priceEur * 1.1).toFixed(2));
+    }
+    if (item.float) {
+      const f = parseFloat(item.float);
+      params.set('floatMin', Math.max(0, f - 0.005).toFixed(4));
+      params.set('floatMax', Math.min(1, f + 0.005).toFixed(4));
+    }
+    if (item.pattern) {
+      params.set('pattern', item.pattern);
+    }
+    const qs = params.toString();
+    return `/skin/${encodeURIComponent(item.name)}${qs ? `?${qs}` : ''}`;
+  };
+
   return (
-    <Link ref={ref} to={`/skin/${encodeURIComponent(item.name)}`} className="browse-card-wrapper browse-card-link glass-panel" style={cardStyle}>
+    <Link ref={ref} to={buildPreFilterUrl()} className="browse-card-wrapper browse-card-link glass-panel" style={cardStyle}>
       <article className="browse-skin-card">
         <CardContent />
       </article>

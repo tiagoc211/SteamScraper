@@ -68,6 +68,23 @@
   line-height: 1.4;
 }
 
+/* Compact variant – used for small label badges (float, pattern) */
+.tooltip-compact {
+  min-width: unset;
+  padding: 5px 10px;
+  border-radius: 7px;
+  gap: 0;
+}
+
+.tooltip-compact .tooltip-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+  white-space: nowrap;
+}
+
 /* Animações de entrada */
 @keyframes tooltip-fade-in-top {
   from {

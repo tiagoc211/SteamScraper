@@ -124,7 +124,8 @@ router.get('/', async (req, res) => {
   const { 
     page = 1, limit = 100, sortBy = 'price', sortOrder = 'ASC',
     // Filtros agora podem ser aplicados diretamente nesta tabela
-    category, rarity, search, stattrak, souvenir 
+    category, rarity, search, stattrak, souvenir,
+    priceMin, priceMax, wearMin, wearMax, paintSeed
   } = req.query;
 
   console.log(`📊 Browse request - Page: ${page}, Category: ${category || 'All'}, Search: ${search || 'none'}`);
@@ -188,6 +189,34 @@ router.get('/', async (req, res) => {
   // Filtro de Souvenir
   if (souvenir === 'true' || souvenir === true) {
     whereClauses.push(`market_hash_name ILIKE '%Souvenir%'`);
+  }
+
+  // Filtro de preço
+  const parseDecimal = (val) => parseFloat(String(val).replace(',', '.'));
+
+  if (priceMin !== undefined && priceMin !== '') {
+    whereClauses.push(`price >= $${paramIndex++}`);
+    queryParams.push(Math.round(parseDecimal(priceMin) * 100));
+  }
+  if (priceMax !== undefined && priceMax !== '') {
+    whereClauses.push(`price <= $${paramIndex++}`);
+    queryParams.push(Math.round(parseDecimal(priceMax) * 100));
+  }
+
+  // Filtro de float/wear
+  if (wearMin !== undefined && wearMin !== '') {
+    whereClauses.push(`float_value >= $${paramIndex++}`);
+    queryParams.push(parseDecimal(wearMin));
+  }
+  if (wearMax !== undefined && wearMax !== '') {
+    whereClauses.push(`float_value <= $${paramIndex++}`);
+    queryParams.push(parseDecimal(wearMax));
+  }
+
+  // Filtro de paint seed
+  if (paintSeed !== undefined && paintSeed !== '') {
+    whereClauses.push(`paint_seed = $${paramIndex++}`);
+    queryParams.push(parseInt(paintSeed, 10));
   }
 
   // Filtro de Rarity (baseado nas raridades oficiais de CS)

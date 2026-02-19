@@ -65,21 +65,23 @@ async function getListingsByItemId(itemId, { page = 1, limit = 24, sortBy = 'pri
     const params = [itemId];
     let paramIndex = 2; // $1 is itemId
 
+    const parseDecimal = (val) => parseFloat(String(val).replace(',', '.'));
+
     if (minPrice !== undefined && minPrice !== '') {
         whereClauses.push(`price >= $${paramIndex++}`);
-        params.push(Math.round(parseFloat(minPrice) * 100)); // Convert to cents
+        params.push(Math.round(parseDecimal(minPrice) * 100)); // Convert to cents
     }
     if (maxPrice !== undefined && maxPrice !== '') {
         whereClauses.push(`price <= $${paramIndex++}`);
-        params.push(Math.round(parseFloat(maxPrice) * 100)); // Convert to cents
+        params.push(Math.round(parseDecimal(maxPrice) * 100)); // Convert to cents
     }
     if (minFloat !== undefined && minFloat !== '') {
         whereClauses.push(`float_value >= $${paramIndex++}`);
-        params.push(parseFloat(minFloat));
+        params.push(parseDecimal(minFloat));
     }
     if (maxFloat !== undefined && maxFloat !== '') {
         whereClauses.push(`float_value <= $${paramIndex++}`);
-        params.push(parseFloat(maxFloat));
+        params.push(parseDecimal(maxFloat));
     }
     if (paintSeed !== undefined && paintSeed !== '') {
         whereClauses.push(`paint_seed = $${paramIndex++}`);
@@ -161,9 +163,15 @@ async function getRandomItems(limit = 10) {
         market_hash_name,
         icon_url,
         price,
-        float_value
+        float_value,
+        paint_seed,
+        stickers,
+        keychains
       FROM listings
-      WHERE price > 0 AND market_hash_name IS NOT NULL AND icon_url IS NOT NULL
+      WHERE price > 0
+        AND market_hash_name IS NOT NULL
+        AND icon_url IS NOT NULL
+        AND scraped_at >= NOW() - INTERVAL '24 hours'
       ORDER BY regexp_replace(market_hash_name, ' \\((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\\)$', ''), RANDOM()
     ) AS unique_skins
     ORDER BY RANDOM()

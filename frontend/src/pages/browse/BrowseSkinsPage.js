@@ -1,16 +1,39 @@
 // src/pages/browse/BrowseSkinsPage.js
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getBrowseItemsFromDB } from '../../api/api';
 import FilterSidebar from '../../components/skin/FilterSidebar/FilterSidebar';
 import BrowseSkinCard from '../../components/skin/BrowseSkinCard/BrowseSkinCard';
 import AdBanner from '../../components/ui/AdBanner/AdBanner';
 import './BrowseSkinsPage.css';
 
-const CategoryNav = ({ categories, selected, onSelect }) => (
-    <nav className="category-nav">{categories.map(cat => (<button key={cat} className={`category-btn ${selected === cat ? 'active' : ''}`} onClick={() => onSelect(cat)}>{cat}</button>))}</nav>
-);
+const CategoryNav = ({ categories, selected, onSelect, t }) => {
+  const categoryKeys = {
+    'All': 'browse.all',
+    'Rifles': 'browse.rifles',
+    'Pistols': 'browse.pistols',
+    'SMGs': 'browse.smgs',
+    'Heavy': 'browse.heavy',
+    'Knives': 'browse.knives',
+    'Gloves': 'browse.gloves'
+  };
+  return (
+    <nav className="category-nav">
+      {categories.map(cat => (
+        <button 
+          key={cat} 
+          className={`category-btn ${selected === cat ? 'active' : ''}`} 
+          onClick={() => onSelect(cat)}
+        >
+          {t(categoryKeys[cat] || cat)}
+        </button>
+      ))}
+    </nav>
+  );
+};
 
 const BrowseSkinsPage = () => {
+  const { t } = useTranslation();
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -19,7 +42,8 @@ const BrowseSkinsPage = () => {
   
   const [filters, setFilters] = useState({
     search: '', category: 'All', stattrak: false, souvenir: false,
-    sortBy: 'floatid', sortOrder: 'ASC', rarity: ''
+    sortBy: 'floatid', sortOrder: 'ASC', rarity: '',
+    priceNumber: ['', ''], wear: ['', ''], paintSeed: ''
   });
   
   const observer = useRef();
@@ -29,7 +53,19 @@ const BrowseSkinsPage = () => {
   const fetchItems = useCallback((currentPage, currentFilters) => {
     setLoading(true);
     console.log('🔍 Fetching items:', { page: currentPage, category: currentFilters.category, sortBy: currentFilters.sortBy });
-    const params = { ...currentFilters, page: currentPage, limit: 100 };
+    const params = {
+      ...currentFilters,
+      page: currentPage,
+      limit: 100,
+      priceMin: currentFilters.priceNumber?.[0] || undefined,
+      priceMax: currentFilters.priceNumber?.[1] || undefined,
+      wearMin: currentFilters.wear?.[0] || undefined,
+      wearMax: currentFilters.wear?.[1] || undefined,
+      paintSeed: currentFilters.paintSeed || undefined,
+    };
+    // Remove array fields that were already expanded above
+    delete params.priceNumber;
+    delete params.wear;
     
     getBrowseItemsFromDB(params).then(data => {
       if (data && data.items) {
@@ -81,7 +117,7 @@ const BrowseSkinsPage = () => {
     <>
       {showDatabaseNotice && (
         <div className="database-notice">
-          <span>ⓘ Database reflects user-fetched data, not live Steam market</span>
+          <span>ⓘ {t('common.databaseNotice')}</span>
           <button className="notice-close-btn" onClick={() => setShowDatabaseNotice(false)}>×</button>
         </div>
       )}
@@ -91,7 +127,8 @@ const BrowseSkinsPage = () => {
         <CategoryNav 
             categories={categories} 
             selected={filters.category} 
-            onSelect={(cat) => setFilters(prev => ({...prev, category: cat}))} 
+            onSelect={(cat) => setFilters(prev => ({...prev, category: cat}))}
+            t={t}
         />
 
         {/* Leaderboard ad abaixo da navegação de categorias */}
@@ -113,9 +150,9 @@ const BrowseSkinsPage = () => {
         )}
 
         <div ref={loadMoreTriggerRef} className="load-trigger" />
-        {loading && <div className="loader">Loading more items...</div>}
-        {!loading && !hasMore && items.length > 0 && <div className="end-of-results">You've reached the end!</div>}
-        {!loading && items.length === 0 && <div className="no-results-message">No items found matching your criteria.</div>}
+        {loading && <div className="loader">{t('common.loading')}</div>}
+        {!loading && !hasMore && items.length > 0 && <div className="end-of-results">{t('browse.noResults')}</div>}
+        {!loading && items.length === 0 && <div className="no-results-message">{t('browse.noResults')}</div>}
       </main>
       </div>
     </>

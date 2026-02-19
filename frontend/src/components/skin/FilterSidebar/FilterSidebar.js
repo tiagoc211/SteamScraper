@@ -1,5 +1,6 @@
 // frontend/src/components/skin/FilterSidebar/FilterSidebar.js
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import './FilterSidebar.css';
 
 // Componente reutilizável para uma secção de filtro
@@ -24,6 +25,7 @@ const ToggleSwitch = ({ label, isChecked, onToggle }) => (
 
 
 const FilterSidebar = ({ filters, setFilters, context = 'detail' }) => { // 'detail' é o contexto padrão
+  const { t } = useTranslation();
 
   // Manipulador genérico para inputs de texto e número
   const handleInputChange = (e) => {
@@ -49,31 +51,31 @@ const FilterSidebar = ({ filters, setFilters, context = 'detail' }) => { // 'det
     <aside className="filter-sidebar glass-panel">
       {context === 'browse' && (
         <>
-          <FilterSection title="Sort By">
+          <FilterSection title={t('filter.sortBy')}>
             <div className="sort-by-container">
               <select
                   className="filter-select"
                   value={filters.sortBy}
                   onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value }))}
               >
-                  <option value="floatid">Float</option>
-                  <option value="price">Price</option>
-                  <option value="paintseed">Paint Seed</option>
-                  <option value="checkedtime">Checked Time</option>
+                  <option value="floatid">{t('filter.float')}</option>
+                  <option value="price">{t('filter.price')}</option>
+                  <option value="paintseed">{t('filter.paintSeed')}</option>
+                  <option value="checkedtime">{t('filter.checkedTime')}</option>
               </select>
               
               <div className="sort-order-arrows">
                 <button
                   className={`arrow-btn ${filters.sortOrder === 'ASC' ? 'active' : ''}`}
                   onClick={() => setFilters(prev => ({ ...prev, sortOrder: 'ASC' }))}
-                  title="Ascending order"
+                  title={t('filter.ascending')}
                 >
                   ↑
                 </button>
                 <button
                   className={`arrow-btn ${filters.sortOrder === 'DESC' ? 'active' : ''}`}
                   onClick={() => setFilters(prev => ({ ...prev, sortOrder: 'DESC' }))}
-                  title="Descending order"
+                  title={t('filter.descending')}
                 >
                   ↓
                 </button>
@@ -81,31 +83,92 @@ const FilterSidebar = ({ filters, setFilters, context = 'detail' }) => { // 'det
             </div>
           </FilterSection>
 
-          <FilterSection title="Search">
-            <input type="text" name="search" placeholder="Filter by name..." value={filters.search || ''} onChange={handleInputChange} className="filter-input" />
+          <FilterSection title={t('filter.search')}>
+            <input type="text" name="search" placeholder={t('filter.filterByName')} value={filters.search || ''} onChange={handleInputChange} className="filter-input" />
           </FilterSection>
 
-          <FilterSection title="Rarity">
+          <FilterSection title={t('filter.rarity')}>
             <select
                 className="filter-select"
                 value={filters.rarity}
                 onChange={(e) => setFilters(prev => ({ ...prev, rarity: e.target.value }))}
             >
-                <option value="">All</option>
-                <option value="1">Consumer Grade (grey/white)</option>
-                <option value="2">Industrial Grade (light blue)</option>
-                <option value="3">Mil-Spec (blue)</option>
-                <option value="4">Restricted (purple)</option>
-                <option value="5">Classified (pink)</option>
-                <option value="6">Covert / knives and gloves (red)</option>
-                <option value="7">Contraband (yellow)</option>
+                <option value="">{t('filter.all')}</option>
+                <option value="1">{t('filter.consumerGrade')}</option>
+                <option value="2">{t('filter.industrialGrade')}</option>
+                <option value="3">{t('filter.milSpec')}</option>
+                <option value="4">{t('filter.restricted')}</option>
+                <option value="5">{t('filter.classified')}</option>
+                <option value="6">{t('filter.covert')}</option>
+                <option value="7">{t('filter.contraband')}</option>
             </select>
           </FilterSection>
 
-          <FilterSection title="Special">
-             <ToggleSwitch label="StatTrak™" isChecked={filters.stattrak || false} onToggle={() => handleToggleChange('stattrak')} />
-             <ToggleSwitch label="Souvenir" isChecked={filters.souvenir || false} onToggle={() => handleToggleChange('souvenir')} />
+          <FilterSection title={t('filter.special')}>
+             <ToggleSwitch label={t('filter.statTrak')} isChecked={filters.stattrak || false} onToggle={() => handleToggleChange('stattrak')} />
+             <ToggleSwitch label={t('filter.souvenir')} isChecked={filters.souvenir || false} onToggle={() => handleToggleChange('souvenir')} />
           </FilterSection>
+
+          <FilterSection title={t('filter.price')}>
+            <div className="range-inputs">
+              <input 
+                type="number" 
+                placeholder={t('filter.from')}
+                value={filters.priceNumber?.[0] || ''} 
+                onChange={(e) => handleRangeChange('priceNumber', 0, e.target.value)} 
+              />
+              <input 
+                type="number" 
+                placeholder={t('filter.to')}
+                value={filters.priceNumber?.[1] || ''} 
+                onChange={(e) => handleRangeChange('priceNumber', 1, e.target.value)} 
+              />
+            </div>
+          </FilterSection>
+
+          <FilterSection title={t('filter.wear')}>
+             <div className="range-inputs">
+                <input 
+                    type="number" 
+                    step="0.01" 
+                    placeholder={t('filter.minimum')}
+                    value={filters.wear?.[0] || ''} 
+                    onChange={(e) => handleRangeChange('wear', 0, e.target.value)} 
+                />
+                <input 
+                    type="number" 
+                    step="0.01"
+                    placeholder={t('filter.maximum')} 
+                    value={filters.wear?.[1] || ''} 
+                    onChange={(e) => handleRangeChange('wear', 1, e.target.value)} 
+                />
+            </div>
+          </FilterSection>
+
+          <FilterSection title={t('filter.patterns')}>
+            <input 
+                type="number" 
+                name="paintSeed" 
+                placeholder={t('filter.paintSeed')}
+                value={filters.paintSeed || ''} 
+                onChange={handleInputChange}
+                className="filter-input"
+            />
+          </FilterSection>
+
+          <button 
+            className="clear-filters-btn"
+            onClick={() => {
+              setFilters(prev => ({
+                ...prev,
+                priceNumber: ['', ''],
+                wear: ['', ''],
+                paintSeed: ''
+              }));
+            }}
+          >
+            {t('filter.clearFilters')}
+          </button>
         </>
       )}
 
@@ -114,48 +177,48 @@ const FilterSidebar = ({ filters, setFilters, context = 'detail' }) => { // 'det
       {/* ================================================= */}
       {context === 'detail' && (
         <>
-          <FilterSection title="Price">
+          <FilterSection title={t('filter.price')}>
             <div className="range-inputs">
               <input 
                 type="number" 
-                placeholder="From"
+                placeholder={t('filter.from')}
                 // CORREÇÃO: Usa optional chaining (?.) e um fallback para não crashar
                 value={filters.priceNumber?.[0] || ''} 
                 onChange={(e) => handleRangeChange('priceNumber', 0, e.target.value)} 
               />
               <input 
                 type="number" 
-                placeholder="To"
+                placeholder={t('filter.to')}
                 value={filters.priceNumber?.[1] || ''} 
                 onChange={(e) => handleRangeChange('priceNumber', 1, e.target.value)} 
               />
             </div>
           </FilterSection>
 
-          <FilterSection title="Wear">
+          <FilterSection title={t('filter.wear')}>
              <div className="range-inputs">
                 <input 
                     type="number" 
                     step="0.01" 
-                    placeholder="Minimum"
+                    placeholder={t('filter.minimum')}
                     value={filters.wear?.[0] || ''} 
                     onChange={(e) => handleRangeChange('wear', 0, e.target.value)} 
                 />
                 <input 
                     type="number" 
                     step="0.01"
-                    placeholder="Maximum" 
+                    placeholder={t('filter.maximum')} 
                     value={filters.wear?.[1] || ''} 
                     onChange={(e) => handleRangeChange('wear', 1, e.target.value)} 
                 />
             </div>
           </FilterSection>
 
-          <FilterSection title="Patterns">
+          <FilterSection title={t('filter.patterns')}>
             <input 
                 type="number" 
                 name="paintSeed" 
-                placeholder="Paint Seed"
+                placeholder={t('filter.paintSeed')}
                 value={filters.paintSeed || ''} 
                 onChange={handleInputChange}
                 className="filter-input"
@@ -166,7 +229,13 @@ const FilterSidebar = ({ filters, setFilters, context = 'detail' }) => { // 'det
             className="apply-filters-btn"
             onClick={filters.onApply}
           >
-            Apply Filters
+            {t('filter.applyFilters')}
+          </button>
+          <button 
+            className="clear-filters-btn"
+            onClick={filters.onClear}
+          >
+            {t('filter.clearFilters')}
           </button>
         </>
       )}
