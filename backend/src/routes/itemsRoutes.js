@@ -271,24 +271,40 @@ router.get('/', async (req, res) => {
       ? (safeSortOrder === 'ASC' ? 'DESC' : 'ASC')
       : safeSortOrder;
 
-  // QUERY SIMPLIFICADA - SEM JOIN (mas adicionamos colunas NULL para rarity por agora)
+  // Use CTE to avoid column ambiguity with featured_listings JOIN
   const query = `
-    SELECT 
-      listing_id,
-      market_hash_name,
-      icon_url,
-      price,
-      float_value,
-      paint_seed,
-      stickers,
-      keychains,
-      inspect_link,
-      scraped_at,
-      NULL as rarity_name,
-      NULL as rarity_color
-    FROM listings
-    ${whereString}
-    ORDER BY ${safeSortBy} ${effectiveSortOrder} NULLS LAST, listing_id DESC
+    WITH base AS (
+      SELECT 
+        listing_id,
+        market_hash_name,
+        icon_url,
+        price,
+        float_value,
+        paint_seed,
+        stickers,
+        keychains,
+        inspect_link,
+        scraped_at,
+        NULL::text as rarity_name,
+        NULL::text as rarity_color
+      FROM listings
+      ${whereString}
+    ),
+    featured_active AS (
+      SELECT DISTINCT ON (market_hash_name)
+        market_hash_name,
+        bid_amount
+      FROM featured_listings
+      WHERE active = TRUE AND renewal_date > NOW()
+      ORDER BY market_hash_name, bid_amount DESC
+    )
+    SELECT
+      b.*,
+      CASE WHEN f.market_hash_name IS NOT NULL THEN TRUE ELSE FALSE END AS is_featured,
+      COALESCE(f.bid_amount, 0) AS featured_bid
+    FROM base b
+    LEFT JOIN featured_active f ON f.market_hash_name = b.market_hash_name
+    ORDER BY featured_bid DESC, ${safeSortBy} ${effectiveSortOrder} NULLS LAST, listing_id DESC
     LIMIT $${paramIndex++}
     OFFSET $${paramIndex++}
   `;

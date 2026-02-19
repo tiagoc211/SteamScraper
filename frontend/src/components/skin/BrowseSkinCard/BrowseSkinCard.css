@@ -1,5 +1,19 @@
 /* ===== Liquid Glass Skin Card ===== */
 
+/* --- Featured Badge --- */
+.featured-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #000;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-bottom: 4px;
+  box-shadow: 0 2px 10px rgba(245,158,11,0.4);
+}
+
 /* --- WRAPPER --- */
 .browse-card-wrapper {
   position: relative;

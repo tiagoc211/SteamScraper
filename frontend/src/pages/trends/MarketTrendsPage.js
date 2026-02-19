@@ -6,6 +6,7 @@ import { getTopGainers, getTopLosers, getBestLiquidity, getLowestFloats, getRand
 import AdBanner from '../../components/ui/AdBanner/AdBanner';
 import Carousel from '../../components/ui/Carousel/Carousel';
 import HoverTooltip from '../../components/ui/HoverTooltip/HoverTooltip';
+import FeaturedSection from '../../components/skin/FeaturedSection/FeaturedSection';
 import './MarketTrendsPage.css';
 
 const TrendCard = ({ item, type }) => {
@@ -286,6 +287,9 @@ const MarketTrendsPage = ({ showHeader = true, fixedTimeframe = null }) => {
             </div>
           )}
           
+          {/* Featured Auction Section - SÓ na HomePage */}
+          {!showHeader && <FeaturedSection />}
+
           {/* Analytics Dashboard */}
           <AdBanner variant="leaderboard" adSlot="8971192051" />
           <div className="analytics-dashboard">

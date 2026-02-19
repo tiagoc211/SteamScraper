@@ -116,6 +116,9 @@ const BrowseSkinCard = React.forwardRef(({ item, variant = 'browse' }, ref) => {
   const CardContent = () => (
     <>
       <div className="card-header">
+        {item.is_featured && (
+          <span className="featured-badge">★ Em Destaque</span>
+        )}
         <p className="item-name" title={item.name}>{item.name}</p>
       </div>
 

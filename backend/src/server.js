@@ -11,6 +11,7 @@ const logsRoutes = require('./routes/logsRoutes');
 const subscriptionsRoutes = require('./routes/subscriptionsRoutes');
 const itemsRoutes = require('./routes/itemsRoutes');
 const trendsRoutes = require('./routes/trendsRoutes');
+const featuredRoutes = require('./routes/featuredRoutes');
 
 // MODELS E OUTROS
 const express = require('express');
@@ -79,6 +80,7 @@ async function startServer() {
   app.use('/api/logs', logsRoutes);
   app.use('/api/items', itemsRoutes);
   app.use('/api/trends', trendsRoutes);
+  app.use('/api/featured', featuredRoutes);
   
 
   //app.get(/^(?!\/api).*/, (req, res) => {

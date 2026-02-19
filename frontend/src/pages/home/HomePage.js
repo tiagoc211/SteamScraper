@@ -27,9 +27,10 @@ const HomePage = () => {
   return (
     <>
       <div className="homepage">
-
-        {/* === GAIVOTAS === */}
-        <Seagulls />
+        {/* === SEAGULLS STRIP === */}
+        <div className="seagulls-strip">
+          <Seagulls />
+        </div>
 
         {/* === PUBLICIDADE ESQUERDA === */}
         <aside className="side-ad side-ad--left">

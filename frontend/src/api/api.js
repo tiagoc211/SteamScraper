@@ -83,6 +83,7 @@ export const getBrowseItemsFromDB = async (params) => {
         stickers: dbItem.stickers,
         keychains: dbItem.keychains,
         scraped_at: dbItem.scraped_at,
+        is_featured: dbItem.is_featured || false,
       }))
     };
     return mappedData;
@@ -251,5 +252,46 @@ export const getRandomItems = async (limit = 10) => {
   } catch (error) {
     console.error('Error fetching random items:', error);
     return { success: false, items: [] };
+  }
+};
+
+// ─── Featured Listings (Auction System) ───────────────────────────────────────
+
+export const getFeaturedListings = async () => {
+  try {
+    const response = await apiClient.get('/api/featured');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching featured listings:', error);
+    return { success: false, items: [] };
+  }
+};
+
+export const createFeaturedListing = async (data) => {
+  try {
+    const response = await apiClient.post('/api/featured', data);
+    return response.data;
+  } catch (error) {
+    const msg = error.response?.data?.error || 'Erro ao criar destaque.';
+    return { success: false, error: msg };
+  }
+};
+
+export const renewFeaturedListing = async (id, bid_amount) => {
+  try {
+    const response = await apiClient.put(`/api/featured/${id}/renew`, { bid_amount });
+    return response.data;
+  } catch (error) {
+    const msg = error.response?.data?.error || 'Erro ao renovar destaque.';
+    return { success: false, error: msg };
+  }
+};
+
+export const deleteFeaturedListing = async (id) => {
+  try {
+    const response = await apiClient.delete(`/api/featured/${id}`);
+    return response.data;
+  } catch (error) {
+    return { success: false, error: 'Erro ao remover destaque.' };
   }
 };
