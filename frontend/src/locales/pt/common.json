@@ -95,6 +95,8 @@
   },
   "skinDetail": {
     "title": "Detalhes do Item",
+    "noLuck": "Não tiveste sorte desta vez",
+    "noLuckSub": "A tua arma já não se encontra no mercado da Steam.",
     "priceHistory": "Histórico de Preços",
     "listings": "Anúncios",
     "similarSkins": "Itens Similares",

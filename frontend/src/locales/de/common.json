@@ -95,6 +95,8 @@
   },
   "skinDetail": {
     "title": "Item-Details",
+    "noLuck": "Kein Glück diesmal",
+    "noLuckSub": "Diese Waffe ist nicht mehr auf dem Steam-Markt verfügbar.",
     "priceHistory": "Preisgeschichte",
     "listings": "Angebote",
     "similarSkins": "Ähnliche Items",

@@ -95,6 +95,8 @@
   },
   "skinDetail": {
     "title": "皮肤详情",
+    "noLuck": "这次没有运气",
+    "noLuckSub": "该武器已不再在 Steam 市场上出售。",
     "priceHistory": "价格历史",
     "listings": "上架列表",
     "similarSkins": "相似皮肤",

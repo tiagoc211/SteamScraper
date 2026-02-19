@@ -95,6 +95,8 @@
   },
   "skinDetail": {
     "title": "スキンの詳細",
+    "noLuck": "今回は運がなかった",
+    "noLuckSub": "この武器は Steam マーケットではもう购入できません。",
     "priceHistory": "価格履歴",
     "listings": "リスティング",
     "similarSkins": "類似スキン",

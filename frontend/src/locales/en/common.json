@@ -95,6 +95,8 @@
   },
   "skinDetail": {
     "title": "Skin Details",
+    "noLuck": "No luck this time",
+    "noLuckSub": "This weapon is no longer available on the Steam market.",
     "priceHistory": "Price History",
     "listings": "Listings",
     "similarSkins": "Similar Skins",

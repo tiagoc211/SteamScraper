@@ -1,6 +1,7 @@
 // frontend/src/pages/skin/SkinDetailPage.js
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getSkinDetails } from '../../api/api';
 import BrowseSkinCard from '../../components/skin/BrowseSkinCard/BrowseSkinCard';
 import FilterSidebar from '../../components/skin/FilterSidebar/FilterSidebar';
@@ -14,6 +15,7 @@ const FullPageLoader = () => <div className="loader">Loading best deals for you.
 const SkinDetailPage = () => {
     const { marketHashName } = useParams();
     const location = useLocation();
+    const { t } = useTranslation();
 
     const getInitialFilters = () => {
         const p = new URLSearchParams(location.search);
@@ -148,6 +150,18 @@ const SkinDetailPage = () => {
                         </div>
                     </div>
                     
+                    {!loading && processedListings.length === 0 && allListings.length > 0 && (
+                        <div className="no-results-overlay">
+                            <div className="no-results-box">
+                                <button className="no-results-close" onClick={handleClearFilters}>✕</button>
+                                <div className="no-results-card glass-panel">
+                                    <h3 className="no-results-title">{t('skinDetail.noLuck')}</h3>
+                                    <p className="no-results-sub">{t('skinDetail.noLuckSub')}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {loading && processedListings.length === 0 ? <FullPageLoader /> : (
                          <div className="skin-cards-grid">
                             {processedListings.map(listing => {

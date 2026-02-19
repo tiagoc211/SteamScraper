@@ -1,0 +1,111 @@
+/* ===== Seagulls — 2D flying bird silhouettes ===== */
+
+.seagulls-container {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* ---------- Flight path (horizontal drift) ---------- */
+.seagull-path {
+  position: absolute;
+  left: -60px;
+  animation: seagull-fly linear infinite;
+  will-change: transform;
+}
+
+@keyframes seagull-fly {
+  0% {
+    transform: translateX(-60px) translateY(0);
+    opacity: 0;
+  }
+  3% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(50vw) translateY(var(--bird-y-drift, -30px));
+  }
+  97% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(calc(100vw + 60px)) translateY(0);
+    opacity: 0;
+  }
+}
+
+/* ---------- Bird body ---------- */
+.seagull {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: seagull-flap ease-in-out infinite;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+}
+
+/* ---------- Wings (two mirrored arcs) ---------- */
+.wing {
+  width: var(--wing-size, 24px);
+  height: calc(var(--wing-size, 24px) * 0.15);
+  background: #1a1a1a;
+  border-radius: 50% 50% 0 0;
+  transform-origin: bottom center;
+}
+
+.wing-left {
+  border-radius: 80% 0 0 0;
+  transform-origin: right bottom;
+  animation: flap-left ease-in-out infinite;
+  animation-duration: inherit;
+}
+
+.wing-right {
+  border-radius: 0 80% 0 0;
+  transform-origin: left bottom;
+  animation: flap-right ease-in-out infinite;
+  animation-duration: inherit;
+}
+
+/* ---------- Flap keyframes ---------- */
+@keyframes flap-left {
+  0%, 100% {
+    transform: rotate(-45deg) scaleY(1);
+  }
+  25% {
+    transform: rotate(-10deg) scaleY(0.8);
+  }
+  50% {
+    transform: rotate(30deg) scaleY(1);
+  }
+  75% {
+    transform: rotate(-10deg) scaleY(0.8);
+  }
+}
+
+@keyframes flap-right {
+  0%, 100% {
+    transform: rotate(45deg) scaleY(1);
+  }
+  25% {
+    transform: rotate(10deg) scaleY(0.8);
+  }
+  50% {
+    transform: rotate(-30deg) scaleY(1);
+  }
+  75% {
+    transform: rotate(10deg) scaleY(0.8);
+  }
+}
+
+/* Gentle body bob in sync with wings */
+@keyframes seagull-flap {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
