@@ -267,6 +267,16 @@ export const getFeaturedListings = async () => {
   }
 };
 
+export const getMyFeaturedSkins = async (q = '') => {
+  try {
+    const response = await apiClient.get('/api/featured/my-skins', { params: { q } });
+    return response.data;
+  } catch (error) {
+    // 401 = não autenticado, retorna vazio graciosamente
+    return { success: false, skins: [] };
+  }
+};
+
 export const createFeaturedListing = async (data) => {
   try {
     const response = await apiClient.post('/api/featured', data);

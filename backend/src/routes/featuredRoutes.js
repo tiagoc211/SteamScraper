@@ -8,6 +8,45 @@ const router = express.Router();
 const MIN_BID_CENTS = 50; // 0.50 €
 
 // ─────────────────────────────────────────────────────────────────────────────
+// GET /api/featured/my-skins?q=search
+// Devolve as listings do utilizador autenticado que existem na nossa BD.
+// Usa o seller_steam_id para identificar as armas do utilizador.
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/my-skins', ensureAuthenticated, async (req, res) => {
+  const { q = '' } = req.query;
+  const steamId = req.user?.id; // Steam ID do passport
+
+  if (!steamId) {
+    return res.status(401).json({ success: false, error: 'Steam ID não encontrado.' });
+  }
+
+  try {
+    const searchPattern = `%${q}%`;
+    const result = await pool.query(
+      `SELECT DISTINCT ON (market_hash_name)
+         listing_id,
+         market_hash_name,
+         icon_url,
+         price,
+         float_value,
+         paint_seed,
+         scraped_at
+       FROM listings
+       WHERE seller_steam_id = $1
+         AND ($2 = '%%' OR market_hash_name ILIKE $2)
+       ORDER BY market_hash_name, price ASC
+       LIMIT 30`,
+      [steamId, searchPattern]
+    );
+
+    res.json({ success: true, skins: result.rows });
+  } catch (err) {
+    console.error('GET /api/featured/my-skins error:', err);
+    res.status(500).json({ success: false, error: 'Erro interno' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // GET /api/featured
 // Lista todas as armas em destaque activas, ordenadas por bid_amount DESC.
 // Expira automaticamente as que ultrapassaram renewal_date.

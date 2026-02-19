@@ -2,10 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { getTopGainers, getTopLosers, getBestLiquidity, getLowestFloats, getRandomItems } from '../../api/api';
+import { getTopGainers, getTopLosers, getBestLiquidity, getLowestFloats } from '../../api/api';
 import AdBanner from '../../components/ui/AdBanner/AdBanner';
-import Carousel from '../../components/ui/Carousel/Carousel';
-import HoverTooltip from '../../components/ui/HoverTooltip/HoverTooltip';
 import FeaturedSection from '../../components/skin/FeaturedSection/FeaturedSection';
 import './MarketTrendsPage.css';
 
@@ -126,7 +124,6 @@ const MarketTrendsPage = ({ showHeader = true, fixedTimeframe = null }) => {
   const [topLosers, setTopLosers] = useState([]);
   const [bestLiquidity, setBestLiquidity] = useState([]);
   const [lowestFloats, setLowestFloats] = useState([]);
-  const [randomItems, setRandomItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [timeframe, setTimeframe] = useState(fixedTimeframe || 7);
 
@@ -135,28 +132,17 @@ const MarketTrendsPage = ({ showHeader = true, fixedTimeframe = null }) => {
       setLoading(true);
       try {
         const effectiveTimeframe = fixedTimeframe || timeframe;
-        const promises = [
+        const results = await Promise.all([
           getTopGainers(effectiveTimeframe, 10),
           getTopLosers(effectiveTimeframe, 10),
           getBestLiquidity(10),
           getLowestFloats(10)
-        ];
-        
-        // Só busca items aleatórios se não mostrar header (HomePage)
-        if (!showHeader) {
-          promises.push(getRandomItems(20));
-        }
-        
-        const results = await Promise.all(promises);
+        ]);
         
         setTopGainers(results[0].items || []);
         setTopLosers(results[1].items || []);
         setBestLiquidity(results[2].items || []);
         setLowestFloats(results[3].items || []);
-        
-        if (!showHeader && results[4]) {
-          setRandomItems(results[4].items || []);
-        }
       } catch (error) {
         console.error('Error fetching trends:', error);
       } finally {
@@ -165,9 +151,7 @@ const MarketTrendsPage = ({ showHeader = true, fixedTimeframe = null }) => {
     };
 
     fetchTrends();
-  }, [timeframe, fixedTimeframe, showHeader]);
-
-  const formatPrice = (cents) => (cents / 100).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' });
+  }, [timeframe, fixedTimeframe]);
 
   return (
     <div className="market-analytics-page">
@@ -208,86 +192,7 @@ const MarketTrendsPage = ({ showHeader = true, fixedTimeframe = null }) => {
         <div className="analytics-loader">{t('analytics.loading')}</div>
       ) : (
         <>
-          {/* Faixa de armas aleatórias - SÓ na HomePage */}
-          {!showHeader && randomItems.length > 0 && (
-            <div className="expensive-items-banner">
-              <div className="banner-header">
-                <h2>{t('analytics.featuredWeapons')}</h2>
-                <p>{t('analytics.discoverBest')}</p>
-              </div>
-              <Carousel
-                items={randomItems}
-                renderItem={(item) => {
-                  const imageUrl = item.icon_url
-                    ? `https://community.akamai.steamstatic.com/economy/image/${item.icon_url}/200fx200f`
-                    : 'https://via.placeholder.com/200';
-                  return (
-                    <Link
-                      to={(() => {
-                        const params = new URLSearchParams();
-                        if (item.price) {
-                          const priceEur = item.price / 100;
-                          params.set('priceMin', (priceEur * 0.9).toFixed(2));
-                          params.set('priceMax', (priceEur * 1.1).toFixed(2));
-                        }
-                        if (item.float_value) {
-                          const f = parseFloat(item.float_value);
-                          params.set('floatMin', Math.max(0, f - 0.005).toFixed(4));
-                          params.set('floatMax', Math.min(1, f + 0.005).toFixed(4));
-                        }
-                        if (item.paint_seed) {
-                          params.set('pattern', item.paint_seed);
-                        }
-                        return `/skin/${encodeURIComponent(item.market_hash_name)}?${params.toString()}`;
-                      })()}
-                      className="banner-item-card"
-                    >
-                      <div className="banner-item-image">
-                        <img src={imageUrl} alt={item.market_hash_name} />
-                      </div>
-                      <div className="banner-item-extras">
-                          {item.stickers?.slice(0, 4).map((sticker, i) => (
-                            <HoverTooltip key={i} title={sticker.name} imageUrl={sticker.img} position="top">
-                              <img src={sticker.img} alt={sticker.name} className="banner-extra-img" />
-                            </HoverTooltip>
-                          ))}
-                          {item.keychains?.slice(0, 1).map((charm, i) => (
-                            <HoverTooltip key={`charm-${i}`} title={charm.name} imageUrl={charm.image_url} position="top">
-                              <img src={charm.image_url} alt={charm.name} className="banner-extra-img banner-charm-img" />
-                            </HoverTooltip>
-                          ))}
-                        </div>
-                      <div className="banner-item-info">
-                        <h4 className="banner-item-name">{item.market_hash_name}</h4>
-                        <span className="banner-avg-price">{formatPrice(item.price)}</span>
-                        <div className="banner-item-tags">
-                          {item.float_value && (
-                            <HoverTooltip title="Float" position="top" compact>
-                              <span className="banner-tag banner-tag-float">
-                                FL {parseFloat(item.float_value).toFixed(4)}
-                              </span>
-                            </HoverTooltip>
-                          )}
-                          {item.paint_seed && (
-                            <HoverTooltip title="Pattern" position="top" compact>
-                              <span className="banner-tag banner-tag-pattern">
-                                #{item.paint_seed}
-                              </span>
-                            </HoverTooltip>
-                          )}
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                }}
-                itemsPerView={5}
-                autoPlay={true}
-                autoPlayInterval={4000}
-              />
-            </div>
-          )}
-          
-          {/* Featured Auction Section - SÓ na HomePage */}
+          {/* Featured Section — shows paid featured OR random carousel fallback */}
           {!showHeader && <FeaturedSection />}
 
           {/* Analytics Dashboard */}
