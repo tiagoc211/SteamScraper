@@ -48,7 +48,7 @@
 .slice-text {
   /* CORREÇÃO: Tamanho da fonte ajustado para o novo tamanho do menu */
   font-size: 0.065px; 
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Inter', sans-serif;
   fill: var(--color-text-bright);
   font-weight: 500;
   text-transform: uppercase;

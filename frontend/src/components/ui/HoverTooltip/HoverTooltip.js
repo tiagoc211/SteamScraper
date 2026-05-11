@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import './HoverTooltip.css';
 
-const HoverTooltip = ({ children, title, imageUrl, lines, mouseMoveNonce, position = 'top' }) => {
+const HoverTooltip = ({ children, title, imageUrl, lines, mouseMoveNonce, position = 'top', compact = false }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [pos, setPos] = useState(null);
   const wrapperRef = useRef(null);
@@ -43,7 +43,7 @@ const HoverTooltip = ({ children, title, imageUrl, lines, mouseMoveNonce, positi
       {children}
       {isVisible && pos && ReactDOM.createPortal(
         <div 
-          className={`tooltip-content tooltip-${position}`}
+          className={`tooltip-content tooltip-${position}${compact ? ' tooltip-compact' : ''}`}
           style={{ top: pos.top, left: pos.left }}
         >
           {title && <h4 className="tooltip-title">{title}</h4>}

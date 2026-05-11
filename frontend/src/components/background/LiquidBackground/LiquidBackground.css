@@ -1,0 +1,43 @@
+.liquid-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.liquid-background canvas {
+  width: 100% !important;
+  height: 100% !important;
+  transform: scale(1.06);
+  filter: saturate(1.12) contrast(1.05);
+}
+
+.liquid-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.1), transparent 45%),
+    radial-gradient(circle at 82% 78%, rgba(56, 189, 248, 0.16), transparent 50%),
+    linear-gradient(180deg, rgba(2, 6, 23, 0.32), rgba(2, 6, 23, 0.58));
+}
+
+.liquid-noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.75) 0.6px, transparent 0.6px);
+  background-size: 2px 2px;
+  mix-blend-mode: soft-light;
+}
+
+@media (max-width: 768px) {
+  .liquid-background canvas {
+    transform: scale(1.12);
+    filter: saturate(1.05);
+  }
+
+  .liquid-noise {
+    opacity: 0.035;
+  }
+}

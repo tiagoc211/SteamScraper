@@ -1,143 +1,218 @@
+// backend/src/routes/listeningsRoutes.js
 const express = require('express');
-const fetcher = require('../fetch.js'); // Ajusta o path se necessário
+const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args));
+const fetcher = require('../fetch.js');
 const cheerio = require('cheerio');
-const searchUsageDb = require('../db/searchUsage.js');
-console.log('searchUsageDb =', searchUsageDb);
-const ensureAuthenticated = require('../middleware/authMiddleware.js');
+const listingsDb = require('../db/listings.js');
+const listingCleanup = require('../db/listingCleanup.js');
+const pool = require('../db/index.js');
 
 const router = express.Router();
 
-function parseListings(data) {
-    if (!data || !data.results_html) return [];
-    const $ = cheerio.load(data.results_html);
-    const listings = [];
-    $('.market_listing_row').each((_, el) => {
-        const $el = $(el);
-        const listingid = $el.attr('id')?.replace('listing_', '');
-        if (!listingid) return;
+// --- FUNÇÃO AUXILIAR DE MAPEAMENTO (PARA ENCONTRAR O item_id) ---
+let apiCache = null;
+async function getApiData() {
+    if (apiCache) return apiCache;
+    console.log("A buscar dados da API externa para mapeamento de paint_index...");
+    const res = await fetch('https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins.json');
+    apiCache = await res.json();
+    return apiCache;
+}
+getApiData();
 
-        const name = $el.find('.market_listing_item_name').text().trim();
-        const priceText = $el.find('.market_listing_price_with_fee').text().trim();
-        const image = $el.find('img.market_listing_item_img').attr('src');
-        const inspectLink = $el.find('.market_listing_row_action a').attr('href');
-        
-        const listingInfo = data.listinginfo?.[listingid];
-        const assetInfo = listingInfo?.asset?.id ? data.assets?.[730]?.[listingInfo.asset.contextid || '2']?.[listingInfo.asset.id] : null;
-
-        const priceNumber = parseFloat(priceText.replace(/[^\d,]/g, '').replace(',', '.'));
-
-        const stickerImgs = [];
-        $el.find('#sticker_info img, .market_listing_sticker_images img').each((_, img) => {
-          const src = $(img).attr('src');
-          if (src) stickerImgs.push(src);
-        });
-
-        const keychains = [];
-        $el.find('#keychain_info img, .market_listing_keychain_images img').each((_, img) => {
-          const src = $(img).attr('src');
-          if (src) keychains.push({ image_url: src });
-        });
-
-        listings.push({
-            listingid, name,
-            price: listingInfo?.price ? (listingInfo.price / 100).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' }) : null,
-            priceNumber, image, inspectLink,
-            stickers: stickerImgs.length > 0 ? stickerImgs : null,
-            keychains: keychains.length > 0 ? keychains : null,
-            buy: {
-                subtotalCents: listingInfo?.price,
-                feeCents: listingInfo?.fee,
-                totalCents: (listingInfo?.price != null && listingInfo?.fee != null) ? (listingInfo.price + listingInfo.fee) : null,
-                currency: listingInfo?.currencyid
-            },
-            raw: assetInfo
-        });
-    });
-    return listings;
+async function findItemIdByMarketHashName(marketHashName) {
+    const apiData = await getApiData();
+    const baseName = marketHashName.split(' (')[0].replace(/StatTrak™ |Souvenir |★ /g, '');
+    const apiItem = apiData.find(item => item.name.replace('★ ', '') === baseName);
+    if (!apiItem || !apiItem.paint_index) {
+        console.warn(`Não foi possível encontrar o paint_index para '${marketHashName}' na API externa.`);
+        return null;
+    }
+    const { rows } = await pool.query('SELECT a FROM items WHERE paintindex = $1 LIMIT 1', [apiItem.paint_index]);
+    return rows.length > 0 ? rows[0].a : null;
 }
 
-// --- ROTAS ---
-
-router.get('/limitado/:marketHashName', ensureAuthenticated, async (req, res) => {
-  try {
-    const userId = req.userId;
-    const marketHashName = decodeURIComponent(req.params.marketHashName);
-
-    // 1️⃣ Obter limites do plano
-    console.log("🧩 userId recebido no router:", userId);
-
-    const limits = await searchUsageDb.getUserLimits(userId);
-    if (!limits)
-      return res.status(403).json({ success: false, message: 'Nenhum plano ativo encontrado.' });
-
-    const { max_searches_per_day, max_results_per_search } = limits;
-
-    // 2️⃣ Garantir registo diário e validar limite
-    await searchUsageDb.ensureUserUsage(userId);
-    const usedToday = await searchUsageDb.getUserUsage(userId);
-    if (usedToday >= max_searches_per_day)
-      return res.status(429).json({ success: false, message: 'Limite diário de pesquisas atingido.' });
-
-    // 3️⃣ Incrementar uso
-    await searchUsageDb.incrementSearchUsage(userId);
-
-    // 4️⃣ Fazer o scrape normal (sem alterar tua lógica)
-    const firstPageData = await fetcher.fetchFirstPage(marketHashName);
-    if (!firstPageData || !firstPageData.success) {
-      return res.status(503).json({ success: false, message: 'Erro ao obter dados da Steam.' });
+/**
+ * Função MESTRA: Extrai os dados da Steam, formata para o frontend E para a base de dados.
+ */
+async function parseAndProcessSteamData(steamData, marketHashName) {
+    if (!steamData || !steamData.results_html) {
+        return { forFrontend: [], forDatabase: [] };
     }
 
-    // 5️⃣ Aplicar limite de resultados
-    const listings = parseListings(firstPageData).slice(0, max_results_per_search);
-    const totalListings = Math.min(firstPageData.total_count || 0, max_results_per_search);
-    const totalPages = Math.ceil(totalListings / 100);
+    const $ = cheerio.load(steamData.results_html);
+    const listingsForFrontend = [];
+    const listingsForDatabase = [];
 
-    // 6️⃣ Resposta
-    res.json({
-      success: true,
-      marketHashName,
-      listings,
-      pagination: { totalPages, totalListings },
-      usage: {
-        used_today: usedToday + 1,
-        remaining: Math.max(0, max_searches_per_day - (usedToday + 1)),
-        limit_per_day: max_searches_per_day,
-        limit_results: max_results_per_search
-      }
-    });
+    for (const el of $('.market_listing_row').toArray()) {
+        const $el = $(el);
+        const listingid = $el.attr('id')?.replace('listing_', '');
+        if (!listingid) continue;
 
-  } catch (err) {
-    console.error('Erro no endpoint /limitado:', err);
-    res.status(500).json({ success: false, message: 'Erro interno ao processar a pesquisa limitada.' });
-  }
-});
+        const listingInfo = steamData.listinginfo?.[listingid];
+        if (!listingInfo) continue;
+        
+        const assetInfo = listingInfo.asset?.id ? steamData.assets?.[730]?.[listingInfo.asset.contextid || '2']?.[listingInfo.asset.id] : null;
 
+        const inspectLink = $el.find('.market_listing_row_action a').attr('href');
+        let floatData = {};
+        if (inspectLink) {
+            try {
+                const inspectRes = await fetch(`${process.env.FLOAT_INSPECT_URL}/?url=${encodeURIComponent(inspectLink)}`, {
+                    timeout: 5000 // 5 segundos de timeout
+                });
+                if (inspectRes.ok) {
+                    const jsonData = await inspectRes.json();
+                    floatData = jsonData.iteminfo || {};
+                    if (floatData.floatvalue) {
+                        console.log(`✓ Float obtido para ${listingid}: ${floatData.floatvalue}`);
+                    }
+                } else {
+                    console.warn(`⚠️ Serviço de inspect retornou status ${inspectRes.status} para listing ${listingid}`);
+                }
+            } catch (e) {
+                if (listingid === Object.keys(steamData.listinginfo)[0]) {
+                    // Só mostra o erro completo uma vez por página
+                    console.error(`❌ FLOAT_INSPECT_URL (${process.env.FLOAT_INSPECT_URL}) não está acessível!`);
+                    console.error(`   Configure um serviço de inspect local ou use uma API pública.`);
+                    console.error(`   Erro: ${e.message}`);
+                }
+            }
+        }
+
+        const stickers = assetInfo?.descriptions?.find(d => d.value.includes('sticker_info'))?.value.match(/<img.*?src="([^"]+)" title="([^"]+)">/g)?.map(tag => ({
+            name: tag.match(/title="([^"]+)"/)?.[1] || 'Sticker',
+            img: tag.match(/src="([^"]+)"/)?.[1] || ''
+        })) || [];
+        
+        const keychains = assetInfo?.descriptions?.find(d => d.value.includes('keychain_info'))?.value.match(/<img.*?src="([^"]+)" title="([^"]+)">/g)?.map(tag => ({
+            name: tag.match(/title="([^"]+)"/)?.[1] || 'Charm',
+            image_url: tag.match(/src="([^"]+)"/)?.[1] || ''
+        })) || [];
+
+        // 1. Formato para o frontend (SkinDetailPage)
+        listingsForFrontend.push({
+            listingid,
+            name: marketHashName, // Nome completo
+            priceNumber: (listingInfo.converted_price + listingInfo.converted_fee) / 100,
+            image: $el.find('img.market_listing_item_img').attr('src'),
+            inspectLink,
+            stickers: stickers.map(s => s.img),
+            keychains: keychains,
+            raw: { ...assetInfo, ...floatData, name: marketHashName, stickers: stickers },
+            buy: {
+                subtotalCents: listingInfo.converted_price,
+                feeCents: listingInfo.converted_fee,
+                totalCents: listingInfo.converted_price + listingInfo.converted_fee
+            }
+        });
+
+        // 2. Formato para guardar na base de dados (só se tiver float)
+        if (floatData.floatvalue != null && floatData.paintseed != null) {
+            listingsForDatabase.push({
+                listing_id: listingid,
+                price: listingInfo.converted_price + listingInfo.converted_fee,
+                fee: listingInfo.converted_fee,
+                float_value: floatData.floatvalue,
+                paint_seed: floatData.paintseed,
+                stickers: stickers.length > 0 ? JSON.stringify(stickers) : null,
+                keychains: keychains.length > 0 ? JSON.stringify(keychains) : null,
+                inspect_link: inspectLink,
+                market_hash_name: marketHashName,
+                icon_url: assetInfo?.icon_url || null
+            });
+        }
+    }
+
+    return { listingsForFrontend, listingsForDatabase };
+}
+
+
+// ROTA PRINCIPAL - /api/skin/:marketHashName
 router.get('/:marketHashName', async (req, res) => {
     const marketHashName = decodeURIComponent(req.params.marketHashName);
-    const firstPageData = await fetcher.fetchFirstPage(marketHashName);
-    if (!firstPageData || !firstPageData.success) {
-      return res.status(503).json({ success: false, message: 'Erro crítico ao obter os dados da Steam.' });
-    }
-
-    const listings = parseListings(firstPageData);
-    const totalListings = firstPageData.total_count || 0;
-    const totalPages = Math.ceil(totalListings / 100);
     
-    res.json({ success: true, marketHashName, listings, pagination: { totalPages, totalListings }});
-});
+    try {
+        const steamData = await fetcher.fetchFirstPage(marketHashName);
+        if (!steamData || !steamData.success) {
+            return res.status(503).json({ success: false, message: 'Erro ao obter dados da Steam.' });
+        }
+        
+        const { listingsForFrontend, listingsForDatabase } = await parseAndProcessSteamData(steamData, marketHashName);
+        
+        if (listingsForDatabase.length > 0) {
+            console.log(`💾 Guardando ${listingsForDatabase.length} listings com float na BD...`);
+            findItemIdByMarketHashName(marketHashName).then(itemId => {
+                if (itemId) {
+                    const listingsWithId = listingsForDatabase.map(l => ({ ...l, item_id: itemId }));
+                    const minPriceDb = Math.min(...listingsWithId.map(l => l.price));
+                    listingCleanup.processListingChanges(marketHashName, listingsWithId, minPriceDb)
+                        .catch(err => console.error('Erro no cleanup:', err));
+                    listingsDb.upsertListings(listingsWithId).catch(console.error);
+                } else {
+                    console.warn(`⚠️ Item ID não encontrado para '${marketHashName}'.`);
+                }
+            }).catch(console.error);
+        } else {
+            console.warn(`⚠️ Nenhum listing com float foi obtido.`);
+        }
 
-router.get('/:marketHashName/page/:pageNumber', async (req, res) => {
-    const marketHashName = decodeURIComponent(req.params.marketHashName);
-    const pageNumber = parseInt(req.params.pageNumber, 10);
-    const pageData = await fetcher.fetchSpecificPage(marketHashName, pageNumber);
-    if (!pageData || !pageData.success) {
-        return res.status(503).json({ success: false, message: `Erro ao obter a página ${pageNumber}` });
+        // SE TIVERMOS FILTROS NA QUERY, IGNORAMOS O RESULTADO DA STEAM E VAMOS À BD
+        const { minPrice, maxPrice, minFloat, maxFloat, paintSeed, page, sortBy: sortByParam } = req.query;
+        const hasFilters = minPrice || maxPrice || minFloat || maxFloat || paintSeed || (page && parseInt(page) > 1);
+
+        if (hasFilters) {
+             const itemId = await findItemIdByMarketHashName(marketHashName);
+             if (itemId) {
+                 const dbData = await listingsDb.getListingsByItemId(itemId, {
+                     page: parseInt(page) || 1,
+                     limit: 100,
+                     sortBy: sortByParam || 'price',
+                     minPrice, maxPrice, minFloat, maxFloat, paintSeed
+                 });
+
+                 // Mapeia de volta para o formato de frontend
+                 const mappedListings = dbData.listings.map(dbItem => ({
+                    listingid: dbItem.listing_id,
+                    name: dbItem.market_hash_name,
+                    priceNumber: dbItem.price / 100.0, // Preço na BD está em centavos
+                    image: `https://community.akamai.steamstatic.com/economy/image/${dbItem.icon_url}`,
+                    inspectLink: dbItem.inspect_link,
+                    stickers: dbItem.stickers ? (typeof dbItem.stickers === 'string' ? JSON.parse(dbItem.stickers) : dbItem.stickers).map(s => s.img) : [],
+                    keychains: dbItem.keychains ? (typeof dbItem.keychains === 'string' ? JSON.parse(dbItem.keychains) : dbItem.keychains) : [],
+                    raw: {
+                        rarity_name: null, // Se necessário buscar da tabela items
+                        floatvalue: dbItem.float_value,
+                        paintseed: dbItem.paint_seed,
+                        icon_url: dbItem.icon_url
+                    }
+                 }));
+
+                 return res.json({
+                     success: true,
+                     marketHashName,
+                     listings: mappedListings,
+                     pagination: dbData.pagination,
+                     source: 'database_filtered'
+                 });
+             }
+        }
+
+        res.json({ 
+            success: true, 
+            marketHashName, 
+            listings: listingsForFrontend,
+            pagination: { 
+                totalPages: Math.ceil((steamData.total_count || 0) / 100), 
+                totalListings: steamData.total_count || 0 
+            }
+        });
+
+    } catch (err) {
+        console.error(`Erro na rota /skin/${marketHashName}:`, err);
+        res.status(500).json({ success: false, message: 'Erro interno do servidor.' });
     }
-
-    const listings = parseListings(pageData);
-    res.json({ success: true, listings });
 });
-
 
 
 module.exports = router;

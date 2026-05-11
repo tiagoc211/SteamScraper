@@ -1,0 +1,78 @@
+/* AdBanner.css */
+
+.ad-banner-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.ad-banner__label {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  user-select: none;
+  line-height: 1;
+}
+
+/* Garante que o slot AdSense não colapsa antes dos anúncios carregarem */
+.ad-banner-wrapper ins.adsbygoogle {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+  min-height: 90px;
+}
+
+.ad-banner__test-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  background: rgba(59, 130, 246, 0.08);
+  box-sizing: border-box;
+}
+
+.ad-banner__test-placeholder span {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ad-banner__test-placeholder small {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+}
+
+/* Leaderboard — faixa horizontal */
+.ad-banner--leaderboard {
+  width: 100%;
+  justify-content: center;
+  padding: 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Rectangle — bloco inline */
+.ad-banner--rectangle {
+  margin: 1.5rem auto;
+}
+
+/* Skyscraper — coluna lateral */
+.ad-banner--skyscraper {
+  position: sticky;
+  top: 80px; /* abaixo do header */
+}
+
+/* Mobile banner */
+.ad-banner--mobile-banner {
+  width: 100%;
+  justify-content: center;
+}

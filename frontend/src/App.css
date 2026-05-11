@@ -1,3 +1,90 @@
+/* ===== Hyper-Realistic Liquid Glass — App Core ===== */
+
+:root {
+  /* Glass material tokens */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-bg-strong: rgba(255, 255, 255, 0.085);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.18);
+
+  /* Colour */
+  --color-text: rgba(255, 255, 255, 0.82);
+  --color-text-bright: rgba(255, 255, 255, 1);
+  --color-text-muted: rgba(255, 255, 255, 0.48);
+  --color-accent: #3b82f6;
+  --color-accent-bright: #60a5fa;
+  --color-accent-deep: #2563eb;
+
+  /* Spring-physics timing functions */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-glass: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(-45deg, #0a0f1e, #0f1d3a, #081428, #162d5a);
+  background-size: 400% 400%;
+  animation: gradientShift 18s ease infinite;
+  color: var(--color-text);
+  overflow-x: hidden;
+  position: relative;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  letter-spacing: 0.01em;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(ellipse 80% 60% at 15% 45%, rgba(56, 189, 248, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 85% 75%, rgba(14, 165, 233, 0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 80% at 50% 15%, rgba(125, 211, 252, 0.07) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+  animation: ambientMove 24s ease infinite;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 3px 3px;
+  pointer-events: none;
+  z-index: 0;
+  mix-blend-mode: soft-light;
+}
+
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes ambientMove {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 1; }
+  33%  { transform: translate(20px, -20px) scale(1.05); opacity: 0.85; }
+  66%  { transform: translate(-15px, 15px) scale(0.95); opacity: 0.9; }
+}
+
+/* ===== Layout ===== */
 .app-container {
   display: flex;
   flex-direction: column;
@@ -10,3 +97,176 @@
   width: 100%;
   margin: 0;
 }
+
+/* ================================================================== */
+/*  GLASS PANEL  —  The core visual material                          */
+/*  Simulates thick frosted glass with specular highlights & noise    */
+/* ================================================================== */
+.glass-panel {
+  position: relative;
+  background:
+    linear-gradient(
+      165deg,
+      rgba(255, 255, 255, 0.09) 0%,
+      rgba(255, 255, 255, 0.035) 40%,
+      rgba(255, 255, 255, 0.015) 100%
+    ),
+    rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(32px) saturate(140%);
+  -webkit-backdrop-filter: blur(32px) saturate(140%);
+  box-shadow:
+    0 40px 100px rgba(15, 23, 42, 0.35),
+    0 8px 32px rgba(59, 130, 246, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Specular highlight border — gradient fading from top */
+.glass-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.38) 0%,
+    rgba(255, 255, 255, 0.12) 20%,
+    rgba(255, 255, 255, 0.04) 50%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Noise texture — imperceptible grain for tactile realism */
+.glass-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0.06;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.7) 0.5px, transparent 0.5px);
+  background-size: 2px 2px;
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.glass-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ================================================================== */
+/*  TYPOGRAPHY  —  Swiss/Industrial hierarchy                         */
+/* ================================================================== */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+h1 { font-weight: 800; letter-spacing: -0.035em; }
+h2 { letter-spacing: -0.02em; }
+
+p, span, li, label, input, select, textarea, button {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+small, .text-sm, .caption {
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+
+.text-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+/* ================================================================== */
+/*  SPRING HOVER  —  Physics-based micro-interactions                 */
+/* ================================================================== */
+.glass-hover {
+  transition:
+    transform 0.45s var(--ease-spring),
+    box-shadow 0.4s var(--ease-out),
+    border-color 0.35s var(--ease-glass);
+}
+
+.glass-hover:hover {
+  transform: translateY(-6px) scale(1.015);
+  box-shadow:
+    0 28px 80px rgba(59, 130, 246, 0.22),
+    0 6px 24px rgba(59, 130, 246, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.glass-hover:active {
+  transform: translateY(-2px) scale(0.995);
+  transition: transform 0.12s ease-out;
+}
+
+/* ================================================================== */
+/*  GLOW BUTTON  —  Accent-colored interactive element                */
+/* ================================================================== */
+.glow-btn {
+  position: relative;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  color: var(--color-text-bright);
+  padding: 0.7rem 1.4rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.01em;
+  transition:
+    all 0.35s var(--ease-spring),
+    box-shadow 0.4s var(--ease-out);
+  overflow: hidden;
+}
+
+.glow-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(37, 99, 235, 0.25));
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: -1;
+  border-radius: inherit;
+}
+
+.glow-btn:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 24px rgba(59, 130, 246, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.glow-btn:hover::before { opacity: 1; }
+
+.glow-btn:active {
+  transform: translateY(0) scale(0.97);
+  transition: transform 0.1s ease-out;
+}
+
+.glow-btn.active {
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-deep));
+  color: #fff;
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow:
+    0 6px 24px rgba(59, 130, 246, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.glow-btn.active::before { opacity: 0; }

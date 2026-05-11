@@ -1,136 +1,307 @@
+// frontend/src/api/api.js
+
 import axios from 'axios';
 
-
-const CSGO_API_BASE = 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en';
-
-// Cache para armazenar os dados e evitar múltiplas chamadas
-let itemsCache = null;
-
-/**
- * Busca e armazena em cache todos os itens da API externa.
- * Agora usa 'skins.json' para obter os dados base das skins.
- * @returns {Promise<Array>} Uma promessa que resolve para a lista de itens.
- */
-const getAllSkins = async () => {
-  if (itemsCache) {
-    return itemsCache;
-  }
-  try {
-    console.log("A buscar e a colocar em cache a lista de skins pela primeira vez...");
-    // Usamos o endpoint 'skins.json' que agrupa por skin base
-    const response = await fetch(`${CSGO_API_BASE}/skins.json`);
-    if (!response.ok) {
-      throw new Error(`Erro na API CSGO: ${response.statusText}`);
-    }
-    const data = await response.json();
-    itemsCache = data;
-    console.log(`Cache preenchido com ${data.length} skins base.`);
-    return data;
-  } catch (error) {
-    console.error("Falha ao buscar a lista de skins:", error);
-    return [];
-  }
-};
-
-// Pré-aquece o cache em segundo plano.
-getAllSkins();
-
-/**
- * Procura skins na lista em cache.
- * @param {string} query - O termo a ser procurado.
- * @returns {Promise<Array>} Uma lista filtrada de skins.
- */
-export const searchSkinsByQuery = async (query) => {
-  const lowerCaseQuery = query.toLowerCase();
-  const allSkins = await getAllSkins();
-
-  if (!allSkins || allSkins.length === 0) {
-    return [];
-  }
-
-  // Filtra as skins cujo nome inclui o termo pesquisado
-  const filteredSkins = allSkins.filter(skin =>
-    skin.name.toLowerCase().includes(lowerCaseQuery)
-  );
-
-  return filteredSkins.slice(0, 50); // Retorna até 50 resultados
-};
-
+// --- CONFIGURAÇÃO PARA A API DO SEU BACKEND ---
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-// << CORREÇÃO >> Centraliza a configuração da API aqui.
-// Todos os pedidos usarão este 'apiClient' para falar com o backend na porta correta.
 const apiClient = axios.create({
-  baseURL: `${BACKEND_URL}/api`,
-  withCredentials: true, // Aponta para o backend na porta 3001
+  baseURL: BACKEND_URL,
+  withCredentials: true,
 });
 
-/**
- * Busca a primeira página de detalhes de uma skin.
- * @param {string} marketHashName - O nome completo da skin.
- * @param {AbortSignal} signal - O sinal para cancelar o pedido.
- * @returns {Promise<Object|null>} - Os detalhes da skin ou null em caso de erro.
- */
-export const getSkinDetails = async (marketHashName, signal) => {
+
+// ===================================================================================
+// LÓGICA PARA A BARRA DE PESQUISA DO HEADER (USA API EXTERNA ByMykel)
+// ===================================================================================
+const CSGO_API_BASE = 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en';
+let searchCache = null;
+
+const normalizeString = (str) => {
+  if (!str) return '';
+  return str.toLowerCase().replace(/[★|™()]/g, '').replace(/\s+/g, ' ').trim();
+};
+
+const formatItemName = (item) => {
+  const isSpecial = item.weapon?.name?.includes('Knife') || item.weapon?.name?.includes('Gloves');
+  return isSpecial ? `★ ${item.name}` : item.name;
+};
+
+const populateSearchCache = async () => {
+  if (searchCache) return searchCache;
   try {
-    const response = await apiClient.get(`/skin/${encodeURIComponent(marketHashName)}`, { signal });
-    return response.data;
+    const [skinsRes, keychainsRes, agentsRes] = await Promise.all([
+      fetch(`${CSGO_API_BASE}/skins.json`),
+      fetch(`${CSGO_API_BASE}/keychains.json`),
+      fetch(`${CSGO_API_BASE}/agents.json`)
+    ]);
+    const skins = await skinsRes.json();
+    const keychains = await keychainsRes.json();
+    const agents = await agentsRes.json();
+
+    const allItems = [
+      ...skins.map(item => ({...item, name: formatItemName(item)})),
+      ...keychains,
+      ...agents
+    ].map(item => ({...item, market_hash_name: item.market_hash_name || item.name, searchableName: normalizeString(item.name)}));
+
+    searchCache = allItems;
+    console.log(`API search cache filled with ${allItems.length} items.`);
+    return searchCache;
   } catch (error) {
-    if (axios.isCancel(error)) {
-      console.log('Pedido de detalhes da skin cancelado.');
-    } else {
-      console.error("Erro ao obter detalhes da skin:", error);
-    }
-    return null;
+    console.error("Failed to populate API search cache:", error);
+    return [];
+  }
+};
+populateSearchCache();
+
+export const searchSkinsByQuery = async (query) => {
+  const allItems = await populateSearchCache();
+  if (!allItems || allItems.length === 0) return [];
+  const searchTerms = normalizeString(query).split(' ');
+  return allItems.filter(item => searchTerms.every(term => item.searchableName.includes(term))).slice(0, 50);
+};
+
+
+// ===================================================================================
+// LÓGICA PARA A PÁGINA /SKINS (USA A SUA BASE DE DADOS com paginação)
+// ===================================================================================
+
+export const getBrowseItemsFromDB = async (params) => {
+  try {
+    const response = await apiClient.get('/api/items', { params });
+    const mappedData = {
+      ...response.data,
+      items: response.data.items.map(dbItem => ({
+        id: dbItem.listing_id,
+        name: dbItem.market_hash_name, 
+        image: `https://community.akamai.steamstatic.com/economy/image/${dbItem.icon_url}`, 
+        rarity: { name: dbItem.rarity_name, color: dbItem.rarity_color },
+        price: dbItem.price,
+        float: dbItem.float_value,
+        pattern: dbItem.paint_seed,
+        stickers: dbItem.stickers,
+        keychains: dbItem.keychains,
+        scraped_at: dbItem.scraped_at,
+        is_featured: dbItem.is_featured || false,
+      }))
+    };
+    return mappedData;
+  } catch (error) {
+    console.error('Error fetching browse items from DB:', error);
+    return { items: [], pagination: { totalPages: 0 } };
   }
 };
 
-/**
- * Busca uma página específica de listings de uma skin.
- * @param {string} marketHashName - O nome completo da skin.
- * @param {number} pageNumber - O número da página a buscar.
- * @param {AbortSignal} signal - O sinal para cancelar o pedido.
- * @returns {Promise<Object|null>} - Os listings da página ou null em caso de erro.
- */
-export const getSkinPage = async (marketHashName, pageNumber, signal) => {
-  try {
-    const response = await apiClient.get(`/skin/${encodeURIComponent(marketHashName)}/page/${pageNumber}`, { signal });
-    return response.data;
-  } catch (error) {
-    if (axios.isCancel(error)) {
-      console.log(`Pedido da página ${pageNumber} cancelado.`);
-    } else {
-      console.error(`Erro ao obter a página ${pageNumber} da skin:`, error);
-    }
-    return null;
-  }
-};
 
-/**
- * Pede ao backend para inspecionar uma skin.
- * @param {string} inspectLink - O link de inspeção da Steam.
- * @returns {Promise<Object|null>} - Os dados da inspeção ou null em caso de erro.
- */
-export const inspectSkin = async (inspectLink) => {
-  try {
-    const response = await apiClient.get(`/inspect?url=${encodeURIComponent(inspectLink)}`);
-    return response.data;
-  } catch (error) {
-    console.error("Erro ao pedir inspeção ao backend:", error);
-    return null;
-  }
-};
+// ===================================================================================
+// FUNÇÕES RESTANTES (PARA PÁGINA DE DETALHES, ETC.)
+// ===================================================================================
 
-/**
- * Busca os planos de subscrição ativos do backend.
- * @returns {Promise<Array|null>} - Uma lista de planos ou null em caso de erro.
- */
 export const getSubscriptionPlans = async () => {
   try {
-    const response = await apiClient.get('/subscriptions');
+    const response = await apiClient.get('/api/subscriptions');
     return response.data;
   } catch (error) {
-    console.error("Erro ao obter planos de subscrição:", error);
+    console.error('Error fetching subscription plans:', error);
     return null;
+  }
+};
+
+export const getSkinDetails = async (marketHashName, signal, filters = {}) => {
+  try {
+    const response = await apiClient.get(`/api/skin/${encodeURIComponent(marketHashName)}`, {
+      signal,
+      params: filters,
+    });
+    return response.data;
+  } catch (err) {
+    if (!axios.isCancel(err)) console.error('Error fetching skin details:', err);
+    return null;
+  }
+};
+
+export const getSkinPage = async (marketHashName, pageNumber, signal, filters = {}) => {
+    try {
+        const queryParams = new URLSearchParams();
+        if (filters.minPrice) queryParams.append('minPrice', filters.minPrice);
+        if (filters.maxPrice) queryParams.append('maxPrice', filters.maxPrice);
+        if (filters.minFloat) queryParams.append('minFloat', filters.minFloat);
+        if (filters.maxFloat) queryParams.append('maxFloat', filters.maxFloat);
+        if (filters.paintSeed) queryParams.append('paintSeed', filters.paintSeed);
+        if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
+
+        const { data } = await apiClient.get(`/api/skin/${encodeURIComponent(marketHashName)}/page/${pageNumber}?${queryParams.toString()}`, { signal });
+        return data;
+    } catch (err) {
+        if (!axios.isCancel(err)) console.error(`Error fetching skin page ${pageNumber}:`, err);
+        return null;
+    }
+};
+
+export const inspectSkin = async (inspectLink) => {
+    try {
+        const { data } = await apiClient.get(`/api/inspect?url=${encodeURIComponent(inspectLink)}`);
+        return data;
+    } catch (err) {
+        console.error('Error inspecting skin:', err);
+        return null;
+    }
+};
+
+export const getLatestItems = async () => {
+  try {
+    const response = await apiClient.get('/api/items/latest');
+    // Mapear os dados para o formato esperado pelo LastSearchesBar
+    const items = response.data.items || [];
+    return items.map(dbItem => ({
+      listing_id: dbItem.listing_id,
+      market_hash_name: dbItem.market_hash_name,
+      icon_url: dbItem.icon_url,
+      price: dbItem.price,
+      float_value: dbItem.float_value,
+      paint_seed: dbItem.paint_seed,
+      stickers: dbItem.stickers,
+      keychains: dbItem.keychains,
+      scraped_at: dbItem.scraped_at
+    }));
+  } catch (error) {
+    console.error('Error fetching latest items:', error);
+    return [];
+  }
+};
+
+// ===================================================================================
+// TRENDS / MARKET ANALYSIS
+// ===================================================================================
+
+export const getTopGainers = async (days = 7, limit = 20) => {
+  try {
+    const response = await apiClient.get('/api/trends/top-gainers', { params: { days, limit } });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching top gainers:', error);
+    return { success: false, items: [] };
+  }
+};
+
+export const getTopLosers = async (days = 7, limit = 20) => {
+  try {
+    const response = await apiClient.get('/api/trends/top-losers', { params: { days, limit } });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching top losers:', error);
+    return { success: false, items: [] };
+  }
+};
+
+export const getBiggestChanges = async (days = 7, limit = 40) => {
+  try {
+    const response = await apiClient.get('/api/trends/biggest-changes', { params: { days, limit } });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching biggest changes:', error);
+    return { success: false, items: [] };
+  }
+};
+
+export const getItemPriceHistory = async (marketHashName, days = 30) => {
+  try {
+    const response = await apiClient.get(`/api/trends/item/${encodeURIComponent(marketHashName)}`, { params: { days } });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching item price history:', error);
+    return { success: false, history: [] };
+  }
+};
+
+export const getBestLiquidity = async (limit = 20) => {
+  try {
+    const response = await apiClient.get('/api/trends/best-liquidity', { params: { limit } });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching best liquidity:', error);
+    return { success: false, items: [] };
+  }
+};
+
+export const getLowestFloats = async (limit = 20) => {
+  try {
+    const response = await apiClient.get('/api/trends/lowest-floats', { params: { limit } });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching lowest floats:', error);
+    return { success: false, items: [] };
+  }
+};
+
+export const getMostExpensiveItems = async (limit = 10) => {
+  try {
+    const response = await apiClient.get('/api/items/most-expensive', { params: { limit } });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching most expensive items:', error);
+    return { success: false, items: [] };
+  }
+};
+
+export const getRandomItems = async (limit = 10) => {
+  try {
+    const response = await apiClient.get('/api/items/random', { params: { limit } });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching random items:', error);
+    return { success: false, items: [] };
+  }
+};
+
+// ─── Featured Listings (Auction System) ───────────────────────────────────────
+
+export const getFeaturedListings = async () => {
+  try {
+    const response = await apiClient.get('/api/featured');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching featured listings:', error);
+    return { success: false, items: [] };
+  }
+};
+
+export const getMyFeaturedSkins = async (q = '') => {
+  try {
+    const response = await apiClient.get('/api/featured/my-skins', { params: { q } });
+    return response.data;
+  } catch (error) {
+    // 401 = não autenticado, retorna vazio graciosamente
+    return { success: false, skins: [] };
+  }
+};
+
+export const createFeaturedListing = async (data) => {
+  try {
+    const response = await apiClient.post('/api/featured', data);
+    return response.data;
+  } catch (error) {
+    const msg = error.response?.data?.error || 'Erro ao criar destaque.';
+    return { success: false, error: msg };
+  }
+};
+
+export const renewFeaturedListing = async (id, bid_amount) => {
+  try {
+    const response = await apiClient.put(`/api/featured/${id}/renew`, { bid_amount });
+    return response.data;
+  } catch (error) {
+    const msg = error.response?.data?.error || 'Erro ao renovar destaque.';
+    return { success: false, error: msg };
+  }
+};
+
+export const deleteFeaturedListing = async (id) => {
+  try {
+    const response = await apiClient.delete(`/api/featured/${id}`);
+    return response.data;
+  } catch (error) {
+    return { success: false, error: 'Erro ao remover destaque.' };
   }
 };

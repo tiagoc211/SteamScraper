@@ -14,21 +14,36 @@
 
 .dashboard-card {
   flex: 1;
-  background-color: var(--color-bg-light);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   padding: 1rem 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  border-radius: 14px;
+  box-shadow:
+    0 8px 24px rgba(15, 23, 42, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  transition:
+    transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.35s;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 12px 32px rgba(15, 23, 42, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .dashboard-card.total {
-  border-left: 4px solid #10b981; /* verde */
+  border-left: 3px solid #10b981; /* verde */
 }
 
 .dashboard-card.active {
-  border-left: 4px solid #3b82f6; /* azul */
+  border-left: 3px solid #3b82f6; /* azul */
 }
 
 .dashboard-card h2 {
@@ -50,10 +65,13 @@
 .dashboard-table {
   width: 100%;
   border-collapse: collapse;
-  background-color: var(--color-bg-light);
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  box-shadow:
+    0 8px 24px rgba(15, 23, 42, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .dashboard-table th, .dashboard-table td {
@@ -77,5 +95,5 @@
 }
 
 .dashboard-card.revenue {
-  border-left: 4px solid #f59e0b; /* laranja para receita */
+  border-left: 3px solid #f59e0b; /* laranja para receita */
 }

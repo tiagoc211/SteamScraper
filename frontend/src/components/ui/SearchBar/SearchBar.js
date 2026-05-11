@@ -1,11 +1,13 @@
 // src/components/ui/SearchBar/SearchBar.js
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { FiSearch, FiArrowLeft } from 'react-icons/fi'; // Usar Fi para consistência
 import { searchSkinsByQuery } from '../../../api/api';
 import './SearchBar.css';
 
 const SearchBar = ({ isSearchActive, setIsSearchActive }) => {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [selectedSkin, setSelectedSkin] = useState(null); // <-- NOVO: Para controlar a vista de detalhes
@@ -73,7 +75,7 @@ const SearchBar = ({ isSearchActive, setIsSearchActive }) => {
 
   return (
     <div className="search-overlay" onClick={handleCloseSearch}>
-      <div className="search-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="search-modal glass-panel" onClick={(e) => e.stopPropagation()}>
         <div className="search-input-wrapper-active">
           {/* CORREÇÃO: Renderização condicional do ícone de busca ou da seta para trás */}
           {selectedSkin ? (
@@ -92,12 +94,12 @@ const SearchBar = ({ isSearchActive, setIsSearchActive }) => {
                 // Se o utilizador começar a escrever, sai da vista de detalhes
                 if (selectedSkin) setSelectedSkin(null);
             }}
-            placeholder="Search skins, knives, gloves..."
+            placeholder={t('common.searchPlaceholder')}
             className="search-input-active"
           />
         </div>
         <div className="results-container">
-          {loading ? ( <div className="result-item-message">Searching...</div> ) : 
+          {loading ? ( <div className="result-item-message">{t('common.loading')}</div> ) : 
            // CORREÇÃO: Lógica para mostrar a vista de detalhes ou a lista de resultados
            selectedSkin ? (
             <ul className="search-results-list">
@@ -135,7 +137,7 @@ const SearchBar = ({ isSearchActive, setIsSearchActive }) => {
             )
           )}
           {!loading && query.length > 2 && results.length === 0 && !selectedSkin && (
-            <div className="result-item-message">Nenhum resultado encontrado.</div>
+            <div className="result-item-message">{t('common.noData')}</div>
           )}
         </div>
       </div>

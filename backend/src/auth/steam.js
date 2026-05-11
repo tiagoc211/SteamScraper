@@ -3,7 +3,12 @@ const SteamStrategy = require("passport-steam").Strategy;
 const pool = require("../db/index.js");
 const { createLog } = require("../utils/logsHelper"); 
 
+const stripTrailingSlash = (value = "") => value.replace(/\/+$/, "");
+
 function setupSteamAuth(app) {
+  const domain = stripTrailingSlash(process.env.DOMAIN || "");
+  const corsOrigin = stripTrailingSlash(process.env.CORS_ORIGIN || "");
+
   app.use(passport.initialize());
   app.use(passport.session());
 
@@ -11,8 +16,8 @@ function setupSteamAuth(app) {
   passport.deserializeUser((obj, done) => done(null, obj));
 
   passport.use(new SteamStrategy({
-    returnURL: `${process.env.DOMAIN}/auth/steam/return`,
-    realm: process.env.DOMAIN,
+    returnURL: `${domain}/auth/steam/return`,
+    realm: domain,
     apiKey: process.env.STEAM_API_KEY
   }, async (identifier, profile, done) => {
     try {
@@ -94,12 +99,15 @@ function setupSteamAuth(app) {
   }));
 
   app.get("/auth/steam", passport.authenticate("steam"));
-  app.get("/auth/steam/return",
+  const steamReturnHandler = [
     passport.authenticate("steam", { failureRedirect: "/" }),
     (req, res) => {
-      res.redirect(process.env.CORS_ORIGIN);
+      res.redirect(corsOrigin);
     }
-  );
+  ];
+
+  app.get("/auth/steam/return", ...steamReturnHandler);
+  app.get("/auth/steam/returns", ...steamReturnHandler);
 
   app.get("/api/me", async (req, res) => {
     if (req.isAuthenticated()) {
@@ -141,7 +149,7 @@ function setupSteamAuth(app) {
         });
       }
 
-      res.redirect(process.env.CORS_ORIGIN);
+      res.redirect(corsOrigin);
     });
   });
 }

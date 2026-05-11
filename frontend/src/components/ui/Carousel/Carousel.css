@@ -1,0 +1,211 @@
+/* ===== Carousel — Professional Glass Design ===== */
+
+.carousel-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* ---- Controls bar (dots + arrows) ---- */
+.carousel-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.carousel-indicators {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.carousel-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  border: none;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.carousel-dot:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.carousel-dot.active {
+  width: 20px;
+  background: rgba(100, 200, 255, 0.7);
+  box-shadow: 0 0 8px rgba(100, 200, 255, 0.35);
+}
+
+/* Nav group (page label + prev/next) */
+.carousel-nav-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.carousel-page-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.5px;
+  margin-right: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.carousel-page-sep {
+  margin: 0 1px;
+  opacity: 0.5;
+}
+
+.carousel-nav-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+  font-size: 0;
+}
+
+.carousel-nav-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.08);
+}
+
+.carousel-nav-btn:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.carousel-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* ---- Viewport & Track ---- */
+.carousel-viewport {
+  overflow: visible;
+  border-radius: 12px;
+}
+
+.carousel-track {
+  display: grid;
+  grid-template-columns: repeat(var(--items-per-view, 3), 1fr);
+  gap: 1rem;
+  width: 100%;
+}
+
+/* ---- Item Animation ---- */
+.carousel-item {
+  animation: carouselFadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  min-width: 0;
+}
+
+@keyframes carouselFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ---- Auto-play progress bar ---- */
+.carousel-progress {
+  height: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 1px;
+  margin-top: 0.85rem;
+  overflow: hidden;
+}
+
+.carousel-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(100, 200, 255, 0.5), rgba(100, 200, 255, 0.15));
+  border-radius: 1px;
+  animation: progressFill linear forwards;
+  transform-origin: left;
+}
+
+.carousel-progress-bar.paused {
+  animation-play-state: paused;
+}
+
+@keyframes progressFill {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+/* ---- Empty state ---- */
+.carousel-empty {
+  width: 100%;
+  height: 120px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+}
+
+/* ===================== Responsive ===================== */
+
+@media (max-width: 1200px) {
+  .carousel-track {
+    gap: 0.9rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .carousel-controls {
+    margin-bottom: 0.75rem;
+  }
+
+  .carousel-nav-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+  }
+
+  .carousel-track {
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .carousel-controls {
+    margin-bottom: 0.6rem;
+  }
+
+  .carousel-dot {
+    width: 5px;
+    height: 5px;
+  }
+
+  .carousel-dot.active {
+    width: 16px;
+  }
+
+  .carousel-nav-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+  }
+
+  .carousel-page-label {
+    font-size: 0.65rem;
+  }
+
+  .carousel-progress {
+    margin-top: 0.6rem;
+  }
+}

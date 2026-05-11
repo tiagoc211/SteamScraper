@@ -1,15 +1,19 @@
-/* Importar uma fonte moderna do Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+/* ===== Hyper-Realistic Liquid Glass — Foundation ===== */
 
-/* Variaveis de cor inspiradas na Steam */
+/* Typography: Inter (neo-grotesque) + JetBrains Mono (data) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+/* Design tokens — all legacy vars redirect to Liquid Glass palette */
 :root {
-  --color-bg-dark: #171a21;
-  --color-bg-light: #1b2838;
-  --color-bg-lighter: #2a475e;
-  --color-accent: #66c0f4;
-  --color-text: #c7d5e0;
+  --color-bg-dark: #0f172a;
+  --color-bg-light: #1e293b;
+  --color-bg-lighter: #334155;
+  --color-accent: #3b82f6;
+  --color-accent-bright: #60a5fa;
+  --color-text: rgba(255, 255, 255, 0.78);
   --color-text-bright: #ffffff;
-  --color-border: #2a475e;
+  --color-text-muted: rgba(255, 255, 255, 0.5);
+  --color-border: rgba(255, 255, 255, 0.12);
 }
 
 * {
@@ -18,76 +22,29 @@
   padding: 0;
 }
 
-body {
-  font-family: 'Poppins', sans-serif;
-  color: var(--color-text);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  /* CORREÇÃO: Novo background com 4 focos de luz distintos */
-  background-color: #12151a; /* Base de cinzento muito escuro */
-  background-image: 
-    /* Foco de luz 1: Canto Superior Esquerdo (mais intenso) */
-    radial-gradient(circle at 20% 25%, rgba(88, 181, 234, 0.25), transparent 30%),
-    
-    /* Foco de luz 2: Canto Superior Direito (mais subtil) */
-    radial-gradient(circle at 90% 10%, rgba(47, 160, 226, 0.15), transparent 25%),
-
-    /* Foco de luz 3: Canto Inferior Esquerdo (médio) */
-    radial-gradient(circle at 10% 80%, rgba(88, 181, 234, 0.2), transparent 35%),
-    
-    /* Foco de luz 4: Canto Inferior Direito (difuso) */
-    radial-gradient(circle at 80% 90%, rgba(47, 160, 226, 0.2), transparent 40%);
-  
-  background-size: 200% 200%;
-  background-attachment: fixed;
-  animation: pageBackgroundAnimation 18s ease-in-out infinite alternate;
-}
-
-@keyframes pageBackgroundAnimation {
-    from {
-        background-position: 0% 0%;
-    }
-    to {
-        background-position: 100% 100%;
-    }
-}
-
+/* ===== Links ===== */
 a {
-  color: var(--color-accent);
+  color: var(--color-accent-bright);
   text-decoration: none;
-  transition: color 0.2s ease-in-out;
+  transition: color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 a:hover {
   color: var(--color-text-bright);
 }
 
-/* Scrollbar com estilo */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: var(--color-bg-dark);
-}
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-bg-lighter);
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 100px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-accent);
+  background: rgba(59, 130, 246, 0.45);
 }
 
-/* =================================================================== */
-/* NOVA REGRA PARA O FUNDO DA PÁGINA DE SUBSCRIÇÕES                    */
-/* =================================================================== */
-
-/* 
-  Esta regra aplica-se ao body APENAS quando ele tiver a classe 'subscriptions-page-active'.
-  Ela mantém a cor de fundo base, mas remove os gradientes e a animação.
-*/
-body.subscriptions-page-active {
-  background-color: #12151a; /* Mantém a cor de fundo escura original */
-  background-image: none;    /* Remove APENAS a imagem de gradiente */
-  animation: none;           /* Remove APENAS a animação */
+/* ===== Selection ===== */
+::selection {
+  background: rgba(59, 130, 246, 0.35);
+  color: #fff;
 }

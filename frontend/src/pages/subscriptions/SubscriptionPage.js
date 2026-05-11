@@ -1,5 +1,6 @@
 // src/pages/subscriptions/SubscriptionPage.js
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 // A importação de 'useNavigate' foi removida, pois não é necessária.
 import { getSubscriptionPlans } from '../../api/api'; // Corrigido o caminho para a API
 import ChromaGrid from '../../components/subscriptions/ChromaGrid/ChromaGrid'; // Corrigido o caminho para o componente
@@ -17,6 +18,7 @@ const tierStyles = [
 
 
 const SubscriptionPage = () => {
+  const { t } = useTranslation();
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -42,7 +44,7 @@ const SubscriptionPage = () => {
       if (data) {
         setPlans(data);
       } else {
-        setError('Não foi possível carregar os planos.');
+        setError(t('common.error'));
       }
       setLoading(false);
     };
@@ -67,21 +69,21 @@ const SubscriptionPage = () => {
     });
   }, [plans]);
 
-  if (loading) return <div className="page-loader">A carregar planos...</div>;
+  if (loading) return <div className="page-loader">{t('common.loading')}</div>;
   if (error) return <div className="page-error">{error}</div>;
 
   return (
     <div className={`subscription-page-wrapper ${isCardHovered ? 'chroma-active' : ''}`}>
       <div className="subscription-page">
         <div className="page-header">
-          <h1>Nossos Planos</h1>
-          <p>Escolha o plano que melhor se adapta às suas necessidades. Passe o rato por cima para ver a magia.</p>
+          <h1>{t('subscriptions.title')}</h1>
+          <p>{t('subscriptions.plans')}</p>
         </div>
         <div className="plans-container">
           {plans.length > 0 ? (
             <ChromaGrid items={formattedItems} columns={plans.length} />
           ) : (
-            <p>Não existem planos de subscrição disponíveis.</p>
+            <p>{t('subscriptions.title')}</p>
           )}
         </div>
       </div>
