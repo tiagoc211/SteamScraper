@@ -1,14 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="1200" height="320" role="img" aria-label="CS:MARKET GLASSES animated logo">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0.6" y2="1">
-      <stop offset="0%" stop-color="#123a5e"/>
-      <stop offset="55%" stop-color="#0e2c49"/>
-      <stop offset="100%" stop-color="#0a2138"/>
+      <stop offset="0%" stop-color="#1a5f92"/>
+      <stop offset="55%" stop-color="#14517f"/>
+      <stop offset="100%" stop-color="#0f3f68"/>
     </linearGradient>
 
     <radialGradient id="glow" cx="50%" cy="42%" r="55%">
-      <stop offset="0%" stop-color="#2f6ea0" stop-opacity="0.45"/>
-      <stop offset="100%" stop-color="#2f6ea0" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#56a3db" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#56a3db" stop-opacity="0"/>
     </radialGradient>
 
     <!-- Blur filter for the word "CS:MARKET" -->
@@ -39,7 +39,7 @@
   <!-- Words -->
   <g font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-weight="800" font-size="100" letter-spacing="0">
     <text x="372" y="182" text-anchor="middle" fill="#ffffff" filter="url(#blurA)">CS:MARKET</text>
-    <text x="862" y="182" text-anchor="middle" fill="#ffffff" filter="url(#blurB)">GLASSES</text>
+    <text x="910" y="182" text-anchor="middle" fill="#ffffff" filter="url(#blurB)">GLASSES</text>
   </g>
 
   <!-- Subtitle -->
@@ -51,7 +51,7 @@
   <g stroke="#ffffff" stroke-opacity="0.85" stroke-width="3" stroke-linecap="square" fill="none">
     <g transform="translate(372,150)">
       <animateTransform attributeName="transform" type="translate"
-        values="372,150; 372,150; 862,150; 862,150; 372,150"
+        values="372,150; 372,150; 910,150; 910,150; 372,150"
         keyTimes="0;0.42;0.55;0.95;1"
         calcMode="spline"
         keySplines="0.65 0 0.35 1; 0.65 0 0.35 1; 0.65 0 0.35 1; 0.65 0 0.35 1"
