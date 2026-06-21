@@ -20,12 +20,16 @@
 
 ## Demo
 
-**CS:MARKET GLASSES — Full Platform Walkthrough | CS2 Skin Price Tracker**
-
-> A complete walkthrough of CS:MARKET GLASSES — explore live skin listings, float & pattern analytics, price history charts, and the multi-language interface built with React, Node.js, and PostgreSQL.
-
 <!-- Demo video -->
 [![CS:MARKET GLASSES Demo](https://img.youtube.com/vi/7D3dPnRaigs/maxresdefault.jpg)](https://youtu.be/7D3dPnRaigs?si=Mb838oCfj-9WbuEs)
+
+<div align="center">
+
+[![Watch the Demo](https://img.shields.io/badge/▶%20WATCH%20THE%20DEMO-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/7D3dPnRaigs?si=Mb838oCfj-9WbuEs)
+
+*A full end-to-end walkthrough of CS:MARKET GLASSES — click the thumbnail or button to watch on YouTube.*
+
+</div>
 
 ---
 
