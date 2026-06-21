@@ -68,40 +68,74 @@ async function initialize() {
   const BASE_LISTING_URL = 'https://steamcommunity.com/market/listings/730';
   const BASE_SEARCH_URL = 'https://steamcommunity.com/market/search/render/';
 
-  async function fetchPage(url, itemName, pageNumber, maxRetries = 5) { // Aumentado para 5 tentativas
+  const REQUEST_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'text/javascript, text/html, application/xml, text/xml, */*',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'X-Requested-With': 'XMLHttpRequest',
+    'Referer': 'https://steamcommunity.com/market/'
+  };
+
+  // O endpoint /render/ da Steam faz 302 para um URL canónico (G...) e remove o
+  // segmento /render/. Aqui seguimos os redirects manualmente reinserindo /render/.
+  async function fetchRenderJson(url, maxHops = 3) {
+    let currentUrl = url;
+    for (let hop = 0; hop <= maxHops; hop++) {
+      const response = await fetch(currentUrl, {
+        agent,
+        redirect: 'manual',
+        headers: REQUEST_HEADERS,
+        timeout: 25000
+      });
+
+      if (response.status >= 300 && response.status < 400) {
+        const loc = response.headers.get('location');
+        if (!loc) throw new Error(`Redirect ${response.status} sem cabeçalho Location.`);
+        currentUrl = loc.replace(/(\/listings\/730\/[^/?]+)(\?|$)/, '$1/render/$2');
+        continue;
+      }
+
+      if (!response.ok) throw new Error(`Erro HTTP ${response.status}`);
+
+      const text = await response.text();
+      if (!text) throw new Error('Resposta vazia da Steam.');
+
+      // Steam devolveu uma página HTML (bloqueio anti-bot / página genérica)
+      if (text.trimStart().startsWith('<')) {
+        const blockErr = new Error('Steam devolveu HTML em vez de JSON (bloqueio anti-bot).');
+        blockErr.isHtmlBlock = true;
+        throw blockErr;
+      }
+
+      const data = JSON.parse(text);
+      if (data.success === false) throw new Error('API da Steam retornou "success": false.');
+      return data;
+    }
+
+    const hopsErr = new Error('Demasiados redirects ao obter dados da Steam.');
+    hopsErr.isHtmlBlock = true;
+    throw hopsErr;
+  }
+
+  async function fetchPage(url, itemName, pageNumber, maxRetries = 3) {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      console.log(`➡️  A buscar [${itemName}] (página ${pageNumber}, tentativa ${attempt})...`);
       try {
-        const response = await fetch(url, { 
-          agent, 
-          headers: { 
-            // Cabeçalhos mais realistas para evitar bloqueios
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Referer': 'https://steamcommunity.com/market/'
-          },
-          timeout: 25000 // Timeout mais longo
-        });
-        
-        if (!response.ok) throw new Error(`Erro HTTP ${response.status}`);
-        
-        const text = await response.text();
-        if (!text) throw new Error('Resposta vazia da Steam.');
-
-        const data = JSON.parse(text);
-        if (data.success === false) throw new Error('API da Steam retornou "success": false.');
-
-        console.log(`✔️  Sucesso para [${itemName}] (página ${pageNumber})`);
+        const data = await fetchRenderJson(url);
         return data;
       } catch (error) {
-        console.error(`❌  Falha para [${itemName}] (página ${pageNumber}, tentativa ${attempt}): ${error.message}`);
-        if (attempt === maxRetries) {
-          console.error(`Falha permanente para [${itemName}] após ${maxRetries} tentativas.`);
+        // Bloqueio HTML do Steam: não vale a pena repetir, falha de forma limpa.
+        if (error.isHtmlBlock) {
+          console.warn(`⚠️  Steam indisponível para [${itemName}] (p${pageNumber}): ${error.message} A usar dados da BD.`);
           return null;
         }
-        await new Promise(resolve => setTimeout(resolve, 2000 * attempt)); // Espera crescente
+        if (attempt === maxRetries) {
+          console.warn(`⚠️  Não foi possível obter [${itemName}] (p${pageNumber}) da Steam após ${maxRetries} tentativas: ${error.message} A usar dados da BD.`);
+          return null;
+        }
+        await new Promise(resolve => setTimeout(resolve, 1500 * attempt));
       }
     }
+    return null;
   }
 
   async function fetchFirstPage(itemName) {

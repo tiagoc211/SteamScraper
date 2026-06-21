@@ -1,8 +1,6 @@
 const express = require('express');
-const fs = require('fs/promises');
 const router = express.Router();
-
-const FLOAT_INSPECT_URL = process.env.FLOAT_INSPECT_URL;
+const { extractFloatFromSteam } = require('../utils/steamFloatExtractor');
 
 router.get('/', async (req, res) => {
   const inspectLink = req.query.url;
@@ -11,19 +9,17 @@ router.get('/', async (req, res) => {
     return res.status(400).json({ success: false, error: 'O parâmetro "url" é obrigatório.' });
   }
 
-  const FLOAT_INSPECT_SERVICE_URL = `${FLOAT_INSPECT_URL}/?url=${encodeURIComponent(inspectLink)}`;
-  
   try {
-    const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args));
-    const response = await fetch(FLOAT_INSPECT_SERVICE_URL, { timeout: 15000 });
-
-    if (!response.ok) throw new Error(`Serviço de inspeção retornou ${response.status}`);
-
-    const data = await response.json();
-    res.json(data);
+    const floatData = await extractFloatFromSteam(inspectLink);
+    
+    if (Object.keys(floatData).length === 0) {
+      return res.status(404).json({ success: false, error: 'Não foi possível extrair dados do item.' });
+    }
+    
+    res.json({ success: true, iteminfo: floatData });
   } catch (err) {
-    console.error('❌ Erro no proxy de inspeção:', err.message);
-    res.status(503).json({ success: false, error: 'Serviço de inspeção indisponível.' });
+    console.error('❌ Erro ao extrair float:', err.message);
+    res.status(500).json({ success: false, error: 'Erro ao extrair dados do item.' });
   }
 });
 
