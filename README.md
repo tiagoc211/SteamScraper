@@ -18,6 +18,17 @@
 
 ---
 
+## Demo
+
+**CS:MARKET GLASSES — Full Platform Walkthrough | CS2 Skin Price Tracker**
+
+> A complete walkthrough of CS:MARKET GLASSES — explore live skin listings, float & pattern analytics, price history charts, and the multi-language interface built with React, Node.js, and PostgreSQL.
+
+<!-- Demo video -->
+[![CS:MARKET GLASSES Demo](https://img.youtube.com/vi/7D3dPnRaigs/maxresdefault.jpg)](https://youtu.be/7D3dPnRaigs?si=Mb838oCfj-9WbuEs)
+
+---
+
 ## Overview
 
 **CS:MARKET GLASSES** is a full-stack web platform for tracking **Counter-Strike 2** skin prices straight from the Steam Community Market. It pulls live listings, resolves **float values** and **paint seeds** through a dedicated Float Inspect service, stores historical price data in PostgreSQL, and surfaces market trends through a polished, animated interface.
