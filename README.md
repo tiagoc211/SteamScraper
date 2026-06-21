@@ -20,9 +20,9 @@
 
 ## Overview
 
-**CS:MARKET GLASSES** is a full-stack web platform for tracking **Counter-Strike 2** skin prices straight from the Steam Community Market. It pulls live listings, extracts **float values** and **paint seeds** directly from Steam, stores historical price data, and surfaces market trends through a polished, animated interface.
+**CS:MARKET GLASSES** is a full-stack web platform for tracking **Counter-Strike 2** skin prices straight from the Steam Community Market. It pulls live listings, resolves **float values** and **paint seeds** through a dedicated Float Inspect service, stores historical price data in PostgreSQL, and surfaces market trends through a polished, animated interface.
 
-The platform is resilient by design: when Steam throttles or blocks its listing endpoints, the backend transparently falls back to its **own PostgreSQL price database**, so the experience never breaks.
+Listings are fetched through a proxy with in-memory caching and concurrency limiting, while every price is persisted to PostgreSQL to power the price-history and analytics engine.
 
 > [!NOTE]
 > The UI ships in **8 languages** (English, Portuguese, Spanish, French, German, Japanese, Russian, Simplified Chinese) with automatic browser-language detection.
@@ -60,9 +60,9 @@ Tiered plans (Free → Básico → Profissional → Trader → Enterprise) with 
 
 ## Features
 
-- 🎯 **Direct float & pattern extraction** — reads float values and paint seeds straight from Steam inspect links (no third-party float service required).
+- 🎯 **Float & pattern inspection** — resolves float values and paint seeds from Steam inspect links via a dedicated Float Inspect microservice.
 - 📈 **Price history engine** — scheduled jobs build historical price series and compute movers/changes per time window.
-- 🛡️ **Resilient fetching** — a smart fetcher detects when Steam blocks the render endpoint and seamlessly falls back to the local price database.
+- ⚡ **Smart caching** — in-memory caching (`node-cache`) and concurrency limiting keep Steam Market requests fast and within rate limits.
 - 🔍 **Advanced filtering** — filter by price, wear, pattern seed, StatTrak™; sort by price, float, or pattern.
 - 🔐 **Steam OpenID login** — sign in with your Steam account via Passport.
 - 💳 **Subscription tiers** — quota-based plans with rate limiting and search-usage tracking.
@@ -90,17 +90,17 @@ flowchart LR
     U[User] -->|HTTPS| FE[React 19 SPA<br/>:3000]
     FE -->|/api/*| BE[Express 5 API<br/>:3001]
     BE -->|fetch + proxy| STEAM[Steam Community Market]
-    BE -->|fallback / history| DB[(PostgreSQL)]
+    BE -->|inspect link| FLOAT[Float Inspect Service]
+    BE -->|read / write| DB[(PostgreSQL)]
     BE -->|OpenID| STEAMID[Steam Login]
-    STEAM -. blocked / throttled .-> BE
-    BE -. serves cached data .-> DB
+    BE -. price history .-> DB
 ```
 
 **Request flow for a skin lookup** (`GET /api/skin/:marketHashName`):
 
-1. The API requests live listings from Steam through the resilient fetcher.
-2. If Steam returns JSON, floats & patterns are extracted and returned (`source: "steam"`).
-3. If Steam blocks the endpoint (HTML response), the API falls back to PostgreSQL (`source: "database_fallback"`), keeping the UI fully functional.
+1. The API fetches live listings from the Steam Community Market (through a proxy, with in-memory caching).
+2. For each listing, the inspect link is resolved by the Float Inspect service to obtain its float value and paint seed.
+3. Prices are persisted to PostgreSQL, feeding the price-history and analytics engine.
 
 ---
 
@@ -110,8 +110,8 @@ All routes are mounted under `/api`:
 
 | Endpoint | Purpose |
 |----------|---------|
-| `GET  /api/skin/:marketHashName` | Live listings for a skin (with DB fallback) |
-| `GET  /api/inspect` | Extract float / pattern from a Steam inspect link |
+| `GET  /api/skin/:marketHashName` | Live listings for a skin |
+| `GET  /api/inspect` | Resolve float / pattern from a Steam inspect link |
 | `GET  /api/items` | Item catalogue / lookups |
 | `GET  /api/trends` | Market trend & price-change analytics |
 | `GET  /api/featured` | Featured listings |
@@ -154,6 +154,7 @@ PORT=3001
 DOMAIN=http://localhost:3001
 CORS_ORIGIN=http://localhost:3000
 STEAM_API_KEY=your_steam_api_key
+FLOAT_INSPECT_URL=http://localhost:80
 SESSION_SECRET=your_session_secret
 ADMIN_STEAMIDS=7656119...
 ADMIN_IDS=1
@@ -194,7 +195,7 @@ SteamScraper/
 │   │   ├── db/                # PostgreSQL access + SQL schema
 │   │   ├── auth/              # Steam OpenID strategy
 │   │   ├── middleware/        # auth & admin guards
-│   │   └── utils/             # float extractor, price history helpers
+│   │   └── utils/             # price history & logging helpers
 │   └── *.js                   # DB seed / migration scripts
 ├── frontend/
 │   └── src/
