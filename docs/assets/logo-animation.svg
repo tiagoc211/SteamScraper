@@ -38,32 +38,27 @@
 
   <!-- Words -->
   <g font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-weight="800" font-size="100" letter-spacing="0">
-    <text x="372" y="182" text-anchor="middle" fill="#ffffff" filter="url(#blurA)">CS:MARKET</text>
-    <text x="862" y="182" text-anchor="middle" fill="#ffffff" filter="url(#blurB)">GLASSES</text>
+    <text x="372" y="192" text-anchor="middle" fill="#ffffff" filter="url(#blurA)">CS:MARKET</text>
+    <text x="862" y="192" text-anchor="middle" fill="#eef4fb" filter="url(#blurB)">GLASSES</text>
   </g>
 
-  <!-- Subtitle -->
-  <text x="600" y="238" text-anchor="middle"
-        font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-weight="400"
-        font-size="26" fill="#cdddec">Acompanhe os preços de itens CS2 e tendências do mercado</text>
-
-  <!-- Sliding focus frame (small thin corner brackets, like the live TrueFocus effect) -->
+  <!-- Sliding focus frame (thin corner brackets, like the live TrueFocus effect) -->
   <g stroke="#ffffff" stroke-opacity="0.85" stroke-width="3" stroke-linecap="square" fill="none">
-    <g transform="translate(372,150)">
+    <g transform="translate(372,160)">
       <animateTransform attributeName="transform" type="translate"
-        values="372,150; 372,150; 862,150; 862,150; 372,150"
+        values="372,160; 372,160; 862,160; 862,160; 372,160"
         keyTimes="0;0.42;0.55;0.95;1"
         calcMode="spline"
         keySplines="0.65 0 0.35 1; 0.65 0 0.35 1; 0.65 0 0.35 1; 0.65 0 0.35 1"
         dur="3.6s" repeatCount="indefinite"/>
       <!-- top-left -->
-      <polyline points="-252,-52 -252,-72 -232,-72"/>
+      <polyline points="-250,-32 -250,-72 -210,-72"/>
       <!-- top-right -->
-      <polyline points="232,-72 252,-72 252,-52"/>
+      <polyline points="210,-72 250,-72 250,-32"/>
       <!-- bottom-left -->
-      <polyline points="-252,52 -252,72 -232,72"/>
+      <polyline points="-250,32 -250,72 -210,72"/>
       <!-- bottom-right -->
-      <polyline points="232,72 252,72 252,52"/>
+      <polyline points="210,72 250,72 250,32"/>
     </g>
   </g>
 </svg>
