@@ -60,15 +60,15 @@ Tiered plans (Free → Básico → Profissional → Trader → Enterprise) with 
 
 ## Features
 
-- 🎯 **Float & pattern inspection** — resolves float values and paint seeds from Steam inspect links via a dedicated Float Inspect microservice.
-- 📈 **Price history engine** — scheduled jobs build historical price series and compute movers/changes per time window.
-- ⚡ **Smart caching** — in-memory caching (`node-cache`) and concurrency limiting keep Steam Market requests fast and within rate limits.
-- 🔍 **Advanced filtering** — filter by price, wear, pattern seed, StatTrak™; sort by price, float, or pattern.
-- 🔐 **Steam OpenID login** — sign in with your Steam account via Passport.
-- 💳 **Subscription tiers** — quota-based plans with rate limiting and search-usage tracking.
-- 📊 **Admin dashboard** — manage users, roles, logs, and featured listings.
-- 🌍 **Internationalisation** — 8 fully translated locales with browser detection.
-- ✨ **Modern UI** — React 19, Three.js / React Three Fiber backgrounds, Framer Motion + GSAP animations.
+- **Float & pattern inspection** — resolves float values and paint seeds from Steam inspect links via a dedicated Float Inspect microservice.
+- **Price history engine** — scheduled jobs build historical price series and compute movers/changes per time window.
+- **Smart caching** — in-memory caching (`node-cache`) and concurrency limiting keep Steam Market requests fast and within rate limits.
+- **Advanced filtering** — filter by price, wear, pattern seed, StatTrak™; sort by price, float, or pattern.
+- **Steam OpenID login** — sign in with your Steam account via Passport.
+- **Subscription tiers** — quota-based plans with rate limiting and search-usage tracking.
+- **Admin dashboard** — manage users, roles, logs, and featured listings.
+- **Internationalisation** — 8 fully translated locales with browser detection.
+- **Modern UI** — React 19, Three.js / React Three Fiber backgrounds, Framer Motion + GSAP animations.
 
 ---
 
